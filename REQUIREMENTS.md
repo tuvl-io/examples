@@ -52,6 +52,6 @@ Estimated cost to run every acceptance test once with the OpenAI defaults: well 
 
 ## Engine
 
-- `tuvl[standard] >= 2026.2.6` (`uv tool install "tuvl[standard]"`), Python 3.12+.
+- `tuvl[standard] >= 2026.2.6` — published on PyPI: `uv tool install "tuvl[standard]>=2026.2.6"`, Python 3.12+.
 - Each project is scaffolded with `tuvl init <name>` and validated with `tuvl validate` before first boot.
 - Production-mode extras (Biscuit signing key via `tuvl keys generate`, IAM roles) are only needed where a spec says so (`content-moderation-pipeline`, `kyc-onboarding` — their HITL group gates need real tokens; `tuvl dev` covers everything else).
