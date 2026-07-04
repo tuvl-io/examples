@@ -38,7 +38,8 @@ tuvl-examples/
 
 > Five projects are specified and ready to build — each directory carries a
 > `project-specification.md` an implementer (human or coding agent) can deliver
-> unaided. Infrastructure and LLM needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md).
+> unaided. Implementers start at [AGENTS.md](./AGENTS.md); infrastructure and
+> LLM needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md).
 
 | Project | Difficulty | What it shows | Step kinds used | Status |
 |---------|------------|---------------|-----------------|--------|
