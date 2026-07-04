@@ -8,7 +8,7 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> ⚠️ **Beta.** These examples track tuvl **2026.2.4 (beta)** — great for learning
+> ⚠️ **Beta.** These examples track tuvl **2026.2.6 (beta)** — great for learning
 > and evaluation, but not yet recommended for production. APIs and schemas may
 > change before the stable release. This repo is updated regularly as new samples
 > land.
@@ -36,16 +36,17 @@ tuvl-examples/
 
 ## Projects
 
-> No samples have been published yet — the first projects are on the way. ⭐ the
-> repo to get notified, or [contribute one](#adding-an-example).
+> Five projects are specified and ready to build — each directory carries a
+> `project-specification.md` an implementer (human or coding agent) can deliver
+> unaided. Infrastructure and LLM needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md).
 
-| Project | What it shows | Step kinds used |
-|---------|---------------|-----------------|
-| _coming soon_ | — | — |
-
-<!-- When adding a project, add a row above, e.g.:
-| [`recruitment-screening`](./recruitment-screening) | Resume intake → AI scoring → human approval | Functional · Agent · ModelOp · HumanInTheLoop · Response |
--->
+| Project | Difficulty | What it shows | Step kinds used | Status |
+|---------|------------|---------------|-----------------|--------|
+| [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → validated structured records via one LLM step | Agent · Functional · ModelOp · Response | 📋 spec |
+| [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers — RAG on built-in rails | Functional (DataIngest/DataSearch) · Agent · Response | 📋 spec |
+| [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → region-aware routing → group-gated human review (no self-approval) | Agent · Router (match) · APICall · HumanInTheLoop · Functional · ModelOp · Response | 📋 spec |
+| [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | AutonomousAgent driving MCP tools to a cited research brief, on a token budget | AutonomousAgent · MCP · Functional · Agent · ModelOp · Response | 📋 spec |
+| [`kyc-onboarding`](./kyc-onboarding) | Complex | Supervised investigation, compliance approval gate, PII masking, versioned schemas | AutonomousAgent (+ supervisor) · APICall · Router (match) · HumanInTheLoop · Functional · Agent · ModelOp · Response | 📋 spec |
 
 ## Running an example
 
