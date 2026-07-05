@@ -1,6 +1,6 @@
 # Infrastructure & LLM Requirements
 
-What each example needs before `tuvl dev` boots. All examples target **tuvl >= 2026.2.6**.
+What each example needs before `tuvl dev` boots. All examples target **tuvl >= 2026.2.6.1** (the 2026.2.6.1 patch carries fixes these projects rely on — HITL resume with versioned contexts, ISO-string persistence, embedding dimensions).
 
 ## Summary matrix
 
@@ -34,15 +34,17 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ## LLM
 
-All model access goes through LiteLLM, configured per project in `llms/*.yaml` (`kind: AgentModel`). The specs default to OpenAI:
+All model access goes through LiteLLM, configured per project in `llms/*.yaml` (`kind: AgentModel`). The specs default to Google Gemini — one `GEMINI_API_KEY` covers everything:
 
-- **Chat model** (`llms/default.yaml`): `openai/gpt-4o-mini` — used by every `Agent` / `AutonomousAgent` step. Requires `OPENAI_API_KEY`.
+- **Chat model** (`llms/default.yaml`): `gemini/gemini-3.1-flash-lite` — used by every `Agent` / `AutonomousAgent` step.
 - **Judge model** (`kyc-onboarding` only, `llms/judge.yaml`): a second preset for the `spec.supervisor` LLM judge and the `tuvl test` evaluations. Can be the same model id; a separate preset keeps cost/temperature tunable independently.
-- **Embeddings** (`knowledge-base-qa`, `kyc-onboarding`): `text-embedding-3-small` (1536 dims) declared in `models/embeddings.yaml`. The collection's vector dimension must match the model.
+- **Embeddings** (`knowledge-base-qa`, `kyc-onboarding`): `gemini/gemini-embedding-001` declared in `models/embeddings.yaml` with `dimensions: 1536` — the engine passes the declared dimensions to the provider (Matryoshka truncation from the model's native 3072), and the collection's vector dimension must match.
 
-Swapping providers: any LiteLLM model string works (`anthropic/claude-…`, `ollama/llama3`, …) — edit the `llms/*.yaml` preset, no workflow changes. Caveat for fully-local runs: the embedding model must also be swapped to a local one and the collection dimension updated to match.
+Note: `tuvl init` has no interactive Gemini preset — answer `n` at the LLM-provider prompt and write `llms/default.yaml` from the spec (it defines the exact preset), with `GEMINI_API_KEY` in `.env`.
 
-Estimated cost to run every acceptance test once with the OpenAI defaults: well under $1; the `mcp-research-agent` is the most expensive (bounded by its `token_budget: 60000`).
+Swapping providers: any LiteLLM model string works (`openai/gpt-…`, `anthropic/claude-…`, `ollama/llama3`, …) — edit the `llms/*.yaml` preset, no workflow changes. Caveat for fully-local runs: the embedding model must also be swapped to a local one and the collection dimension updated to match.
+
+Estimated cost to run every acceptance test once with the Gemini defaults: well under $1; the `mcp-research-agent` is the most expensive (bounded by its `token_budget: 60000`).
 
 ## External services
 
@@ -52,6 +54,6 @@ Estimated cost to run every acceptance test once with the OpenAI defaults: well 
 
 ## Engine
 
-- `tuvl[standard] >= 2026.2.6` — published on PyPI: `uv tool install "tuvl[standard]>=2026.2.6"`, Python 3.12+.
+- `tuvl[standard] >= 2026.2.6.1` — published on PyPI: `uv tool install "tuvl[standard]>=2026.2.6.1"`, Python 3.12+.
 - Each project is scaffolded with `tuvl init <name>` and validated with `tuvl validate` before first boot.
 - Production-mode extras (Biscuit signing key via `tuvl keys generate`, IAM roles) are only needed where a spec says so (`content-moderation-pipeline`, `kyc-onboarding` — their HITL group gates need real tokens; `tuvl dev` covers everything else).

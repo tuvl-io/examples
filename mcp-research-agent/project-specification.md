@@ -1,8 +1,8 @@
 # MCP Research Agent — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Medium–Complex
-> **Engine:** tuvl >= 2026.2.6 · **Ground truth:** `TUVL_AGENTIC_MANUAL.md` (§4.7 MCP, §4.13 AutonomousAgent) + engine `docs/autonomous-agent.md`
-> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_research`, `OPENAI_API_KEY`, `uv` installed for `uvx mcp-server-fetch`, outbound network)
+> **Engine:** tuvl >= 2026.2.6.1 · **Ground truth:** `tuvl-agentic-manual.md` (§4.7 MCP, §4.13 AutonomousAgent) + engine `docs/autonomous-agent.md`
+> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_research`, `GEMINI_API_KEY` — Google Gemini `gemini/gemini-3.1-flash-lite` via LiteLLM, `uv` installed for `uvx mcp-server-fetch`, outbound network)
 
 `POST /api/research` hands a question to a bounded **AutonomousAgent** that drives an **MCP fetch tool** across the web, summarizes sources as it goes, and returns a cited research brief — capped by iterations and a token budget, with live loop progress streamed to the caller.
 
@@ -20,7 +20,7 @@
 mcp-research-agent/
 ├── README.md
 ├── config.yaml
-├── .env.example                      # DATABASE_URL, OPENAI_API_KEY
+├── .env.example                      # Postgres creds, GEMINI_API_KEY
 ├── models/research_brief.yaml
 ├── datasources/postgres.yaml
 ├── llms/default.yaml

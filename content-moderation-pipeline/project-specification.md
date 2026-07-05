@@ -1,8 +1,8 @@
 # Content Moderation Pipeline — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Medium
-> **Engine:** tuvl >= 2026.2.6 · **Ground truth:** `TUVL_AGENTIC_MANUAL.md` (§4.5 Router `match:`, §4.10 HITL) + engine `docs/human-in-the-loop.md`
-> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_moderation`, `OPENAI_API_KEY`; optional `MODERATION_WEBHOOK_URL`)
+> **Engine:** tuvl >= 2026.2.6.1 · **Ground truth:** `tuvl-agentic-manual.md` (§4.5 Router `match:`, §4.10 HITL) + engine `docs/human-in-the-loop.md`
+> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_moderation`, `GEMINI_API_KEY`; optional `MODERATION_WEBHOOK_URL`)
 
 User-generated content arrives on a webhook; an LLM classifies it; deterministic routing applies region-specific policy; violations notify an external channel; borderline cases suspend for **group-gated human review** — where the submitter cannot approve their own content.
 
@@ -20,7 +20,7 @@ User-generated content arrives on a webhook; an LLM classifies it; deterministic
 content-moderation-pipeline/
 ├── README.md                    # run guide + the two-token demo (submitter vs moderator)
 ├── config.yaml
-├── .env.example                 # DATABASE_URL, OPENAI_API_KEY, MODERATION_WEBHOOK_URL
+├── .env.example                 # DATABASE_URL, GEMINI_API_KEY, MODERATION_WEBHOOK_URL
 ├── models/content_item.yaml
 ├── models/moderation_action.yaml
 ├── datasources/postgres.yaml
