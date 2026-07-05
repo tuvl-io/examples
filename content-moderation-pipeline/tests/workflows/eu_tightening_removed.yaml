@@ -1,0 +1,57 @@
+# EU-tightening branch (acceptance criterion 6). The classifier rates the content
+# borderline, but region is `eu`, so route_region takes the apply_eu_policy branch
+# which escalates borderline -> violation under the stricter EU threshold. The run
+# then flows to notify + persist_removed instead of human review — the `match:`
+# branch changing the outcome. apply_eu_policy, prepare_audit and the routers run
+# for real; the classify Agent, the notify APICall, and the persist ModelOps are
+# stubbed.
+workflow: moderate_content
+
+input:
+  author_id: "u4"
+  region: "eu"
+  content: "Borderline content that EU policy escalates to a violation."
+
+stubs:
+  - step_id: classify
+    mock_output:
+      classification:
+        category: "borderline"
+        reason: "ambiguous under baseline policy"
+        confidence: 0.5
+  - step_id: notify
+    mock_output: {}
+  - step_id: persist_removed
+    mock_output:
+      saved_item:
+        id: "44444444-4444-4444-4444-444444444444"
+        author_id: "u4"
+        region: "eu"
+        category: "violation"
+        status: "removed"
+  - step_id: persist_removed_action
+    mock_output:
+      saved_action:
+        id: "aaaaaaaa-4444-4444-4444-444444444444"
+        action: "auto_removed"
+        actor: "system"
+
+evaluations:
+  - step_id: apply_eu_policy
+    instruction: >
+      Under the stricter EU threshold this step must escalate the classification:
+      classification.category must become "violation" (up from "borderline"), and
+      classification.reason must mention the EU escalation. Pass only if both hold.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: notify
+    instruction: >
+      Because EU policy escalated the item, the webhook step context must expose
+      notify_category = "violation" and a non-empty notify_reason. Pass only if
+      both hold.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond
+    instruction: >
+      The response payload must have status "removed", category "violation", and
+      action "auto_removed" — the EU branch auto-removes instead of going to human
+      review.
+    judge_model: gemini/gemini-3.1-flash-lite

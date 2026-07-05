@@ -1,0 +1,12 @@
+kind: AgentModel
+version: v1
+enabled: true
+metadata:
+  name: default
+  description: Default chat model driving the research agent loop and the brief composer
+spec:
+  provider: gemini
+  model: gemini/gemini-3.1-flash-lite
+  api_key: ${GEMINI_API_KEY}
+  temperature: 1.0
+  timeout: 60

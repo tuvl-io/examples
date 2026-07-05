@@ -1,0 +1,16 @@
+kind: AgentModel
+version: v1
+enabled: true
+metadata:
+  name: judge
+  description: >-
+    Judge model. Used by the fail-closed spec.supervisor LLM judge on the
+    onboard_applicant workflow and by the `tuvl test` judge evaluations
+    (TUVL_TEST_JUDGE). Kept as a separate preset so cost/temperature stay
+    tunable independently of the chat model.
+spec:
+  provider: gemini
+  model: gemini/gemini-3.1-flash-lite
+  api_key: ${GEMINI_API_KEY}
+  temperature: 0.0
+  timeout: 30

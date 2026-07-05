@@ -1,0 +1,53 @@
+# Category: borderline. The classifier rates the content borderline; region `us`
+# skips the EU branch, so route_category suspends the run at hitl_review. The HITL
+# step is stubbed with a moderator's answer (approve). apply_review — the step
+# immediately after hitl_review in document order, where a real resume continues —
+# runs for real, normalizes the decision to the "approved" signal, and sets the
+# human audit fields. The classify Agent and the persist ModelOps are stubbed.
+workflow: moderate_content
+
+input:
+  author_id: "u3"
+  region: "us"
+  content: "This product is a total scam, do not buy it."
+
+stubs:
+  - step_id: classify
+    mock_output:
+      classification:
+        category: "borderline"
+        reason: "strong negative opinion, possibly defamatory"
+        confidence: 0.55
+  - step_id: hitl_review
+    mock_output:
+      review:
+        decision: "approve"
+        note: "Opinion, not a policy violation — allow."
+  - step_id: persist_approved
+    mock_output:
+      saved_item:
+        id: "33333333-3333-3333-3333-333333333333"
+        author_id: "u3"
+        region: "us"
+        category: "borderline"
+        status: "approved"
+  - step_id: persist_approved_action
+    mock_output:
+      saved_action:
+        id: "aaaaaaaa-3333-3333-3333-333333333333"
+        action: "human_approved"
+        actor: "system"
+
+evaluations:
+  - step_id: apply_review
+    instruction: >
+      The reviewer approved, so this step must emit the "approved" signal and set
+      the human audit fields: mod_action = "human_approved" and mod_reason
+      reflecting the reviewer note (not the automated default). Pass only if both
+      hold.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond
+    instruction: >
+      The response payload must have status "approved", category "borderline",
+      and action "human_approved" (the human-review path, not auto_approved).
+    judge_model: gemini/gemini-3.1-flash-lite

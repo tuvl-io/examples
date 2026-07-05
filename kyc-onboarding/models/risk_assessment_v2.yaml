@@ -1,0 +1,28 @@
+kind: ModelDefinition
+version: v1
+metadata:
+  name: RiskAssessment
+  schema_version: v2
+  description: >-
+    Risk assessment result — v2. Staged (enabled: false) with a DISTINCT
+    tablename so it can coexist with v1 (never two enabled versions on one
+    table). Adds structured factors + policy_refs. Activated via the admin
+    toggle + restart (manual §6.8); the workflow is then re-pinned to v2.
+enabled: false
+spec:
+  tablename: risk_assessments_v2
+  datasource: main_postgres
+  access:
+    read_scope: kyc:assess:read
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: applicant_id, type: uuid, required: true, index: true }
+    - { name: score, type: numeric }
+    - name: band
+      type: enum
+      enum_values: [low, medium, high]
+    - { name: rationale, type: text }
+    - { name: decided_by, type: string }
+    - { name: factors, type: jsonb }
+    - { name: policy_refs, type: jsonb }
+    - { name: created_at, type: timestamptz, input: false }

@@ -1,0 +1,28 @@
+kind: ModelDefinition
+metadata:
+  name: Document
+  schema_version: v1
+  description: >-
+    Optional bookkeeping record for ingested documents (title/tags/timestamp).
+    The RAG rows themselves live in the engine's system vector store, so the
+    ingest/ask workflows do NOT touch this model — it is a standalone CRUD entity
+    kept for auditing/listing, exactly the "optional Document model" the spec
+    mentions.
+enabled: true
+spec:
+  tablename: documents
+  fields:
+    - name: id
+      type: uuid
+      primary_key: true
+      default: uuid4
+      input: false
+    - name: title
+      type: string
+      required: true
+      index: true
+    - name: tags
+      type: jsonb
+    - name: created_at
+      type: timestamptz
+      input: false

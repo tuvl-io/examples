@@ -1,0 +1,49 @@
+# Classifier failure (acceptance criterion 5). The classify Agent fails to return
+# parseable JSON; it emits the reserved parse_error signal, which routes straight
+# to hitl_review — the pipeline fails toward a human and never auto-approves. The
+# HITL step is stubbed with a moderator's decision (remove); apply_review runs for
+# real and routes to persist_removed. classify is stubbed via `_signal`.
+workflow: moderate_content
+
+input:
+  author_id: "u5"
+  region: "us"
+  content: "###### unparseable classifier output ######"
+
+stubs:
+  - step_id: classify
+    mock_output:
+      _signal: parse_error
+      _last_error: "JSON parse error: classifier did not return structured output"
+  - step_id: hitl_review
+    mock_output:
+      review:
+        decision: "remove"
+        note: "Unclassifiable — remove pending appeal."
+  - step_id: persist_removed
+    mock_output:
+      saved_item:
+        id: "55555555-5555-5555-5555-555555555555"
+        author_id: "u5"
+        region: "us"
+        category: "borderline"
+        status: "removed"
+  - step_id: persist_removed_action
+    mock_output:
+      saved_action:
+        id: "aaaaaaaa-5555-5555-5555-555555555555"
+        action: "human_removed"
+        actor: "system"
+
+evaluations:
+  - step_id: apply_review
+    instruction: >
+      The classifier failed, so the run reached human review (never auto-approved).
+      The reviewer chose remove, so this step must emit the "removed" signal with
+      mod_action = "human_removed". Pass only if both hold.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond
+    instruction: >
+      The response payload must have status "removed" and action "human_removed" —
+      a classifier failure must route to a human decision, never auto-approve.
+    judge_model: gemini/gemini-3.1-flash-lite

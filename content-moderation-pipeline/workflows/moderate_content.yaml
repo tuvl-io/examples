@@ -1,0 +1,218 @@
+kind: Workflow
+version: v1
+metadata:
+  name: moderate_content
+  schema_version: v1
+  description: Classify user-generated content, apply region policy, notify on violations, and gate borderline cases behind group-restricted human review.
+  group: moderation
+  required_scope: moderation:submit
+enabled: true
+spec:
+  context:
+    models:
+      - name: ContentItem
+      - name: ModerationAction
+  trigger:
+    path: /api/moderate
+    method: POST
+    input_schema:
+      - { name: author_id, type: string, required: true }
+      - { name: region, type: string, required: true }
+      - { name: content, type: string, required: true }
+
+  steps:
+    # 1. LLM classification. Decision routing stays deterministic (Routers below);
+    #    region guidance is context only. Any classifier failure fails toward human
+    #    review — never auto-approve.
+    - id: classify
+      kind: Agent
+      description: Classify the submitted content as safe, borderline, or violation.
+      agent:
+        model: default
+        system: |
+          You are a strict content-moderation classifier. Read the submitted
+          content and decide whether it is safe, borderline, or a policy
+          violation. Consider the submission region as context (regional norms
+          differ) but do not invent policy — return your best single verdict.
+        prompt: |
+          Classify the content in the Input Data below.
+
+          Return ONLY this JSON object, with no prose:
+          {
+            "classification": {
+              "category": "safe" | "borderline" | "violation",
+              "reason": "<one short sentence>",
+              "confidence": <number between 0 and 1>
+            }
+          }
+        output:
+          format: json
+        retry:
+          attempts: 2
+          on: [parse_error, timeout]
+          backoff: 2
+        timeout: 30
+      routes:
+        default: route_region
+        error: hitl_review
+        timeout: hitl_review
+        parse_error: hitl_review
+
+    # 2. Region switch (data-driven match). EU submissions get a stricter pass;
+    #    everything else continues to audit preparation.
+    - id: route_region
+      kind: Router
+      match:
+        field: region
+      routes:
+        eu: apply_eu_policy
+        default: prepare_audit
+
+    # EU-only tightening: escalate borderline -> violation under the stricter
+    # EU threshold. Small Functional node — demonstrates match: without inventing
+    # complex policy.
+    - id: apply_eu_policy
+      kind: Functional
+      runner: apply_eu_policy
+      description: Apply the stricter EU threshold to the classifier category.
+      routes:
+        default: prepare_audit
+        error: prepare_audit
+
+    # Resolve the notification target from the environment (workflow YAML is not
+    # env-interpolated) and pre-compute the automated audit fields (actor/action/
+    # reason) so the shared persist steps can write the audit row for either path.
+    - id: prepare_audit
+      kind: Functional
+      runner: prepare_audit
+      description: Resolve the webhook URL and derive automated audit-trail fields.
+      routes:
+        default: route_category
+        error: route_category
+
+    # 3. Category switch (data-driven match).
+    - id: route_category
+      kind: Router
+      match:
+        field: classification.category
+      routes:
+        safe: persist_approved
+        violation: notify
+        borderline: hitl_review
+
+    # 4. Fire-and-forget violation notification. Failure must not block removal.
+    - id: notify
+      kind: APICall
+      description: Notify the external moderation channel that a violation was found.
+      http:
+        url: "{{webhook_url}}"
+        method: POST
+        body: '{"event": "content_violation", "author_id": "{{author_id}}", "region": "{{region}}", "category": "{{notify_category}}", "reason": "{{notify_reason}}", "content": "{{content}}"}'
+        timeout: 30
+      routes:
+        default: persist_removed
+        error: persist_removed
+
+    # 5. Group-gated human review. Suspends (HTTP 202) and persists an instance
+    #    row — NOT a ContentItem. Only a `moderators` token (or iam:admin) may
+    #    resume; the submitter cannot approve their own content. On resume the
+    #    engine continues at the NEXT step in document order (apply_review) — a
+    #    HITL step's routes are never consulted on resume.
+    - id: hitl_review
+      kind: HumanInTheLoop
+      description: Suspend borderline content for a group-restricted human decision.
+      ui:
+        title: "Moderation review"
+        instruction: "Review borderline content from {{author_id}} (region {{region}})."
+        display_context:
+          - content
+          - region
+          - classification
+      human_feedback:
+        - { name: decision, type: enum, options: [approve, remove], required: true }
+        - { name: note, type: text }
+      output_key: review
+      auth:
+        required_group: moderators
+
+    # 6. Resume lands here. Reads review.decision, sets the human audit fields,
+    #    and routes to the matching persist path.
+    - id: apply_review
+      kind: Functional
+      runner: apply_review
+      description: Apply the human reviewer's decision and set the human audit fields.
+      routes:
+        approved: persist_approved
+        removed: persist_removed
+        error: persist_removed
+
+    # 7a. Approved path: persist the item, then the audit row, then respond.
+    - id: persist_approved
+      kind: ModelOp
+      model: ContentItem
+      operation: create
+      payload:
+        author_id: "{{author_id}}"
+        region: "{{region}}"
+        content: "{{content}}"
+        category: "{{item_category}}"
+        status: approved
+      output: saved_item
+      routes:
+        default: persist_approved_action
+        error: respond
+
+    - id: persist_approved_action
+      kind: ModelOp
+      model: ModerationAction
+      operation: create
+      payload:
+        item_id: "{{saved_item.id}}"
+        action: "{{mod_action}}"
+        actor: "{{mod_actor}}"
+        reason: "{{mod_reason}}"
+      output: saved_action
+      routes:
+        default: respond
+        error: respond
+
+    # 7b. Removed path: persist the item, then the audit row, then respond.
+    - id: persist_removed
+      kind: ModelOp
+      model: ContentItem
+      operation: create
+      payload:
+        author_id: "{{author_id}}"
+        region: "{{region}}"
+        content: "{{content}}"
+        category: "{{item_category}}"
+        status: removed
+      output: saved_item
+      routes:
+        default: persist_removed_action
+        error: respond
+
+    - id: persist_removed_action
+      kind: ModelOp
+      model: ModerationAction
+      operation: create
+      payload:
+        item_id: "{{saved_item.id}}"
+        action: "{{mod_action}}"
+        actor: "{{mod_actor}}"
+        reason: "{{mod_reason}}"
+      output: saved_action
+      routes:
+        default: respond
+        error: respond
+
+    # 8. Shape the response.
+    - id: respond
+      kind: Response
+      mapping:
+        item_id: saved_item.id
+        status: saved_item.status
+        category: saved_item.category
+        action: saved_action.action
+      routes:
+        default: END

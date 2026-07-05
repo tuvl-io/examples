@@ -1,0 +1,12 @@
+kind: ProjectConfig
+metadata:
+  name: invoice-extraction-api
+  description: >-
+    Paste raw invoice text at POST /api/invoices/extract and get back a
+    validated, persisted, structured invoice record.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  nodes: nodes

@@ -1,0 +1,54 @@
+# Happy path: the bounded AutonomousAgent converges with >=2 independent
+# sources, the composer writes a cited brief, it is persisted as `answered`,
+# and the `respond` step returns it. The agent tool-loop (investigate), the
+# composer LLM (compose) and the DB write (persist) are all stubbed with
+# scripted turns, so the test is deterministic and needs no live network,
+# no MCP server, and no Postgres. The evaluation uses an LLM judge.
+workflow: research
+
+input:
+  question: "What is the CAP theorem and what are its three properties?"
+
+stubs:
+  # Scripted tool-loop result: the agent answered from two cited sources.
+  - step_id: investigate
+    mock_output:
+      research:
+        answer: "CAP theorem states a distributed store can guarantee at most two of consistency, availability, and partition tolerance."
+        sources:
+          - { url: "https://en.wikipedia.org/wiki/CAP_theorem", title: "CAP theorem", takeaway: "A distributed system can provide at most two of consistency, availability, and partition tolerance." }
+          - { url: "https://www.ibm.com/topics/cap-theorem", title: "What is the CAP theorem?", takeaway: "Consistency, availability, and partition tolerance cannot all be guaranteed simultaneously." }
+      _signal: answered
+  # Scripted composer turn (Agent json output -> brief + sources in context).
+  - step_id: compose
+    mock_output:
+      brief: >-
+        The CAP theorem holds that a distributed data store can simultaneously
+        provide at most two of three guarantees: Consistency (every read sees
+        the latest write), Availability (every request receives a non-error
+        response), and Partition tolerance (the system keeps operating despite
+        dropped messages between nodes). When a network partition occurs, a
+        system must trade off consistency against availability.
+      sources:
+        - { url: "https://en.wikipedia.org/wiki/CAP_theorem", title: "CAP theorem", takeaway: "At most two of consistency, availability, partition tolerance." }
+        - { url: "https://www.ibm.com/topics/cap-theorem", title: "What is the CAP theorem?", takeaway: "The three properties cannot all be guaranteed at once." }
+  # Scripted persistence (ModelOp create -> saved record echoed back).
+  - step_id: persist
+    mock_output:
+      saved:
+        id: "11111111-1111-1111-1111-111111111111"
+        question: "What is the CAP theorem and what are its three properties?"
+        outcome: answered
+        brief: "The CAP theorem holds that a distributed data store can provide at most two of consistency, availability, and partition tolerance."
+        sources:
+          - { url: "https://en.wikipedia.org/wiki/CAP_theorem", title: "CAP theorem", takeaway: "At most two of consistency, availability, partition tolerance." }
+          - { url: "https://www.ibm.com/topics/cap-theorem", title: "What is the CAP theorem?", takeaway: "The three properties cannot all be guaranteed at once." }
+
+evaluations:
+  - step_id: respond
+    instruction: >-
+      The response step context represents the happy-path answer. Pass only if
+      outcome equals "answered", id is a non-empty identifier, brief is a
+      non-empty grounded explanation of the CAP theorem, and sources is a list
+      with at least two entries each carrying a url. Fail otherwise.
+    judge_model: gemini/gemini-3.1-flash-lite

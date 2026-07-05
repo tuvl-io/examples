@@ -1,0 +1,42 @@
+kind: ModelDefinition
+version: v1
+metadata:
+  name: ContentItem
+  schema_version: v1
+  description: A piece of user-generated content submitted for moderation.
+enabled: true
+spec:
+  tablename: content_items
+  fields:
+    - name: id
+      type: uuid
+      primary_key: true
+      default: uuid4
+      input: false
+    - name: author_id
+      type: string
+      required: true
+      index: true
+      description: Identifier of the user who submitted the content.
+    - name: region
+      type: enum
+      enum_values: [us, eu, in]
+      required: true
+      description: Submission region — drives region-specific policy routing.
+    - name: content
+      type: text
+      required: true
+      description: The user-generated text under moderation.
+    - name: category
+      type: enum
+      enum_values: [safe, borderline, violation]
+      input: false
+      description: Classifier verdict (server-set).
+    - name: status
+      type: enum
+      enum_values: [approved, removed, pending_review]
+      input: false
+      description: Final moderation status (server-set).
+    - name: created_at
+      type: timestamptz
+      input: false

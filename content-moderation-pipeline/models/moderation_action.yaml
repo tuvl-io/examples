@@ -1,0 +1,33 @@
+kind: ModelDefinition
+version: v1
+metadata:
+  name: ModerationAction
+  schema_version: v1
+  description: Append-only audit log of every moderation decision.
+enabled: true
+spec:
+  tablename: moderation_actions
+  fields:
+    - name: id
+      type: uuid
+      primary_key: true
+      default: uuid4
+      input: false
+    - name: item_id
+      type: uuid
+      required: true
+      index: true
+      description: The ContentItem this action applies to.
+    - name: action
+      type: enum
+      enum_values: [auto_approved, auto_removed, human_approved, human_removed]
+      description: What was decided and by whom (automated vs human path).
+    - name: actor
+      type: string
+      description: '"system" for automated decisions, or the reviewer''s user id.'
+    - name: reason
+      type: text
+      description: Classifier reason (auto path) or reviewer note (human path).
+    - name: created_at
+      type: timestamptz
+      input: false

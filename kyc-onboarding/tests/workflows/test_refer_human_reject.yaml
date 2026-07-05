@@ -1,0 +1,39 @@
+# investigate -> refer_human routes to hitl_review; the reviewer rejects.
+workflow: onboard_applicant
+input:
+  full_name: "Carol Refer"
+  dob: "1978-09-09"
+  national_id: "CA-3003"
+  email: "carol@example.com"
+  country: in
+stubs:
+  - step_id: persist_applicant
+    mock_output:
+      applicant_record: { id: "00000000-0000-0000-0000-000000000003", status: received }
+  - step_id: sanctions_screen
+    mock_output:
+      screening_result: { status: ambiguous }
+      screening_echo: in
+  - step_id: policy_context
+    mock_output:
+      policies:
+        - { content: "Policy 02 — Enhanced jurisdictions require mandatory human review.", score: 0.85 }
+  - step_id: investigate
+    mock_output:
+      investigation: { outcome: refer_human, summary: "Could not conclude; refer.", watchlist_hit: false }
+      _signal: refer_human
+  - step_id: hitl_review
+    mock_output:
+      compliance_decision: { decision: reject, band: high, note: "Insufficient evidence of identity." }
+  - step_id: persist_assessment
+    mock_output:
+      assessment_record: { id: "00000000-0000-0000-0000-0000000000c2" }
+  - step_id: update_applicant
+    mock_output:
+      applicant_updated: { id: "00000000-0000-0000-0000-000000000003", status: rejected }
+evaluations:
+  - step_id: respond
+    instruction: >-
+      The reviewer rejected the application at band "high". In the step context,
+      decision_status must equal "rejected" and decision_band must equal "high".
+      Pass only if both hold.

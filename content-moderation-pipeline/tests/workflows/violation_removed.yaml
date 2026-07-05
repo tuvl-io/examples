@@ -1,0 +1,49 @@
+# Category: violation. The classifier rates the content a policy violation;
+# region `us` skips the EU branch. route_category sends it to the fire-and-forget
+# `notify` webhook and then to persist_removed. The classify Agent, the `notify`
+# APICall (no outbound network in tests), and the persist ModelOps are stubbed;
+# prepare_audit runs for real and surfaces the flat notify_category/notify_reason
+# keys the webhook body depends on.
+workflow: moderate_content
+
+input:
+  author_id: "u2"
+  region: "us"
+  content: "You are all worthless idiots and should be harmed."
+
+stubs:
+  - step_id: classify
+    mock_output:
+      classification:
+        category: "violation"
+        reason: "targeted harassment and threat of harm"
+        confidence: 0.96
+  - step_id: notify
+    mock_output: {}
+  - step_id: persist_removed
+    mock_output:
+      saved_item:
+        id: "22222222-2222-2222-2222-222222222222"
+        author_id: "u2"
+        region: "us"
+        category: "violation"
+        status: "removed"
+  - step_id: persist_removed_action
+    mock_output:
+      saved_action:
+        id: "aaaaaaaa-2222-2222-2222-222222222222"
+        action: "auto_removed"
+        actor: "system"
+
+evaluations:
+  - step_id: notify
+    instruction: >
+      The webhook step context must expose the flat keys notify_category equal to
+      "violation" and a non-empty notify_reason describing the violation (i.e. the
+      real classifier category/reason, NOT empty strings). Pass only if both hold.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond
+    instruction: >
+      The response payload must have status "removed", category "violation", and
+      action "auto_removed". Removal must not depend on webhook success.
+    judge_model: gemini/gemini-3.1-flash-lite

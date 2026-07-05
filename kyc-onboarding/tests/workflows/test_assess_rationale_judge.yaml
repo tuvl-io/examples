@@ -1,0 +1,39 @@
+# LLM-judge evaluation. Everything except `assess` is stubbed; the real assess
+# Agent runs against injected policies + investigation and the judge verdicts
+# whether its rationale is policy-grounded. Requires a real GEMINI_API_KEY (for
+# the assess Agent) and a judge — set here per-eval via judge_model.
+workflow: onboard_applicant
+input:
+  full_name: "Helen Judge"
+  dob: "1991-06-06"
+  national_id: "HE-8008"
+  email: "helen@example.com"
+  country: us
+stubs:
+  - step_id: persist_applicant
+    mock_output: { applicant_record: { id: "00000000-0000-0000-0000-000000000008", status: received } }
+  - step_id: sanctions_screen
+    mock_output: { screening_result: { status: clean }, screening_echo: us }
+  - step_id: policy_context
+    mock_output:
+      policies:
+        - { content: "Policy 01 — Sanctions & Watchlist Screening: a clean screen is required before onboarding.", score: 0.92 }
+        - { content: "Policy 02 — Jurisdiction Risk: the United States is a Standard jurisdiction eligible for baseline due diligence.", score: 0.88 }
+        - { content: "Policy 03 — Risk Banding: low band may be auto-approved when screening is clean and the jurisdiction is Standard.", score: 0.83 }
+  - step_id: investigate
+    mock_output:
+      investigation: { outcome: clear, summary: "Watchlist clean; screening clean.", watchlist_hit: false }
+      _signal: clear
+  - step_id: persist_assessment
+    mock_output: { assessment_record: { id: "00000000-0000-0000-0000-0000000000h2" } }
+  - step_id: update_applicant
+    mock_output: { applicant_updated: { id: "00000000-0000-0000-0000-000000000008", status: approved } }
+evaluations:
+  - step_id: assess
+    instruction: >-
+      The output context contains an `assessment` object with a `rationale`
+      string. Pass only if the rationale is grounded in the retrieved compliance
+      policies — i.e. it references at least one policy topic (sanctions/
+      watchlist screening, jurisdiction risk, or risk banding) rather than being
+      generic. Also require `assessment.band` to be one of low/medium/high.
+    judge_model: gemini/gemini-3.1-flash-lite

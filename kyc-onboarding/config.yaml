@@ -1,0 +1,19 @@
+# tuvl project configuration.
+# Present so `tuvl validate` uses an explicit directory layout (silences the
+# "No config.yaml" / "No 'dirs' section" warnings). These are the defaults;
+# `dirs` is read from the document root (not under `spec`).
+kind: ProjectConfig
+version: v1
+metadata:
+  name: kyc-onboarding
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  nodes: nodes
+  federation: federation
+# EmbeddingRegistry / CollectionRegistry live in vectors/ and are discovered at
+# runtime by `kind:` (load_all_configs walks the whole tree). They are kept out
+# of models/ so `tuvl validate` (which only expects ModelDefinition in models/)
+# stays warning-free.

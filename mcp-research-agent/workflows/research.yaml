@@ -1,0 +1,178 @@
+kind: Workflow
+version: v1
+enabled: true
+metadata:
+  name: research
+  schema_version: v1
+  description: >-
+    Bounded AutonomousAgent that drives an MCP fetch tool across the web,
+    summarizes sources as it goes, and returns a cited research brief — capped
+    by iterations and a token budget.
+  group: research
+spec:
+  context:
+    models:
+      - name: ResearchBrief
+  trigger:
+    path: /api/research
+    method: POST
+    input_schema:
+      - name: question
+        type: string
+        required: true
+        description: The research question to investigate.
+
+  steps:
+    # 1. The bounded ReAct loop. It chooses among the two declared tools below,
+    #    observes their results, and stops once it can answer.
+    - id: investigate
+      kind: AutonomousAgent
+      agent:
+        model: default
+        steering: |
+          Answer the research question using fetched web sources only.
+          Fetch a source, summarize it with the summarize tool, and stop
+          fetching once you can answer with at least two independent sources.
+        steering_files: [agents/research__investigate/steering/method.md]
+        skills:         [agents/research__investigate/skills/citation-style.md]
+        max_iterations: 12
+        token_budget: 60000
+        tools:
+          - ref: fetch_page
+            parameters:
+              type: object
+              properties:
+                url: { type: string }
+              required: [url]
+          - ref: summarize_source
+            parameters:
+              type: object
+              properties:
+                url: { type: string }
+                content: { type: string }
+              required: [url, content]
+        outcome:
+          enum: [answered, insufficient_sources]
+          output_key: research
+      routes:
+        answered:             compose
+        insufficient_sources: persist_partial
+        max_iterations:       persist_partial
+        budget_exceeded:      persist_partial
+        error:                respond_failed
+        aborted:              respond_failed
+
+    # 2. Off-spine tool. The description is what the model chooses the tool by —
+    #    it is REQUIRED and lives on this step. No routes: a tool's routes are
+    #    ignored; tool errors return to the agent as observations.
+    - id: fetch_page
+      kind: MCP
+      description: Fetch a web page and return its readable text content.
+      mcp:
+        transport: stdio
+        command: uvx
+        args: [mcp-server-fetch]
+        tool: fetch
+        arguments:
+          url: "{{ url }}"
+        timeout: 30
+      response:
+        output_key: fetched
+
+    # 3. Off-spine tool. Pure-Python normalize + structured takeaway — no nested
+    #    LLM call, so the loop's cost stays inside the agent's own budget.
+    - id: summarize_source
+      kind: Functional
+      runner: summarize_source
+      description: Summarize one fetched source into a two-sentence takeaway with its URL.
+
+    # 4. Compose the final cited brief from the agent's research notes.
+    - id: compose
+      kind: Agent
+      agent:
+        model: default
+        system: |
+          You compose a concise, cited research brief from an agent's
+          investigation notes. Ground every claim in the fetched sources.
+        prompt: |
+          Write a research brief that answers the question using only the
+          research notes gathered by the agent, and list the sources you relied
+          on. Return JSON exactly as:
+          {"brief": "<a few grounded paragraphs>",
+           "sources": [{"url": "...", "title": "...", "takeaway": "..."}]}
+        output:
+          format: json
+        retry:
+          attempts: 2
+          on: [parse_error, timeout]
+        timeout: 45
+      routes:
+        default:     persist
+        error:       respond_partial
+        timeout:     respond_partial
+        parse_error: respond_partial
+
+    # 5a. Persist the full answer (happy path).
+    - id: persist
+      kind: ModelOp
+      model: ResearchBrief
+      operation: create
+      payload:
+        question: "{{ question }}"
+        brief:    "{{ brief }}"
+        sources:  "{{ sources }}"
+        outcome:  answered
+      output: saved
+      routes:
+        default: respond
+        error:   respond_failed
+
+    # 5b. Persist the capped/partial attempt (reserved-exit + insufficient path).
+    - id: persist_partial
+      kind: ModelOp
+      model: ResearchBrief
+      operation: create
+      payload:
+        question: "{{ question }}"
+        brief:    "Research stopped before a complete answer was reached."
+        outcome:  capped
+      output: saved_partial
+      routes:
+        default: respond_partial
+        error:   respond_partial
+
+    # 6a. Success response.
+    - id: respond
+      kind: Response
+      mapping:
+        id:       saved.id
+        question: saved.question
+        outcome:  saved.outcome
+        brief:    saved.brief
+        sources:  saved.sources
+      routes:
+        default: END
+
+    # 6b. Partial response — say what was gathered and why it stopped. The stop
+    #     reason is read from the terminal signal the engine recorded
+    #     (max_iterations vs budget_exceeded), not the model's opinion.
+    - id: respond_partial
+      kind: Response
+      mapping:
+        question:       question
+        outcome:        saved_partial.outcome
+        brief:          saved_partial.brief
+        stopped_reason: _last_error_type
+        detail:         _last_error
+      routes:
+        default: END
+
+    # 6c. Failure response — declared error / aborted exits land here (never 500).
+    - id: respond_failed
+      kind: Response
+      mapping:
+        question:   question
+        error:      _last_error
+        error_type: _last_error_type
+      routes:
+        default: END

@@ -1,0 +1,9 @@
+kind: CollectionRegistry
+version: v1
+metadata:
+  name: default
+spec:
+  collections:
+    - name: compliance_policies
+      description: Ingested compliance / sanctions policy documents used to ground the risk assessment.
+      embedding: text-embedding-3-small   # 1536 dims — matches the collection vector dimension

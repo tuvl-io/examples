@@ -1,0 +1,19 @@
+kind: DataSource
+version: v1
+enabled: true
+metadata:
+  name: main_postgres
+  primary: true
+  description: Primary PostgreSQL database (tuvl_invoices)
+spec:
+  type: postgresql
+  driver: asyncpg
+  connection:
+    host: ${POSTGRES_HOST:localhost}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DB:tuvl_invoices}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  pooling:
+    min_size: 5
+    max_size: 20

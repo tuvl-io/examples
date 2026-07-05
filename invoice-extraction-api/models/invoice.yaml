@@ -1,0 +1,23 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Invoice
+  schema_version: v1
+  description: A validated, persisted structured invoice record.
+spec:
+  tablename: invoices
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: vendor_name, type: string, required: true }
+    - { name: invoice_number, type: string, required: true, unique: true, index: true }
+    - { name: invoice_date, type: date }
+    - { name: currency, type: enum, enum_values: [USD, EUR, GBP, INR], required: true }
+    - { name: subtotal, type: numeric, required: true }
+    - { name: tax, type: numeric, required: true }
+    - { name: total, type: numeric, required: true }
+    - name: vendor_tax_id
+      type: string
+      secure: true          # masked in telemetry snapshots — verify in acceptance
+    - { name: status, type: enum, enum_values: [extracted, rejected], required: true }
+    - { name: raw_text, type: text }
+    - { name: created_at, type: timestamptz, input: false }

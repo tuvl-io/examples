@@ -1,0 +1,38 @@
+kind: ModelDefinition
+version: v1
+enabled: true
+metadata:
+  name: ResearchBrief
+  schema_version: v1
+  description: A cited research brief produced by the bounded MCP research agent.
+spec:
+  tablename: research_briefs
+  datasource: main_postgres
+  fields:
+    - name: id
+      type: uuid
+      primary_key: true
+      default: uuid4
+      input: false
+      description: Server-generated primary key.
+    - name: question
+      type: text
+      required: true
+      description: The research question the agent was asked.
+    - name: brief
+      type: text
+      description: The composed, cited research brief (may be partial).
+    - name: sources
+      type: jsonb
+      description: List of cited sources as [{url, title, takeaway}].
+    - name: outcome
+      type: enum
+      enum_values: [answered, insufficient_sources, capped]
+      description: How the run concluded — answered, insufficient_sources, or capped by a bound.
+    - name: tokens_used
+      type: integer
+      description: Cumulative LLM tokens the agent loop consumed, when known.
+    - name: created_at
+      type: timestamptz
+      input: false
+      description: Server-generated creation timestamp.
