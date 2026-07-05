@@ -1,8 +1,8 @@
 # Invoice Extraction API — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Easy
-> **Engine:** tuvl >= 2026.2.6 · **Ground truth for all YAML:** `TUVL_AGENTIC_MANUAL.md` in the engine repo (golden rules are hard constraints)
-> **Requirements:** see repo-root `REQUIREMENTS.md` (Postgres `tuvl_invoices`, `OPENAI_API_KEY`; no pgvector, no Redis)
+> **Engine:** tuvl >= 2026.2.6.1 · **Ground truth for all YAML:** `tuvl-agentic-manual.md` in the engine repo (golden rules are hard constraints)
+> **Requirements:** see repo-root `REQUIREMENTS.md` (Postgres `tuvl_invoices`, `GEMINI_API_KEY`; no pgvector, no Redis)
 
 Paste raw invoice text at `POST /api/invoices/extract` and get back a validated, persisted, structured invoice record. One LLM step, deterministic verification, typed persistence — the smallest example that proves "declare a model and a workflow in YAML, get a production API."
 
@@ -22,7 +22,7 @@ Scaffold with `tuvl init invoice-extraction-api`, then produce:
 invoice-extraction-api/
 ├── README.md                # how to run + demo curl
 ├── config.yaml              # from scaffold
-├── .env.example             # DATABASE_URL, OPENAI_API_KEY
+├── .env.example             # DATABASE_URL, GEMINI_API_KEY
 ├── models/invoice.yaml
 ├── datasources/postgres.yaml
 ├── llms/default.yaml
@@ -57,7 +57,7 @@ spec:
 
 Datasource: single Postgres `DataSource` with `metadata.primary: true`, database `tuvl_invoices`, connection via `${DATABASE_URL}` (Golden Rule 9 — never inline credentials).
 
-LLM preset `llms/default.yaml`: `kind: AgentModel`, name `default`, model `openai/gpt-4o-mini`, `api_key: ${OPENAI_API_KEY}`.
+LLM preset `llms/default.yaml`: `kind: AgentModel`, name `default`, model `gemini/gemini-3.1-flash-lite`, `api_key: ${GEMINI_API_KEY}`.
 
 ## Workflow — `workflows/extract_invoice.yaml`
 

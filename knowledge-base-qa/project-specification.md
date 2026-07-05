@@ -1,8 +1,8 @@
 # Knowledge-Base Q&A — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Easy–Medium
-> **Engine:** tuvl >= 2026.2.6 · **Ground truth for all YAML:** `TUVL_AGENTIC_MANUAL.md` (esp. §4.2 built-in runners, Golden Rule 16)
-> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kb` **with pgvector**, `OPENAI_API_KEY` for chat + embeddings)
+> **Engine:** tuvl >= 2026.2.6.1 · **Ground truth for all YAML:** `tuvl-agentic-manual.md` (esp. §4.2 built-in runners, Golden Rule 16)
+> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kb` **with pgvector**, `GEMINI_API_KEY` for chat + embeddings)
 
 Ingest markdown documents, then ask questions and get answers grounded in — and citing — the ingested content. The entire RAG pipeline runs on tuvl's built-in rails: **zero custom Python**.
 
@@ -20,11 +20,11 @@ Ingest markdown documents, then ask questions and get answers grounded in — an
 knowledge-base-qa/
 ├── README.md
 ├── config.yaml
-├── .env.example              # DATABASE_URL, OPENAI_API_KEY
+├── .env.example              # DATABASE_URL, GEMINI_API_KEY
 ├── models/embeddings.yaml    # EmbeddingRegistry
 ├── models/collections.yaml   # CollectionRegistry
 ├── datasources/postgres.yaml # primary: true, pgvector
-├── llms/default.yaml         # openai/gpt-4o-mini
+├── llms/default.yaml         # gemini/gemini-3.1-flash-lite
 ├── workflows/ingest_doc.yaml
 ├── workflows/ask_kb.yaml
 └── client/ask.ts             # SDK demo script (@tuvl/client)
@@ -32,7 +32,7 @@ knowledge-base-qa/
 
 ## Registries
 
-- `models/embeddings.yaml` — `kind: EmbeddingRegistry`: one model, name `default`, `openai/text-embedding-3-small`, `${OPENAI_API_KEY}`.
+- `models/embeddings.yaml` — `kind: EmbeddingRegistry`: one model, name `default`, `gemini/gemini-embedding-001` (Matryoshka-truncated to 1536 dims), `${GEMINI_API_KEY}`.
 - `models/collections.yaml` — `kind: CollectionRegistry`: collection `kb_docs`, embedding `default`, dimension **1536** (must match the model; per-collection dim is validated at load).
 
 No `ModelDefinition` is needed — the vector store rows live in the engine's system table. (Optionally add a `Document` model for bookkeeping; not required.)
@@ -78,7 +78,7 @@ A ~40-line `@tuvl/client` script (documented in the README): `client.execute("in
 3. Ask something not in the docs → the "not in the knowledge base" shape, `confident: false` — no hallucinated citation.
 4. The `metadata_filter` variant restricts hits to the tagged doc.
 5. `client/ask.ts` runs end-to-end against `tuvl dev` with `pnpm tsx client/ask.ts`.
-6. `tuvl test` suite: stubbed-LLM test for `ask_kb` routing + a judge-evaluated case (grounded-answer criterion) runnable when `TUVL_TEST_JUDGE` is set.
+6. `tuvl test` suite: a stubbed-LLM routing case + a grounded-answer case for `ask_kb`, both with fully stubbed retrieval + answer steps (no pgvector). Each evaluation pins `judge_model: gemini/gemini-3.1-flash-lite`, so `tuvl test` runs green (`2/2`) on the `GEMINI_API_KEY` already in `.env`. (A judge evaluation with no resolvable model — no `judge_model` and no `TUVL_TEST_JUDGE` — is reported as skipped→FAIL, so there is no keyless-green mode; `TUVL_TEST_JUDGE` can override the judge without editing the YAML.)
 
 ## Out of scope
 

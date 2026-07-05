@@ -8,7 +8,7 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> ⚠️ **Beta.** These examples track tuvl **2026.2.6 (beta)** — great for learning
+> ⚠️ **Beta.** These examples track tuvl **2026.2.6.1 (beta)** — great for learning
 > and evaluation, but not yet recommended for production. APIs and schemas may
 > change before the stable release. This repo is updated regularly as new samples
 > land.

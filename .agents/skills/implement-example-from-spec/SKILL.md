@@ -6,8 +6,8 @@ first — it carries the hard constraints; this skill is the procedure.
 
 ## 0. Preflight
 
-- `tuvl --version` → must be `>= 2026.2.6`, published on PyPI:
-  `uv tool install "tuvl[standard]>=2026.2.6"` (add `--reinstall` to upgrade an
+- `tuvl --version` → must be `>= 2026.2.6.1`, published on PyPI:
+  `uv tool install "tuvl[standard]>=2026.2.6.1"` (add `--reinstall` to upgrade an
   older install).
 - Read the project's row in `REQUIREMENTS.md`; create the database (and
   `CREATE EXTENSION vector` where required) before booting anything.
@@ -21,12 +21,14 @@ into the current directory and leaves existing files (the spec) untouched:
 
 ```bash
 cd <project-dir>
-printf 'y\nlocalhost\n5432\n<db-from-REQUIREMENTS>\npostgres\npostgres\ny\nopenai\n\ngpt-4o-mini\n' | tuvl init .
+printf 'y\nlocalhost\n5432\n<db-from-REQUIREMENTS>\npostgres\npostgres\nn\n' | tuvl init .
 ```
 
-Prompt order (accept with the values above, adjust host/creds to your env):
-postgres? → host → port → database → user → password → llm? → provider →
-api key (empty = keep `${OPENAI_API_KEY}` placeholder) → model.
+Prompt order (adjust host/creds to your env): postgres? → host → port →
+database → user → password → **llm? — answer `n`**: the specs use Gemini, which
+init has no interactive preset for. Write `llms/default.yaml` from the spec
+(`gemini/gemini-3.1-flash-lite`, `api_key: ${GEMINI_API_KEY}`) and put the key
+in `.env` yourself.
 
 Headless alternative: answer `n` to both confirms (`printf 'n\nn\n'`) and write
 `datasources/postgres.yaml`, `llms/default.yaml`, and `.env` yourself from the

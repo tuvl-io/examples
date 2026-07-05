@@ -1,8 +1,8 @@
 # KYC Onboarding — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Complex
-> **Engine:** tuvl >= 2026.2.6 · **Ground truth:** `TUVL_AGENTIC_MANUAL.md` (§4.13–4.14, §6.8, Golden Rules 25/26) + engine `docs/supervisor.md`, `docs/human-in-the-loop.md`, `docs/auth.md`
-> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kyc` **with pgvector**, `OPENAI_API_KEY`, judge preset; screening API stubbed)
+> **Engine:** tuvl >= 2026.2.6.1 · **Ground truth:** `tuvl-agentic-manual.md` (§4.13–4.14, §6.8, Golden Rules 25/26) + engine `docs/supervisor.md`, `docs/human-in-the-loop.md`, `docs/auth.md`
+> **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kyc` **with pgvector**, `GEMINI_API_KEY`, judge preset; screening API stubbed)
 
 Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, policy-grounded autonomous investigation under a **fail-closed supervisor**, risk routing, **group-gated human approval**, and versioned risk schemas. This is the example that answers the "can I trust it in a regulated flow?" question — and it deliberately exercises every 2026.2.6-hardened surface.
 
@@ -22,13 +22,13 @@ Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, pol
 kyc-onboarding/
 ├── README.md                          # run guide, IAM bootstrap, the v1→v2 activation drill
 ├── config.yaml
-├── .env.example                       # DATABASE_URL, OPENAI_API_KEY, SCREENING_API_URL
+├── .env.example                       # DATABASE_URL, GEMINI_API_KEY, SCREENING_API_URL
 ├── models/applicant.yaml
 ├── models/risk_assessment.yaml        # v1 (enabled) + v2 (enabled: false), multi-doc file
 ├── models/embeddings.yaml
 ├── models/collections.yaml            # compliance_policies (1536)
 ├── datasources/postgres.yaml
-├── llms/default.yaml                  # openai/gpt-4o-mini
+├── llms/default.yaml                  # gemini/gemini-3.1-flash-lite
 ├── llms/judge.yaml                    # supervisor judge + tuvl test judge
 ├── workflows/ingest_policy.yaml
 ├── workflows/onboard_applicant.yaml

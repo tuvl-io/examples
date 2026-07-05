@@ -10,7 +10,7 @@ same directory**.
 1. **The specification is the contract.** Implement exactly what it says —
    models, step ids, routes, acceptance criteria. Do not add features, rename
    steps, or "improve" the design. Ambiguity → the engine manual decides.
-2. **The engine manual is the authority on YAML.** `docs/TUVL_AGENTIC_MANUAL.md`
+2. **The engine manual is the authority on YAML.** `docs/tuvl-agentic-manual.md`
    in the [tuvl engine repo](https://github.com/tuvl-io/tuvl) is ground truth;
    its Golden Rules are hard constraints. The engine's `docs/` deep-dives
    (`autonomous-agent.md`, `supervisor.md`, `human-in-the-loop.md`,
@@ -31,14 +31,17 @@ Follow the skill at
 — short version:
 
 ```
-# engine 2026.2.6 is published on PyPI — install/upgrade it first:
-uv tool install "tuvl[standard]>=2026.2.6"
-tuvl --version                   # must print v2026.2.6 or later
+# engine 2026.2.6.1 is published on PyPI — install/upgrade it first:
+uv tool install "tuvl[standard]>=2026.2.6.1"
+tuvl --version                   # must print v2026.2.6.1 or later
 
 cd <project-dir>                 # the dir holding project-specification.md
-# scaffold IN PLACE (init refuses existing dirs, but "." is allowed):
-printf 'y\nlocalhost\n5432\n<db-name>\npostgres\npostgres\ny\nopenai\n\ngpt-4o-mini\n' | tuvl init .
-# then: write models/ datasources/ llms/ workflows/ nodes/ agents/ per the spec
+# scaffold IN PLACE (init refuses existing dirs, but "." is allowed).
+# Answer y + creds for Postgres; answer n at the LLM prompt — the specs use
+# Gemini, which init has no preset for, so you write llms/default.yaml yourself:
+printf 'y\nlocalhost\n5432\n<db-name>\npostgres\npostgres\nn\n' | tuvl init .
+# then: write llms/ models/ datasources/ workflows/ nodes/ agents/ per the spec
+# (llms/default.yaml = gemini/gemini-3.1-flash-lite, api_key: ${GEMINI_API_KEY})
 tuvl validate                    # loop until clean
 tuvl dev                         # smoke the endpoints with the spec's curl demos
 tuvl test                        # the spec's test suite
