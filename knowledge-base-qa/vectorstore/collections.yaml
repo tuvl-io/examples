@@ -1,0 +1,12 @@
+kind: CollectionRegistry
+metadata:
+  name: default
+  description: pgvector-backed collections for the knowledge base.
+enabled: true
+spec:
+  collections:
+    # Both workflows (ingest_doc + ask_kb) share this one collection. Its vector
+    # dimension is inherited from the referenced embedding (`default` = 1536).
+    - name: kb_docs
+      description: Ingested markdown knowledge-base documents.
+      embedding: default

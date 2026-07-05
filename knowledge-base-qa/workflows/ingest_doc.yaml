@@ -1,0 +1,43 @@
+kind: Workflow
+metadata:
+  name: ingest_doc
+  schema_version: v1
+  description: Embed a markdown document and persist it to the kb_docs vector store.
+  group: knowledge-base
+enabled: true
+spec:
+  # No ModelDefinition is touched — the vector rows live in the engine's system
+  # table (tuvl_system_vector_store), so spec.context has no models to allow-list.
+  trigger:
+    path: /api/kb/ingest
+    method: POST
+    # Untyped body: { "title": "...", "content": "<markdown>", "tags": ["..."] }.
+    # Left untyped on purpose — inline trigger schemas coerce to string/int/float/
+    # bool only, which would drop the `tags` array before it reaches DataIngest.
+  steps:
+    - id: ingest
+      kind: Functional
+      runner: DataIngest
+      collection: kb_docs
+      scope: global
+      document: "{{content}}"
+      metadata:
+        title: "{{title}}"
+        tags: "{{tags}}"
+      routes:
+        error: respond_failed
+        default: respond
+
+    - id: respond
+      kind: Response
+      mapping:
+        title: title
+      routes:
+        default: END
+
+    - id: respond_failed
+      kind: Response
+      mapping:
+        error: _last_error
+      routes:
+        default: END

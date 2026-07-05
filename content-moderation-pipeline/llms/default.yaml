@@ -1,0 +1,12 @@
+kind: AgentModel
+version: v1
+enabled: true
+metadata:
+  name: default
+  description: Default chat model for the content classifier
+spec:
+  provider: gemini
+  model: gemini/gemini-3.1-flash-lite
+  api_key: ${GEMINI_API_KEY}
+  temperature: 0.0
+  timeout: 30

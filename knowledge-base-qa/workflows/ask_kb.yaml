@@ -1,0 +1,85 @@
+kind: Workflow
+metadata:
+  name: ask_kb
+  schema_version: v1
+  description: Retrieve grounding passages from kb_docs and answer, citing sources.
+  group: knowledge-base
+enabled: true
+spec:
+  # RAG only — no ModelDefinition is accessed, so spec.context has no models.
+  # The `default` chat model is an AgentModel preset (llms/default.yaml), not a
+  # ModelDefinition, so it is not enumerated here.
+  trigger:
+    path: /api/kb/ask
+    method: POST
+    # Untyped body: { "question": "...", "tag": "optional-filter" }.
+  steps:
+    # 1) Hybrid (RRF) retrieval over the shared collection. Writes a
+    #    list[{content, metadata, score}] to context under `kb_hits`.
+    - id: search
+      kind: Functional
+      runner: DataSearch
+      collection: kb_docs
+      query: "{{question}}"
+      top_k: 5
+      output_key: kb_hits
+      # Metadata filter (extension point — see README "Filtered retrieval").
+      # Enabling this unconditionally would filter every request, so it is left
+      # off by default; uncomment to restrict hits to a single tag:
+      # metadata_filter:
+      #   tags: "{{tag}}"
+      routes:
+        error: respond_failed
+        default: answer
+
+    # 2) Golden Rule 16: DataSearch -> Agent with context_injection. The engine
+    #    injects the retrieved passages; the prompt must NOT concatenate them.
+    - id: answer
+      kind: Agent
+      agent:
+        model: default
+        system: |
+          You answer questions strictly from the provided knowledge-base sources.
+          Rules:
+          - Use ONLY the injected sources. Never rely on outside knowledge.
+          - Cite the `title` (from each source's metadata) of every source you use.
+          - If the sources do not contain the answer, set answer to exactly
+            "not in the knowledge base", return an empty sources list, and set
+            confident to false. Never invent a citation.
+        prompt: |
+          Answer the user's question using the injected knowledge-base sources.
+          Question: {{question}}
+
+          Respond with a JSON object of exactly this shape:
+          {"answer": "<string>", "sources": ["<title>", ...], "confident": <true|false>}
+        context_injection:
+          - kb_hits
+        output:
+          format: json
+        retry:
+          attempts: 2
+          on: [parse_error, timeout]
+          backoff: 2
+        timeout: 30
+      routes:
+        error: respond_failed
+        timeout: respond_failed
+        parse_error: respond_failed
+        default: respond
+
+    # 3) Project the merged answer fields into the HTTP body.
+    - id: respond
+      kind: Response
+      mapping:
+        answer: answer
+        sources: sources
+        confident: confident
+      routes:
+        default: END
+
+    - id: respond_failed
+      kind: Response
+      mapping:
+        error: _last_error
+      routes:
+        default: END

@@ -1,0 +1,27 @@
+# Judge-evaluated grounded-answer case — runs on GEMINI_API_KEY.
+#
+# Only retrieval is stubbed (so no pgvector is needed); the real `answer` Agent
+# runs against the injected hits. The judge then checks that the answer is
+# grounded in the provided source and cites it — the core RAG guarantee.
+# The evaluation pins its own judge_model so `tuvl test` is green without needing
+# a TUVL_TEST_JUDGE override (which, if set, would still take priority per-run).
+workflow: ask_kb
+
+input:
+  question: "What is the daily meal allowance while travelling?"
+
+stubs:
+  - step_id: search
+    mock_output:
+      kb_hits:
+        - content: "The daily meal allowance while travelling is $75 per day. Hotels are capped at $250 per night."
+          metadata: { title: "Travel & Expense Policy", tags: ["finance", "policy"] }
+          score: 0.93
+
+evaluations:
+  - step_id: answer
+    judge_model: gemini/gemini-3.1-flash-lite
+    instruction: >
+      The answer must be grounded ONLY in the provided source: it must state that
+      the daily meal allowance is $75 per day and cite "Travel & Expense Policy"
+      in its sources. It must not invent figures that are not in the source.

@@ -1,0 +1,279 @@
+kind: Workflow
+version: v1
+metadata:
+  name: onboard_applicant
+  schema_version: v1
+  description: >-
+    Compliance-grade KYC onboarding: PII-safe intake, sanctions screening,
+    policy-grounded autonomous investigation under a fail-closed supervisor,
+    risk assessment, group-gated human approval, and versioned persistence.
+  group: kyc
+  required_scope: kyc:submit
+enabled: true
+spec:
+  context:
+    models:
+      - { name: Applicant }
+      - { name: RiskAssessment, version: v1 }   # the pin under test in the v1 -> v2 drill
+
+  trigger:
+    path: /api/kyc/apply
+    method: POST
+    input_schema: Applicant.create
+    # response_schema omitted — the Response steps do custom, PII-free mapping.
+
+  # ── Supervisor: a SIBLING of steps:, not a step. Fail-closed. ──────────────
+  supervisor:
+    watches: [agents]
+    rules:
+      - { when: iteration_reached, gte: 5, then: abort }
+      - { when: tool_repeated, count: 3, then: pause }
+    model: judge
+    criteria_file: agents/onboard_applicant__supervisor/steering/criteria.md
+    every_n_iterations: 2
+    on_violation: pause
+    on_judge_error: abort        # fail-closed: a dead judge stops the run, silence never passes
+
+  steps:
+    # 1. Persist the applicant (status: received).
+    - id: persist_applicant
+      kind: ModelOp
+      model: Applicant
+      operation: create
+      payload:
+        full_name: "{{ full_name }}"
+        dob: "{{ dob }}"
+        national_id: "{{ national_id }}"
+        email: "{{ email }}"
+        country: "{{ country }}"
+        status: received
+      output: applicant_record
+      routes:
+        default: sanctions_screen
+        error: respond_failed
+
+    # 2. Sanctions screening (stubbed APICall — echoes back).
+    - id: sanctions_screen
+      kind: APICall
+      description: >-
+        Sanctions / watchlist screening of the applicant by name, dob and
+        country against the external screening provider (stubbed).
+      http:
+        url: https://postman-echo.com/post   # stub screening endpoint (echoes body under json.*); APICall url is {{context}}-templated only, not env-substituted
+        method: POST
+        body: '{"full_name": "{{ full_name }}", "dob": "{{ dob }}", "country": "{{ country }}"}'
+        timeout: 30
+      response:
+        output_key: screening_result
+        extract:
+          - path: json.country
+            as: screening_echo
+      routes:
+        default: policy_context
+        error: hitl_review          # screening outage -> a human decides; never auto-clear
+
+    # 3. Retrieve grounding policies (RAG), query from country + screening result.
+    - id: policy_context
+      kind: Functional
+      runner: DataSearch
+      collection: compliance_policies
+      scope: global
+      query: "Sanctions and KYC onboarding policy for country {{ country }} (screening: {{ screening_echo }})"
+      top_k: 5
+      output_key: policies
+      routes:
+        default: investigate
+        error: hitl_review
+
+    # 4. Autonomous, policy-grounded investigation (bounded ReAct tool-loop).
+    - id: investigate
+      kind: AutonomousAgent
+      agent:
+        model: default
+        steering: |
+          You are a KYC compliance investigator. Determine whether the applicant
+          under review can be safely fast-tracked. You MUST perform at least one
+          watchlist check before concluding. Only conclude `clear` when the
+          watchlist check is clean AND nothing in the screening result or the
+          retrieved policies raises a concern. When anything is uncertain or a
+          policy flag applies, prefer `refer_human` or `elevated`.
+        steering_files:
+          - agents/onboard_applicant__investigate/steering/investigation.md
+        skills:
+          - agents/onboard_applicant__investigate/skills/red-flags.md
+        max_iterations: 6
+        token_budget: 50000
+        tools:
+          - ref: check_watchlist
+            parameters:
+              type: object
+              properties:
+                name: { type: string, description: "The applicant's full name to screen." }
+              required: [name]
+          - ref: fetch_registry
+            parameters:
+              type: object
+              properties:
+                query: { type: string, description: "Company / registry lookup query." }
+              required: [query]
+        outcome:
+          enum: [clear, elevated, refer_human]
+          output_key: investigation
+      # All reserved exits mapped (Golden Rule 26 — the supervisor CAN abort).
+      routes:
+        clear: assess
+        elevated: hitl_review
+        refer_human: hitl_review
+        max_iterations: hitl_review
+        budget_exceeded: hitl_review
+        aborted: hitl_review
+        error: respond_failed
+
+    # 5. Risk assessment grounded in the investigation + policies.
+    - id: assess
+      kind: Agent
+      agent:
+        model: default
+        system: |
+          You are a KYC risk analyst. Produce a risk assessment for the applicant
+          using the investigation outcome and the retrieved compliance policies.
+          Ground the rationale in the policies and cite at least one of them.
+        prompt: |
+          Return ONLY a JSON object of exactly this shape (no markdown fences):
+          {"assessment": {"score": <integer 0-100>, "band": "low" | "medium" | "high", "rationale": "<2-3 sentences citing at least one policy>"}}
+        context_injection: [investigation, policies]
+        output:
+          format: json
+        timeout: 30
+      routes:
+        default: route_band
+        error: hitl_review
+        parse_error: hitl_review
+        timeout: hitl_review
+
+    # 6. Deterministic band routing (no model logic here).
+    - id: route_band
+      kind: Router
+      match:
+        field: assessment.band
+      routes:
+        low: finalize_auto
+        medium: hitl_review
+        high: hitl_review
+        default: hitl_review        # conservative: any unmapped band -> human
+
+    # 7. Group-gated human review (no self-approval).
+    - id: hitl_review
+      kind: HumanInTheLoop
+      ui:
+        title: "KYC compliance review"
+        instruction: "Review and decide onboarding for applicant {{ applicant_record.id }}."
+        display_context: [investigation, assessment, policies]   # PII fields stay off the wire
+      human_feedback:
+        - name: decision
+          type: enum
+          options: [approve, reject]
+          required: true
+          label: "Decision"
+        - name: band
+          type: enum
+          options: [low, medium, high]
+          required: true
+          label: "Risk band"
+        - name: note
+          type: text
+          label: "Reviewer note"
+      output_key: compliance_decision
+      auth:
+        required_group: compliance
+      routes:
+        default: apply_decision
+
+    # 8. Normalize the decision — IMMEDIATELY after hitl_review (resume lands here).
+    - id: apply_decision
+      kind: Functional
+      runner: apply_decision
+      routes:
+        approve: persist_assessment
+        reject: persist_assessment
+        error: respond_failed
+
+    # 9. Auto branch (low band) — same runner, merges into the finalize path.
+    - id: finalize_auto
+      kind: Functional
+      runner: apply_decision
+      routes:
+        approve: persist_assessment
+        reject: persist_assessment
+        error: respond_failed
+
+    # 10. Persist the risk assessment (v1 pin).
+    - id: persist_assessment
+      kind: ModelOp
+      model: RiskAssessment
+      operation: create
+      payload:
+        applicant_id: "{{ applicant_id }}"
+        score: "{{ assessment.score }}"
+        band: "{{ decision_band }}"
+        rationale: "{{ assessment.rationale }}"
+        decided_by: "{{ decided_by }}"
+      output: assessment_record
+      routes:
+        default: update_applicant
+        error: respond_failed
+
+    # 10b. Update the applicant status (create + update = two ModelOps).
+    - id: update_applicant
+      kind: ModelOp
+      model: Applicant
+      operation: update
+      record_id: "{{ applicant_id }}"    # flat key set by apply_decision — ModelOp record_id is not dot-path resolved
+      payload:
+        status: "{{ decision_status }}"
+      output: applicant_updated
+      routes:
+        default: respond
+        error: respond_failed
+
+    # 11. Response — mapping only, no PII in any response path.
+    - id: respond
+      kind: Response
+      mapping:
+        applicant_id: applicant_record.id
+        status: decision_status
+        band: decision_band
+      routes:
+        default: END
+
+    - id: respond_failed
+      kind: Response
+      mapping:
+        applicant_id: applicant_record.id
+        status: decision_status
+        band: decision_band
+      routes:
+        default: END
+
+    # ── Tool-only steps (invoked by the investigate agent; their routes are
+    #    ignored in tool mode, and the spine never falls through into them). ──
+    - id: check_watchlist
+      kind: Functional
+      runner: check_watchlist
+      description: >-
+        Check a person's name against the sanctions/PEP watchlist. Returns
+        whether the name matches a seeded watchlist entry. Call this at least
+        once before concluding.
+
+    - id: fetch_registry
+      kind: APICall
+      description: >-
+        Look up a company/entity in the external business registry (stubbed).
+        Use to corroborate the applicant's declared details.
+      http:
+        url: https://postman-echo.com/post   # stub screening endpoint (echoes body under json.*); APICall url is {{context}}-templated only, not env-substituted
+        method: POST
+        body: '{"query": "{{ query }}"}'
+        timeout: 30
+      response:
+        output_key: registry_result

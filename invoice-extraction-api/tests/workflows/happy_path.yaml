@@ -1,0 +1,53 @@
+# Happy path: a well-formed invoice whose totals balance is extracted,
+# verified (valid), persisted with status "extracted", and returned via the
+# redacted mapping response. The LLM `extract` step and the DB `persist` step
+# are stubbed so the test is deterministic and needs no GEMINI_API_KEY/Postgres
+# for the workflow itself (the evaluation still uses a judge model).
+workflow: extract_invoice
+
+input:
+  raw_text: |
+    ACME CORP
+    Invoice #INV-1001
+    Date: 2026-06-01
+    Subtotal: 100.00 USD
+    Tax: 8.50 USD
+    Total: 108.50 USD
+    Tax ID: US-99-1234567
+
+stubs:
+  - step_id: extract
+    mock_output:
+      extracted:
+        vendor_name: "Acme Corp"
+        invoice_number: "INV-1001"
+        invoice_date: "2026-06-01"
+        currency: "USD"
+        subtotal: 100.00
+        tax: 8.50
+        total: 108.50
+        vendor_tax_id: "US-99-1234567"
+  - step_id: persist
+    mock_output:
+      saved_invoice:
+        id: "11111111-1111-1111-1111-111111111111"
+        vendor_name: "Acme Corp"
+        invoice_number: "INV-1001"
+        currency: "USD"
+        total: 108.50
+        status: "extracted"
+
+evaluations:
+  - step_id: verify_totals
+    instruction: >
+      The verify_totals step must emit the signal "valid" because
+      subtotal (100.00) + tax (8.50) equals total (108.50), and the
+      verification snapshot must show ok = true with an empty reasons list.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond_ok
+    instruction: >
+      The response payload must have status "extracted" and expose only
+      id, vendor_name, invoice_number, currency, total, and status. It must
+      NOT contain the field vendor_tax_id (the secure field is redacted by
+      the mapping response).
+    judge_model: gemini/gemini-3.1-flash-lite

@@ -1,0 +1,37 @@
+# Supervisor/operator abort: the reserved `aborted` exit routes into hitl_review
+# (Golden Rule 26). Mirrors the runtime drill where the iteration_reached rule
+# aborts the agent. The human then decides.
+workflow: onboard_applicant
+input:
+  full_name: "Dan Aborted"
+  dob: "1992-02-02"
+  national_id: "DA-4004"
+  email: "dan@example.com"
+  country: gb
+stubs:
+  - step_id: persist_applicant
+    mock_output:
+      applicant_record: { id: "00000000-0000-0000-0000-000000000004", status: received }
+  - step_id: sanctions_screen
+    mock_output: { screening_result: { status: clean }, screening_echo: gb }
+  - step_id: policy_context
+    mock_output:
+      policies:
+        - { content: "Policy 01 — ambiguous screening must go to a human.", score: 0.7 }
+  - step_id: investigate
+    mock_output:
+      investigation: { outcome: null, summary: "Run aborted by supervisor." }
+      _signal: aborted
+  - step_id: hitl_review
+    mock_output:
+      compliance_decision: { decision: approve, band: medium, note: "Manually cleared after supervisor abort." }
+  - step_id: persist_assessment
+    mock_output: { assessment_record: { id: "00000000-0000-0000-0000-0000000000d2" } }
+  - step_id: update_applicant
+    mock_output: { applicant_updated: { id: "00000000-0000-0000-0000-000000000004", status: approved } }
+evaluations:
+  - step_id: apply_decision
+    instruction: >-
+      The agent was aborted and routed to human review, then the reviewer
+      approved. In the step context after apply_decision, decision_status must
+      equal "approved". Pass only if it holds.

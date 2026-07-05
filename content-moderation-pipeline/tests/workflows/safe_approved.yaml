@@ -1,0 +1,46 @@
+# Category: safe. The classifier rates the content safe; region is `us` so the
+# EU branch is skipped. route_category sends it straight to persist_approved with
+# no suspension and no webhook. The classify Agent and the two ModelOp persist
+# steps are stubbed so the test is deterministic and needs no LLM/Postgres for
+# the workflow itself (prepare_audit + the routers run for real).
+workflow: moderate_content
+
+input:
+  author_id: "u1"
+  region: "us"
+  content: "I love this community, thanks for all the help!"
+
+stubs:
+  - step_id: classify
+    mock_output:
+      classification:
+        category: "safe"
+        reason: "friendly, appreciative message"
+        confidence: 0.98
+  - step_id: persist_approved
+    mock_output:
+      saved_item:
+        id: "11111111-1111-1111-1111-111111111111"
+        author_id: "u1"
+        region: "us"
+        category: "safe"
+        status: "approved"
+  - step_id: persist_approved_action
+    mock_output:
+      saved_action:
+        id: "aaaaaaaa-1111-1111-1111-111111111111"
+        action: "auto_approved"
+        actor: "system"
+
+evaluations:
+  - step_id: prepare_audit
+    instruction: >
+      For safe content on the automated path, the step context must carry
+      item_category = "safe", mod_action = "auto_approved", and mod_actor =
+      "system". Pass only if all three hold.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond
+    instruction: >
+      The response payload must have status "approved", category "safe", and
+      action "auto_approved". There must be no suspension and no removal.
+    judge_model: gemini/gemini-3.1-flash-lite

@@ -1,0 +1,37 @@
+# Reserved exit: the AutonomousAgent hits its iteration cap before it can
+# answer. The scripted tool-loop forces the `max_iterations` terminal signal,
+# which routes investigate -> persist_partial -> respond_partial. This proves a
+# reserved exit lands on a declared response (never an unhandled 500) and that
+# the partial body reports the engine-recorded stop reason, not the model's
+# opinion. All spine steps are stubbed, so the test is deterministic.
+workflow: research
+
+input:
+  question: "Provide an exhaustive, fully-cited history of every distributed consensus algorithm ever published."
+
+stubs:
+  # Scripted tool-loop that never converges: engine records the max_iterations
+  # terminal signal, which routes to the partial branch.
+  - step_id: investigate
+    mock_output:
+      research:
+        answer: null
+        summary: "Iteration cap reached before two corroborating sources were found."
+      _signal: max_iterations
+  # Scripted partial persistence (ModelOp create -> capped record).
+  - step_id: persist_partial
+    mock_output:
+      saved_partial:
+        id: "22222222-2222-2222-2222-222222222222"
+        question: "Provide an exhaustive, fully-cited history of every distributed consensus algorithm ever published."
+        outcome: capped
+        brief: "Research stopped before a complete answer was reached."
+
+evaluations:
+  - step_id: respond_partial
+    instruction: >-
+      The response step context represents a capped run that exited via the
+      max_iterations reserved exit. Pass only if outcome equals "capped" and the
+      brief indicates the research stopped before completing. Fail if outcome is
+      "answered" or the body looks like a complete answer.
+    judge_model: gemini/gemini-3.1-flash-lite

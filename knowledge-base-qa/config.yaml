@@ -1,0 +1,17 @@
+kind: ProjectConfig
+metadata:
+  name: knowledge-base-qa
+  description: RAG knowledge-base Q&A on tuvl's built-in DataIngest/DataSearch rails.
+# tuvl auto-discovers every YAML by its `kind:` via a full project-tree walk, so
+# these directory hints are informational (they feed `Settings.dir_for(...)` and
+# `tuvl validate`'s per-kind scan). The EmbeddingRegistry/CollectionRegistry live
+# under vectorstore/ rather than models/ so that `tuvl validate`'s models scan —
+# which flags any non-ModelDefinition kind in the models dir — stays clean.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  nodes: nodes
+  embeddings: vectorstore
+  collections: vectorstore

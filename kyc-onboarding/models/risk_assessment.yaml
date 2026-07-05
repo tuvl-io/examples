@@ -1,0 +1,22 @@
+kind: ModelDefinition
+version: v1
+metadata:
+  name: RiskAssessment
+  schema_version: v1
+  description: Risk assessment result for an applicant (v1 — enabled).
+enabled: true
+spec:
+  tablename: risk_assessments
+  datasource: main_postgres
+  access:
+    read_scope: kyc:assess:read   # override default {model}:read to a KYC-scoped name
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: applicant_id, type: uuid, required: true, index: true }
+    - { name: score, type: numeric }
+    - name: band
+      type: enum
+      enum_values: [low, medium, high]
+    - { name: rationale, type: text }
+    - { name: decided_by, type: string }
+    - { name: created_at, type: timestamptz, input: false }

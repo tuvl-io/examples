@@ -1,0 +1,12 @@
+kind: ProjectConfig
+version: v1
+metadata:
+  name: content-moderation-pipeline
+  description: Content moderation pipeline — LLM classification, deterministic region/category routing, group-gated human review.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  nodes: nodes
+  federation: federation

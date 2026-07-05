@@ -1,0 +1,41 @@
+# Garbage path: unparseable input. A real LLM given random bytes returns a JSON
+# object with every field null (it has nothing to extract) — exactly what the
+# live `gemini/gemini-3.1-flash-lite` model does here. The deterministic
+# verify_totals node then sees no usable required fields and emits "incomplete",
+# which routes straight to respond_failed. The run ends cleanly with the
+# verification reasons surfaced — never a 500 and never a persisted row (a record
+# with null NOT-NULL columns would violate the schema).
+workflow: extract_invoice
+
+input:
+  raw_text: "###### not an invoice — random bytes ######"
+
+stubs:
+  - step_id: extract
+    mock_output:
+      extracted:
+        vendor_name: null
+        invoice_number: null
+        invoice_date: null
+        currency: null
+        subtotal: null
+        tax: null
+        total: null
+        vendor_tax_id: null
+
+evaluations:
+  - step_id: verify_totals
+    instruction: >
+      The verification object in the output must have ok = false (the extraction
+      is NOT valid) and its reasons list must name every missing required field:
+      vendor_name, invoice_number, currency, subtotal, tax, and total. Pass as
+      long as ok is false and those six missing-field reasons are present.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond_failed
+    instruction: >
+      The workflow must terminate on the respond_failed step WITHOUT persisting
+      any invoice (neither persist nor persist_rejected runs). The output must
+      carry a verification object whose reasons explain that the required invoice
+      fields are missing — i.e. structured data could not be extracted — and there
+      must be no status "extracted" record.
+    judge_model: gemini/gemini-3.1-flash-lite

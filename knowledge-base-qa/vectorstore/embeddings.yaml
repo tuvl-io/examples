@@ -1,0 +1,15 @@
+kind: EmbeddingRegistry
+metadata:
+  name: default
+  description: Embedding models available to the vector store.
+enabled: true
+spec:
+  embeddings:
+    # gemini-embedding-001 supports Matryoshka output truncation; the engine
+    # passes `dimensions` through to LiteLLM, so it returns exactly 1536 dims —
+    # matching the vector-store column (TUVL default 1536) and staying under
+    # pgvector's 2000-dim HNSW index limit.
+    - name: default
+      provider: gemini
+      model: gemini/gemini-embedding-001
+      dimensions: 1536

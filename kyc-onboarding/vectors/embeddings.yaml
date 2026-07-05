@@ -1,0 +1,10 @@
+kind: EmbeddingRegistry
+version: v1
+metadata:
+  name: default
+spec:
+  embeddings:
+    - name: text-embedding-3-small
+      provider: gemini
+      model: gemini/gemini-embedding-001
+      dimensions: 1536

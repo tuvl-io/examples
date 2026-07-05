@@ -1,0 +1,41 @@
+# investigate -> elevated routes to hitl_review. The HITL step is stubbed with
+# a compliance reviewer's answer; apply_decision (the step immediately after the
+# HITL step, where a real resume continues) runs for real and normalizes it.
+workflow: onboard_applicant
+input:
+  full_name: "Bob Elevated"
+  dob: "1985-05-05"
+  national_id: "BO-2002"
+  email: "bob@example.com"
+  country: sg
+stubs:
+  - step_id: persist_applicant
+    mock_output:
+      applicant_record: { id: "00000000-0000-0000-0000-000000000002", status: received }
+  - step_id: sanctions_screen
+    mock_output:
+      screening_result: { status: review }
+      screening_echo: sg
+  - step_id: policy_context
+    mock_output:
+      policies:
+        - { content: "Policy 02 — Elevated jurisdictions require a documented review.", score: 0.8 }
+  - step_id: investigate
+    mock_output:
+      investigation: { outcome: elevated, summary: "Elevated jurisdiction; needs review.", watchlist_hit: false }
+      _signal: elevated
+  - step_id: hitl_review
+    mock_output:
+      compliance_decision: { decision: approve, band: medium, note: "Reviewed; source of funds documented." }
+  - step_id: persist_assessment
+    mock_output:
+      assessment_record: { id: "00000000-0000-0000-0000-0000000000b2" }
+  - step_id: update_applicant
+    mock_output:
+      applicant_updated: { id: "00000000-0000-0000-0000-000000000002", status: approved }
+evaluations:
+  - step_id: respond
+    instruction: >-
+      The compliance reviewer approved at band "medium". In the step context,
+      decision_status must equal "approved" and decision_band must equal
+      "medium". Pass only if both hold.

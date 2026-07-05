@@ -1,0 +1,49 @@
+# Mismatch path: a doctored invoice where total != subtotal + tax. The
+# deterministic verify_totals node emits "mismatch", the record is persisted
+# with status "rejected", and the response includes the verification reasons.
+workflow: extract_invoice
+
+input:
+  raw_text: |
+    ACME CORP
+    Invoice #INV-2002
+    Date: 2026-06-02
+    Subtotal: 100.00 USD
+    Tax: 8.50 USD
+    Total: 200.00 USD
+
+stubs:
+  - step_id: extract
+    mock_output:
+      extracted:
+        vendor_name: "Acme Corp"
+        invoice_number: "INV-2002"
+        invoice_date: "2026-06-02"
+        currency: "USD"
+        subtotal: 100.00
+        tax: 8.50
+        total: 200.00
+        vendor_tax_id: null
+  - step_id: persist_rejected
+    mock_output:
+      rejected_invoice:
+        id: "22222222-2222-2222-2222-222222222222"
+        vendor_name: "Acme Corp"
+        invoice_number: "INV-2002"
+        currency: "USD"
+        total: 200.00
+        status: "rejected"
+
+evaluations:
+  - step_id: verify_totals
+    instruction: >
+      The verify_totals step must emit the signal "mismatch" because
+      subtotal (100.00) + tax (8.50) does not equal total (200.00). The
+      verification snapshot must show ok = false and a reasons list that
+      mentions the total mismatch.
+    judge_model: gemini/gemini-3.1-flash-lite
+  - step_id: respond_rejected
+    instruction: >
+      The response payload must have status "rejected" and must include a
+      verification object whose reasons explain the total mismatch.
+    judge_model: gemini/gemini-3.1-flash-lite

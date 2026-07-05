@@ -1,0 +1,18 @@
+kind: DataSource
+metadata:
+  name: main_postgres
+  primary: true
+  description: Primary PostgreSQL database (holds the pgvector system_vector_store).
+enabled: true
+spec:
+  type: postgresql
+  driver: asyncpg
+  connection:
+    host: ${POSTGRES_HOST:localhost}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DB:tuvl_kb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD}
+  pooling:
+    min_size: 5
+    max_size: 20

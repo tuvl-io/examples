@@ -1,0 +1,26 @@
+kind: ModelDefinition
+version: v1
+metadata:
+  name: Applicant
+  schema_version: v1
+  description: A KYC applicant. PII fields are secure (masked in telemetry spans).
+enabled: true
+spec:
+  tablename: applicants
+  datasource: main_postgres
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: full_name, type: string, required: true, secure: true }
+    - { name: dob, type: date, required: true, secure: true }
+    - { name: national_id, type: string, required: true, unique: true, index: true, secure: true }
+    - { name: email, type: string, required: true }
+    - name: country
+      type: enum
+      enum_values: [us, gb, de, in, sg]
+      required: true
+    - name: status
+      type: enum
+      enum_values: [received, investigating, pending_review, approved, rejected]
+      input: false
+      default: received
+    - { name: created_at, type: timestamptz, input: false }

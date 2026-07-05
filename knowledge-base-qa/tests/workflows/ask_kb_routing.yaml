@@ -1,0 +1,33 @@
+# Routing smoke test for ask_kb — no API key required.
+#
+# Both LLM/RAG steps are stubbed, so the workflow runs offline: `search` yields
+# canned hits and `answer` yields a canned grounded JSON output. This verifies
+# the search -> answer -> respond happy path routes cleanly (no unmapped signal).
+# The evaluation pins judge_model so it runs on GEMINI_API_KEY (a judge with no
+# resolvable model is reported skipped->FAIL, so `tuvl test` needs a key to go
+# green); set TUVL_TEST_JUDGE to override the judge globally without editing YAML.
+workflow: ask_kb
+
+input:
+  question: "What is the daily meal allowance while travelling?"
+
+stubs:
+  - step_id: search
+    mock_output:
+      kb_hits:
+        - content: "The daily meal allowance while travelling is $75 per day."
+          metadata: { title: "Travel & Expense Policy", tags: ["finance", "policy"] }
+          score: 0.91
+  - step_id: answer
+    # `_signal` omitted → defaults to "default", routing answer -> respond.
+    mock_output:
+      answer: "The daily meal allowance while travelling is $75 per day."
+      sources: ["Travel & Expense Policy"]
+      confident: true
+
+evaluations:
+  - step_id: answer
+    judge_model: gemini/gemini-3.1-flash-lite
+    instruction: >
+      The answer must state the $75 daily meal allowance and cite
+      "Travel & Expense Policy" in its sources list, with confident = true.
