@@ -36,18 +36,18 @@ tuvl-examples/
 
 ## Projects
 
-> Five projects are specified and ready to build — each directory carries a
-> `project-specification.md` an implementer (human or coding agent) can deliver
-> unaided. Implementers start at [AGENTS.md](./AGENTS.md); infrastructure and
-> LLM needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md).
+> Five complete projects, each built from the `project-specification.md` in its
+> directory — clone one and run it. Contributors and coding agents start at
+> [AGENTS.md](./AGENTS.md); infrastructure and LLM needs per project:
+> [REQUIREMENTS.md](./REQUIREMENTS.md).
 
 | Project | Difficulty | What it shows | Step kinds used | Status |
 |---------|------------|---------------|-----------------|--------|
-| [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → validated structured records via one LLM step | Agent · Functional · ModelOp · Response | 📋 spec |
-| [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers — RAG on built-in rails | Functional (DataIngest/DataSearch) · Agent · Response | 📋 spec |
-| [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → region-aware routing → group-gated human review (no self-approval) | Agent · Router (match) · APICall · HumanInTheLoop · Functional · ModelOp · Response | 📋 spec |
-| [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | AutonomousAgent driving MCP tools to a cited research brief, on a token budget | AutonomousAgent · MCP · Functional · Agent · ModelOp · Response | 📋 spec |
-| [`kyc-onboarding`](./kyc-onboarding) | Complex | Supervised investigation, compliance approval gate, PII masking, versioned schemas | AutonomousAgent (+ supervisor) · APICall · Router (match) · HumanInTheLoop · Functional · Agent · ModelOp · Response | 📋 spec |
+| [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → validated structured records via one LLM step | Agent · Functional · ModelOp · Response | ✅ runnable |
+| [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers — RAG on built-in rails | Functional (DataIngest/DataSearch) · Agent · Response | ✅ runnable |
+| [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → region-aware routing → group-gated human review (no self-approval) | Agent · Router (match) · APICall · HumanInTheLoop · Functional · ModelOp · Response | ✅ runnable |
+| [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | AutonomousAgent driving MCP tools to a cited research brief, on a token budget | AutonomousAgent · MCP · Functional · Agent · ModelOp · Response | ✅ runnable |
+| [`kyc-onboarding`](./kyc-onboarding) | Complex | Supervised investigation, compliance approval gate, PII masking, versioned schemas | AutonomousAgent (+ supervisor) · APICall · Router (match) · HumanInTheLoop · Functional · Agent · ModelOp · Response | ✅ runnable |
 
 ## Running an example
 
