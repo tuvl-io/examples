@@ -1,0 +1,13 @@
+kind: ProjectConfig
+metadata:
+  name: sentiment-api
+  description: >-
+    Post a product review at POST /api/reviews/analyze and get back a persisted
+    sentiment classification. A minimal, deployment-ready service — the reference
+    example for `tuvl ship`.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  nodes: nodes

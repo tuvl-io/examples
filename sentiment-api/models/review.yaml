@@ -1,0 +1,15 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Review
+  schema_version: v1
+  description: A product review with its classified sentiment.
+spec:
+  tablename: reviews
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: text, type: text, required: true }
+    - { name: source, type: string, index: true }
+    - { name: sentiment, type: enum, enum_values: [positive, neutral, negative], required: true }
+    - { name: confidence, type: numeric, required: true }
+    - { name: created_at, type: timestamptz, input: false }
