@@ -1,0 +1,84 @@
+kind: Workflow
+enabled: true
+metadata:
+  name: analyze_sentiment
+  schema_version: v1
+  description: Classify a product review's sentiment and persist the result.
+  group: reviews
+spec:
+  context:
+    models:
+      - name: Review
+        version: v1
+  trigger:
+    path: /api/reviews/analyze
+    method: POST
+    # Untyped trigger: the request body { "text": "...", "source": "..." }
+    # becomes the raw context dict. The Review Create schema enforces the
+    # contract downstream at the persist ModelOp step.
+
+  steps:
+    # 1. LLM classification. output.format: json merges the returned object into
+    #    context; the prompt asks for a single `analysis` object so the persist
+    #    step can read context["analysis"]. The review text is auto-appended by
+    #    the engine as an "## Input Data" block (Golden Rule 15).
+    - id: classify
+      kind: Agent
+      agent:
+        model: default
+        system: |
+          You are a precise sentiment classifier. Return ONLY a JSON object with
+          a single key "analysis" whose value is an object with these keys:
+            sentiment  (one of "positive", "neutral", "negative")
+            confidence (number between 0 and 1)
+          Base the judgement solely on the review text in the Input Data block.
+        prompt: |
+          Classify the sentiment of the product review in the Input Data block
+          below. Return the analysis object exactly as specified.
+        output:
+          format: json
+        retry:
+          attempts: 2
+          on: [parse_error, timeout]
+          backoff: 2
+        timeout: 60
+      routes:
+        default: persist
+        error: respond_failed
+        timeout: respond_failed
+        parse_error: respond_failed
+
+    # 2. Persist the classified review.
+    - id: persist
+      kind: ModelOp
+      model: Review
+      operation: create
+      output: saved_review
+      payload:
+        text: "{{text}}"
+        source: "{{source}}"
+        sentiment: "{{analysis.sentiment}}"
+        confidence: "{{analysis.confidence}}"
+      routes:
+        default: respond_ok
+        error: respond_failed
+
+    # 3a. Success response.
+    - id: respond_ok
+      kind: Response
+      mapping:
+        id: saved_review.id
+        sentiment: saved_review.sentiment
+        confidence: saved_review.confidence
+        source: saved_review.source
+      routes:
+        default: END
+
+    # 3b. Failure response — no record persisted; surface the reason cleanly
+    #     (never a 500).
+    - id: respond_failed
+      kind: Response
+      mapping:
+        error: _last_error
+      routes:
+        default: END

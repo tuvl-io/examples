@@ -8,9 +8,8 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> ⚠️ **Beta.** These examples track tuvl **2026.2.6.1 (beta)** — great for learning
-> and evaluation, but not yet recommended for production. APIs and schemas may
-> change before the stable release. This repo is updated regularly as new samples
+> **Early stable.** These examples track tuvl **2026.3.1.0** — the API and YAML
+> schemas are stable and versioned. This repo is updated regularly as new samples
 > land.
 
 ---
@@ -36,8 +35,8 @@ tuvl-examples/
 
 ## Projects
 
-> Five complete projects, each built from the `project-specification.md` in its
-> directory — clone one and run it. Contributors and coding agents start at
+> Six complete projects — clone one and run it. Contributors and coding agents
+> start at
 > [AGENTS.md](./AGENTS.md); infrastructure and LLM needs per project:
 > [REQUIREMENTS.md](./REQUIREMENTS.md).
 
@@ -48,6 +47,7 @@ tuvl-examples/
 | [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → region-aware routing → group-gated human review (no self-approval) | Agent · Router (match) · APICall · HumanInTheLoop · Functional · ModelOp · Response | ✅ runnable |
 | [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | AutonomousAgent driving MCP tools to a cited research brief, on a token budget | AutonomousAgent · MCP · Functional · Agent · ModelOp · Response | ✅ runnable |
 | [`kyc-onboarding`](./kyc-onboarding) | Complex | Supervised investigation, compliance approval gate, PII masking, versioned schemas | AutonomousAgent (+ supervisor) · APICall · Router (match) · HumanInTheLoop · Functional · Agent · ModelOp · Response | ✅ runnable |
+| [`sentiment-api`](./sentiment-api) | Easy | Classify a review's sentiment, persist it — the reference for packaging to production with `tuvl ship` | Agent · ModelOp · Response | ✅ runnable |
 
 ## Running an example
 
