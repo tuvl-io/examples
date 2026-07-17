@@ -7,7 +7,7 @@
  * any non-progress frame.
  *
  * Run:
- *   npm i @tuvl/client@2026.2.6 tsx
+ *   npm i @tuvl/client@2026.3.1 tsx
  *   TUVL_URL=http://localhost:8000 npx tsx client/watch.ts "How does HTTP caching work?"
  */
 import { TuvlClient, agentProgress } from "@tuvl/client";

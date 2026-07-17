@@ -7,7 +7,7 @@
  * plain REST by default, SSE when an `onProgress` callback is supplied.
  *
  * Run against a live `tuvl dev` server:
- *   pnpm add @tuvl/client@2026.2.6 tsx
+ *   pnpm add @tuvl/client@2026.3.1 tsx
  *   pnpm tsx client/ask.ts
  */
 import { createClient } from "@tuvl/client";

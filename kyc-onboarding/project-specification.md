@@ -1,7 +1,7 @@
 # KYC Onboarding — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Complex
-> **Engine:** tuvl >= 2026.2.6.1 · **Ground truth:** `tuvl-agentic-manual.md` (§4.13–4.14, §6.8, Golden Rules 25/26) + engine `docs/supervisor.md`, `docs/human-in-the-loop.md`, `docs/auth.md`
+> **Engine:** tuvl >= 2026.3.1.0 · **Ground truth:** `tuvl-agentic-manual.md` (§4.13–4.14, §6.8, Golden Rules 25/26) + engine `docs/supervisor.md`, `docs/human-in-the-loop.md`, `docs/auth.md`
 > **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kyc` **with pgvector**, `GEMINI_API_KEY`, judge preset; screening API stubbed)
 
 Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, policy-grounded autonomous investigation under a **fail-closed supervisor**, risk routing, **group-gated human approval**, and versioned risk schemas. This is the example that answers the "can I trust it in a regulated flow?" question — and it deliberately exercises every 2026.2.6-hardened surface.
