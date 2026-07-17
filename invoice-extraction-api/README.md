@@ -5,7 +5,7 @@ persisted, structured invoice record. One LLM step, deterministic verification,
 typed persistence — the smallest example that proves *"declare a model and a
 workflow in YAML, get a production API."*
 
-Built with [tuvl](https://tuvl.io) `>= 2026.2.6`. See the full brief in
+Built with [tuvl](https://tuvl.io) `>= 2026.3.1.0`. See the full brief in
 [`project-specification.md`](./project-specification.md).
 
 ## What it demonstrates
@@ -28,7 +28,7 @@ For this project specifically:
 
 - **PostgreSQL 15+**, database `tuvl_invoices` (plain Postgres — no pgvector).
 - **`GEMINI_API_KEY`** — the `extract` Agent uses `gemini/gemini-3.1-flash-lite` via LiteLLM.
-- **tuvl** `>= 2026.2.6` on PATH (`uv tool install "tuvl[standard]>=2026.2.6"`).
+- **tuvl** `>= 2026.3.1.0` on PATH (`uv tool install "tuvl[standard]>=2026.3.1.0"`).
 
 ```sql
 CREATE DATABASE tuvl_invoices;

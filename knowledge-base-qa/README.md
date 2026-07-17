@@ -35,7 +35,7 @@ project specifically:
 - **`GEMINI_API_KEY`** — used for both the chat model
   (`gemini/gemini-3.1-flash-lite`) and the embedding model
   (`gemini/gemini-embedding-001`, truncated to 1536 dims via Matryoshka).
-- tuvl **>= 2026.2.6** (`uv tool install "tuvl[standard]>=2026.2.6"`).
+- tuvl **>= 2026.3.1.0** (`uv tool install "tuvl[standard]>=2026.3.1.0"`).
 
 ## Run
 
@@ -149,7 +149,7 @@ Hits (and therefore citations) are limited to the `security`-tagged document.
 ### 5. TypeScript SDK
 
 ```bash
-pnpm add @tuvl/client@2026.2.6 tsx
+pnpm add @tuvl/client@2026.3.1 tsx
 pnpm tsx client/ask.ts
 ```
 

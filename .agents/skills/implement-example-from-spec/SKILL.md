@@ -6,8 +6,8 @@ first — it carries the hard constraints; this skill is the procedure.
 
 ## 0. Preflight
 
-- `tuvl --version` → must be `>= 2026.2.6.1`, published on PyPI:
-  `uv tool install "tuvl[standard]>=2026.2.6.1"` (add `--reinstall` to upgrade an
+- `tuvl --version` → must be `>= 2026.3.1.0`, published on PyPI:
+  `uv tool install "tuvl[standard]>=2026.3.1.0"` (add `--reinstall` to upgrade an
   older install).
 - Read the project's row in `REQUIREMENTS.md`; create the database (and
   `CREATE EXTENSION vector` where required) before booting anything.

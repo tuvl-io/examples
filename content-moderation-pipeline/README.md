@@ -59,7 +59,7 @@ See [`../REQUIREMENTS.md`](../REQUIREMENTS.md) for the full matrix. For this pro
 - **`GEMINI_API_KEY`** for the `classify` Agent (`gemini/gemini-3.1-flash-lite`).
 - **`MODERATION_WEBHOOK_URL`** (optional) — violation notification target;
   defaults to `https://httpbin.org/post` so the demo runs with no setup.
-- tuvl >= 2026.2.6 (`uv tool install "tuvl[standard]>=2026.2.6"`).
+- tuvl >= 2026.3.1.0 (`uv tool install "tuvl[standard]>=2026.3.1.0"`).
 
 ## Run
 

@@ -1,6 +1,6 @@
 # KYC Onboarding — a compliance-grade tuvl example
 
-Compliance-grade applicant onboarding on **tuvl ≥ 2026.2.6**: PII-safe intake,
+Compliance-grade applicant onboarding on **tuvl ≥ 2026.3.1.0**: PII-safe intake,
 sanctions screening, policy-grounded autonomous investigation under a
 **fail-closed supervisor**, risk routing, **group-gated human approval**, and
 **versioned risk schemas**. This is the "can I trust it in a regulated flow?"
