@@ -10,12 +10,18 @@ example — it deliberately exercises every 2026.2.6-hardened surface.
 
 - **`spec.supervisor`** (a sibling of `steps:`, not a step): deterministic
   `rules` (`iteration_reached` → abort, `tool_repeated` → pause) **plus** an LLM
-  judge with a scoped `criteria_file`, `on_violation: pause`, and
+  judge whose `criteria` is a pinned steering artifact
+  (`artifact://supervisor-criteria@1`), `on_violation: pause`, and
   **`on_judge_error: abort`** (fail-closed: a dead judge stops the run). The
   `investigate` agent routes the reserved **`aborted`** exit (Golden Rule 26).
-- **`AutonomousAgent`** bounded tool-loop (`max_iterations: 6`,
+- **`kind: Agent`, `mode: autonomous`** bounded tool-loop (`max_iterations: 6`,
   `token_budget: 50000`) with two tools (a stub watchlist node + a stub registry
-  APICall), a closed `outcome.enum`, and **all four reserved exits routed**.
+  APICall), a closed `outcome.enum`, and **all four reserved exits routed**
+  (`guardrail_violation` is also reserved, for agents with guardrails attached).
+- **Versioned prose artifacts** in `artifacts/` — the agent's steering
+  (`investigation-policy`), its skill (`red-flags`), and the supervisor criteria
+  (`supervisor-criteria`) are front-matter markdown, referenced as pinned
+  `artifact://<name>@1` refs.
 - **`HumanInTheLoop`** with `auth.required_group: compliance` — no self-approval
   (enforced on resume in 2026.2.6).
 - **`secure: true` PII masking** end-to-end (spans/streamed snapshots); the

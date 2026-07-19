@@ -29,7 +29,7 @@ spec:
       - { when: iteration_reached, gte: 5, then: abort }
       - { when: tool_repeated, count: 3, then: pause }
     model: judge
-    criteria_file: agents/onboard_applicant__supervisor/steering/criteria.md
+    criteria: artifact://supervisor-criteria@1
     every_n_iterations: 2
     on_violation: pause
     on_judge_error: abort        # fail-closed: a dead judge stops the run, silence never passes
@@ -87,20 +87,15 @@ spec:
 
     # 4. Autonomous, policy-grounded investigation (bounded ReAct tool-loop).
     - id: investigate
-      kind: AutonomousAgent
+      kind: Agent
+      mode: autonomous
       agent:
         model: default
-        steering: |
-          You are a KYC compliance investigator. Determine whether the applicant
-          under review can be safely fast-tracked. You MUST perform at least one
-          watchlist check before concluding. Only conclude `clear` when the
-          watchlist check is clean AND nothing in the screening result or the
-          retrieved policies raises a concern. When anything is uncertain or a
-          policy flag applies, prefer `refer_human` or `elevated`.
-        steering_files:
-          - agents/onboard_applicant__investigate/steering/investigation.md
+        # The investigation policy and the red-flags skill are versioned prose
+        # artifacts (artifacts/) — pinned so a redeploy never silently changes them.
+        steering: artifact://investigation-policy@1
         skills:
-          - agents/onboard_applicant__investigate/skills/red-flags.md
+          - artifact://red-flags@1
         max_iterations: 6
         token_budget: 50000
         tools:
@@ -118,7 +113,7 @@ spec:
               required: [query]
         outcome:
           enum: [clear, elevated, refer_human]
-          output_key: investigation
+          write: investigation
       # All reserved exits mapped (Golden Rule 26 — the supervisor CAN abort).
       routes:
         clear: assess
@@ -132,6 +127,7 @@ spec:
     # 5. Risk assessment grounded in the investigation + policies.
     - id: assess
       kind: Agent
+      mode: completion
       agent:
         model: default
         system: |
@@ -142,7 +138,7 @@ spec:
           Return ONLY a JSON object of exactly this shape (no markdown fences):
           {"assessment": {"score": <integer 0-100>, "band": "low" | "medium" | "high", "rationale": "<2-3 sentences citing at least one policy>"}}
         context_injection: [investigation, policies]
-        output:
+        outcome:
           format: json
         timeout: 30
       routes:

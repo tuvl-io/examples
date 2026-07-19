@@ -1,0 +1,11 @@
+kind: Artifact
+version: v1
+enabled: true
+metadata:
+  name: fetch-web
+  description: MCP fetch server (stdio) — fetches a web page and returns its readable text.
+spec:
+  type: mcp
+  transport: stdio
+  command: uvx
+  args: [mcp-server-fetch]

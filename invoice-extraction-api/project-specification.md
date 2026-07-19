@@ -9,7 +9,7 @@ Paste raw invoice text at `POST /api/invoices/extract` and get back a validated,
 ## What it demonstrates
 
 - `ModelDefinition` with `enum` fields, a `secure: true` PII field, and `input: false` server fields
-- `Agent` step with `output.format: json` (structured extraction, auto-merged input)
+- `Agent` step (`mode: completion`) with `outcome.format: json` (structured extraction, auto-merged input)
 - A custom `Functional` node emitting business signals (`valid` / `mismatch`) routed via `routes:`
 - `ModelOp` persistence + the auto-generated CRUD routes coexisting with the workflow
 - `Response` mapping mode shaping the public payload (the `secure` field never leaves)
@@ -65,7 +65,7 @@ LLM preset `llms/default.yaml`: `kind: AgentModel`, name `default`, model `gemin
 
 Step sequence (every non-`default` signal must be routed — Golden Rule 6):
 
-1. **`extract`** — `kind: Agent`, model `default`, `output: { format: json, output_key: extracted }`. Prompt: extract `vendor_name, invoice_number, invoice_date (ISO), currency (one of USD|EUR|GBP|INR), subtotal, tax, total, vendor_tax_id` from `raw_text`; do not invent values, use `null` for absent fields. Do **not** paste `raw_text` into the prompt manually — the engine appends the input block (Golden Rule 15). Routes: `error → respond_failed`, `timeout → respond_failed`, `parse_error → respond_failed`.
+1. **`extract`** — `kind: Agent`, `mode: completion`, model `default`, `outcome: { format: json }` (the prompt asks for a single `extracted` object, which merges into context). Prompt: extract `vendor_name, invoice_number, invoice_date (ISO), currency (one of USD|EUR|GBP|INR), subtotal, tax, total, vendor_tax_id` from `raw_text`; do not invent values, use `null` for absent fields. Do **not** paste `raw_text` into the prompt manually — the engine appends the input block (Golden Rule 15). Routes: `error → respond_failed`, `timeout → respond_failed`, `parse_error → respond_failed`.
 2. **`verify_totals`** — `kind: Functional`, `runner: verify_totals`. Emits `valid` when `subtotal + tax == total` (within 0.01) and all required fields are present; else `mismatch` with a reason list written to `verification`. Routes: `valid → persist`, `mismatch → persist_rejected`, `error → respond_failed`.
 3. **`persist`** — `kind: ModelOp`, operation `create` on `Invoice`, payload from `extracted` plus `status: extracted` and `raw_text` — then continue to `respond_ok`.
 4. **`persist_rejected`** — `ModelOp` create with `status: rejected` → `respond_rejected`.

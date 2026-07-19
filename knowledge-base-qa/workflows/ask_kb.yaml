@@ -36,6 +36,7 @@ spec:
     #    injects the retrieved passages; the prompt must NOT concatenate them.
     - id: answer
       kind: Agent
+      mode: completion
       agent:
         model: default
         system: |
@@ -54,7 +55,7 @@ spec:
           {"answer": "<string>", "sources": ["<title>", ...], "confident": <true|false>}
         context_injection:
           - kb_hits
-        output:
+        outcome:
           format: json
         retry:
           attempts: 2

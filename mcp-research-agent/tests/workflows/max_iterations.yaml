@@ -1,4 +1,4 @@
-# Reserved exit: the AutonomousAgent hits its iteration cap before it can
+# Reserved exit: the autonomous agent hits its iteration cap before it can
 # answer. The scripted tool-loop forces the `max_iterations` terminal signal,
 # which routes investigate -> persist_partial -> respond_partial. This proves a
 # reserved exit lands on a declared response (never an unhandled 500) and that

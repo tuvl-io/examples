@@ -8,7 +8,7 @@ Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, pol
 
 ## What it demonstrates
 
-- `spec.supervisor`: deterministic `rules` (`when:`/`then:`) + LLM judge with scoped `criteria_file`, `on_violation: pause`, **`on_judge_error: abort` (fail-closed)** — plus the `aborted` reserved exit routed (Golden Rule 26)
+- `spec.supervisor`: deterministic `rules` (`when:`/`then:`) + LLM judge with `criteria` referencing a pinned steering artifact, `on_violation: pause`, **`on_judge_error: abort` (fail-closed)** — plus the `aborted` reserved exit routed (Golden Rule 26)
 - `HumanInTheLoop` with `auth.required_group: compliance` (no self-approval, 2026.2.6)
 - `secure: true` PII masking end-to-end (spans, streamed snapshots); `Response` mapping as the redaction layer
 - **Model versioning**: `RiskAssessment` v1 enabled + v2 authored `enabled: false`, activated via the admin toggle + restart (manual §6.8 flow), workflow pinned via `context.models[].version`
@@ -34,11 +34,10 @@ kyc-onboarding/
 ├── workflows/onboard_applicant.yaml
 ├── nodes/check_watchlist.py           # stub tool
 ├── nodes/apply_decision.py
-├── agents/onboard_applicant__investigate/
-│   ├── steering/investigation.md
-│   └── skills/red-flags.md
-├── agents/onboard_applicant__supervisor/
-│   └── steering/criteria.md           # judge policy (scoped location is enforced)
+├── artifacts/
+│   ├── investigation-policy.md        # type: steering — the agent's operating policy
+│   ├── red-flags.md                   # type: skill — applied when relevant
+│   └── supervisor-criteria.md         # type: steering — the judge policy
 ├── policies/                          # 3 sample compliance policy markdown docs
 └── tests/                             # tuvl test suite incl. judge evaluations
 ```
@@ -81,7 +80,7 @@ supervisor:
     - { when: iteration_reached, gte: 5, then: abort }
     - { when: tool_repeated, count: 3, then: pause }
   model: judge
-  criteria_file: agents/onboard_applicant__supervisor/steering/criteria.md
+  criteria: artifact://supervisor-criteria@1
   every_n_iterations: 2
   on_violation: pause
   on_judge_error: abort        # fail-closed: a dead judge stops the run, silence never passes
@@ -92,14 +91,14 @@ Steps (document order matters at the HITL boundary):
 1. **`persist_applicant`** — `ModelOp` create (status `received`). `error → respond_failed`.
 2. **`sanctions_screen`** — `APICall` POST `${SCREENING_API_URL}` with name/dob/country (stub echoes). `error → hitl_review` (screening outage → human decides; never auto-clear).
 3. **`policy_context`** — `DataSearch` on `compliance_policies`, query built from country + screening result, `output_key: policies`. `error → hitl_review`.
-4. **`investigate`** — `AutonomousAgent`: model `default`, `steering` + `steering_files` + `skills` (scoped dirs above), `max_iterations: 6`, `token_budget: 50000`, tools:
+4. **`investigate`** — `kind: Agent`, `mode: autonomous`: model `default`, `steering: artifact://investigation-policy@1` + `skills: ["artifact://red-flags@1"]` (pinned prose artifacts above), `max_iterations: 6`, `token_budget: 50000`, tools:
    - `check_watchlist` (`Functional` stub node; `description:` on the step — required) — deterministic fake watchlist with 2 seeded names
    - `fetch_registry` (`APICall` to the stub URL; `description:` set) — "company registry" lookalike
-   `outcome: { enum: [clear, elevated, refer_human], output_key: investigation }`.
+   `outcome: { enum: [clear, elevated, refer_human], write: investigation }`.
    Routes — **all reserved exits mapped** (rule 26; the supervisor CAN abort):
    `clear → assess` · `elevated → hitl_review` · `refer_human → hitl_review` · `max_iterations → hitl_review` · `budget_exceeded → hitl_review` · `aborted → hitl_review` · `error → respond_failed`.
    Everything uncertain funnels to the human — the agent can only fast-path `clear`.
-5. **`assess`** — `Agent` json → `{score, band, rationale}` from investigation + policies. `error|parse_error|timeout → hitl_review`.
+5. **`assess`** — `Agent` (`mode: completion`) json → `{score, band, rationale}` from investigation + policies. `error|parse_error|timeout → hitl_review`.
 6. **`route_band`** — `Router` `match:` on `{{assessment.band}}`: `low → finalize_auto` · `medium → hitl_review` · `high → hitl_review`.
 7. **`hitl_review`** — `HumanInTheLoop`, `display_context: [investigation, assessment, policies]` (PII fields stay out of the wire payload), `ui_interaction`: `decision enum [approve, reject]` + `band enum [low, medium, high]` + `note text`, `output_key: compliance_decision`, `auth: { required_group: compliance }`.
 8. **`apply_decision`** — `Functional`, `runner: apply_decision` — **immediately after `hitl_review` in document order** (resume continues here). Normalizes the human decision or the auto path into `{status, band, decided_by}` (reads `{{_user_id}}` on the human path). Signals `approve|reject`.
@@ -111,7 +110,7 @@ Steps (document order matters at the HITL boundary):
 
 1. Run the happy path on v1. 2. `PATCH /admin/models/RiskAssessment/v2/toggle` (admin token) → flag flips. 3. Restart tuvl → boot log shows the override applied; v2 table exists. 4. Re-pin the workflow to `version: v2` and demonstrate the version-pin `RuntimeError` protection by *not* re-pinning first and observing the clean failure. Document expected outputs at each step.
 
-## Supervisor criteria — `agents/onboard_applicant__supervisor/steering/criteria.md`
+## Supervisor criteria — `artifacts/supervisor-criteria.md` (`type: steering`, version 1)
 
 The judge policy: the agent must not (a) call tools with PII fields other than the applicant under review, (b) conclude `clear` without at least one watchlist check, (c) loop on the registry tool. Conservative pass otherwise.
 
@@ -123,7 +122,7 @@ The judge policy: the agent must not (a) call tools with PII fields other than t
 
 ## Acceptance criteria
 
-1. `tuvl validate` clean — supervisor block, scoped criteria file, all reserved exits, HITL group, versioned models.
+1. `tuvl validate` clean — supervisor block, pinned criteria artifact, all reserved exits, HITL group, versioned models.
 2. Happy path (`clear` + `low`) completes without suspension; PII absent from responses and (telemetry on) masked in spans.
 3. Seeded watchlist name → `elevated` → 202; submitter self-resume → **403**; compliance-group resume → decision applied, `decided_by` = reviewer.
 4. Supervisor drills: force >5 iterations (temporarily lower `gte`) → run exits `aborted` into `hitl_review`; break the judge (bad judge model) → `on_judge_error: abort` stops the run (fail-closed proven).

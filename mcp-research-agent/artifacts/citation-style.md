@@ -1,3 +1,9 @@
+---
+name: citation-style
+type: skill
+version: 1
+description: How to number and format source citations in the final research answer.
+---
 # Citation style
 
 Apply this when preparing the sources for your final answer.

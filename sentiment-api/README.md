@@ -12,8 +12,9 @@ reference for [`tuvl ship`](https://tuvl.dev/cli/commands/#tuvl-ship).
 
 - A `ModelDefinition` (`Review`) with an `enum` field (`sentiment`), a `numeric`
   score, and `input: false` server fields (`id`, `created_at`).
-- An `Agent` step with `output.format: json` for structured classification (the
-  review text is auto-merged — the prompt never pastes it manually).
+- An `Agent` step (`mode: completion`) with `outcome.format: json` for
+  structured classification (the review text is auto-merged — the prompt never
+  pastes it manually).
 - `ModelOp` persistence coexisting with the auto-generated CRUD routes.
 - A `Response` **mapping mode** shaping the public payload.
 - **`tuvl ship`** — turning the validated project into a production container
