@@ -3,7 +3,7 @@ version: v1
 enabled: true
 metadata:
   name: default
-  description: Chat model for the investigate (AutonomousAgent) and assess (Agent) steps.
+  description: Chat model for the investigate (autonomous) and assess (completion) Agent steps.
 spec:
   provider: gemini
   model: gemini/gemini-3.1-flash-lite

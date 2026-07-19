@@ -37,7 +37,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 All model access goes through LiteLLM, configured per project in `llms/*.yaml` (`kind: AgentModel`). The specs default to Google Gemini — one `GEMINI_API_KEY` covers everything:
 
-- **Chat model** (`llms/default.yaml`): `gemini/gemini-3.1-flash-lite` — used by every `Agent` / `AutonomousAgent` step.
+- **Chat model** (`llms/default.yaml`): `gemini/gemini-3.1-flash-lite` — used by every `Agent` step (both `mode: completion` and `mode: autonomous`).
 - **Judge model** (`kyc-onboarding` only, `llms/judge.yaml`): a second preset for the `spec.supervisor` LLM judge and the `tuvl test` evaluations. Can be the same model id; a separate preset keeps cost/temperature tunable independently.
 - **Embeddings** (`knowledge-base-qa`, `kyc-onboarding`): `gemini/gemini-embedding-001` declared in `models/embeddings.yaml` with `dimensions: 1536` — the engine passes the declared dimensions to the provider (Matryoshka truncation from the model's native 3072), and the collection's vector dimension must match.
 

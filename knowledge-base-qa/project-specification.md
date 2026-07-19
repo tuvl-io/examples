@@ -64,7 +64,7 @@ No `ModelDefinition` is needed — the vector store rows live in the engine's sy
    # metadata_filter: { tags: "{{tag}}" }   # include the filtered variant in the README demo
    ```
    Routes: `error → respond_failed`.
-2. **`answer`** — `kind: Agent`, model `default`, `context_injection: [kb_hits]` (Golden Rule 16 — the engine injects retrieval results; do not concatenate them into the prompt). Prompt: answer strictly from the provided sources; cite the `title` of each source used; say "not in the knowledge base" when the sources don't contain the answer. `output: { format: json, output_key: answer }` with shape `{ answer, sources: [title], confident: bool }`. Routes: `error|timeout|parse_error → respond_failed`.
+2. **`answer`** — `kind: Agent`, model `default`, `context_injection: [kb_hits]` (Golden Rule 16 — the engine injects retrieval results; do not concatenate them into the prompt). Prompt: answer strictly from the provided sources; cite the `title` of each source used; say "not in the knowledge base" when the sources don't contain the answer. `mode: completion`, `outcome: { format: json }` with shape `{ answer, sources: [title], confident: bool }` (fields merge into context). Routes: `error|timeout|parse_error → respond_failed`.
 3. **`respond`** — `Response` with `source: answer`.
 
 ## SDK script — `client/ask.ts`

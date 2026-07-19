@@ -36,8 +36,8 @@ When YAML isn't enough, you can create a custom `Functional` Python node.
 
 ## 5.1 Step Kinds (closed set)
 Use only these `kind:` values in workflow steps — never invent others:
-`Functional`, `Agent`, `AutonomousAgent`, `Router`, `APICall`, `MCP`, `ModelOp`, `Response`, `HumanInTheLoop`.
-- `Agent` is a single LLM call. **`AutonomousAgent`** is a bounded tool-calling loop: the model autonomously picks tools (each `tools[].ref` names another step in the workflow), observes results, and re-decides until done. Map every `outcome.enum` value plus the reserved exits `max_iterations` / `budget_exceeded` / `error` in `routes:`.
+`Functional`, `Agent`, `Router`, `APICall`, `MCP`, `ModelOp`, `Response`, `HumanInTheLoop`.
+- Every `Agent` step MUST declare a `mode:`. **`mode: completion`** is a single LLM call. **`mode: autonomous`** is a bounded tool-calling loop: the model autonomously picks tools (each `tools[].ref` names another step in the workflow), observes results, and re-decides until done. Map every `outcome.enum` value plus the reserved exits `max_iterations` / `budget_exceeded` / `error` / `aborted` (and `guardrail_violation` when guardrails are attached) in `routes:`.
 - `Router` supports a multi-way `match:` switch (`match: { field: user.country }`) for data-driven branching — keep deterministic routing logic here, never push it into an agent.
 
 ## 6. PostgreSQL & Multi-tenancy

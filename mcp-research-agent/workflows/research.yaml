@@ -5,7 +5,7 @@ metadata:
   name: research
   schema_version: v1
   description: >-
-    Bounded AutonomousAgent that drives an MCP fetch tool across the web,
+    Bounded autonomous agent that drives an MCP fetch tool across the web,
     summarizes sources as it goes, and returns a cited research brief — capped
     by iterations and a token budget.
   group: research
@@ -26,15 +26,14 @@ spec:
     # 1. The bounded ReAct loop. It chooses among the two declared tools below,
     #    observes their results, and stops once it can answer.
     - id: investigate
-      kind: AutonomousAgent
+      kind: Agent
+      mode: autonomous
       agent:
         model: default
-        steering: |
-          Answer the research question using fetched web sources only.
-          Fetch a source, summarize it with the summarize tool, and stop
-          fetching once you can answer with at least two independent sources.
-        steering_files: [agents/research__investigate/steering/method.md]
-        skills:         [agents/research__investigate/skills/citation-style.md]
+        # Steering + skills are versioned prose artifacts in artifacts/ —
+        # pinned so a redeploy can never silently change the agent's method.
+        steering: artifact://research-method@1
+        skills: ["artifact://citation-style@1"]
         max_iterations: 12
         token_budget: 60000
         tools:
@@ -53,7 +52,7 @@ spec:
               required: [url, content]
         outcome:
           enum: [answered, insufficient_sources]
-          output_key: research
+          write: research
       routes:
         answered:             compose
         insufficient_sources: persist_partial
@@ -64,14 +63,13 @@ spec:
 
     # 2. Off-spine tool. The description is what the model chooses the tool by —
     #    it is REQUIRED and lives on this step. No routes: a tool's routes are
-    #    ignored; tool errors return to the agent as observations.
+    #    ignored; tool errors return to the agent as observations. The server's
+    #    transport config lives in the `type: mcp` artifact (artifacts/fetch-web.yaml).
     - id: fetch_page
       kind: MCP
       description: Fetch a web page and return its readable text content.
       mcp:
-        transport: stdio
-        command: uvx
-        args: [mcp-server-fetch]
+        server: artifact://fetch-web@1
         tool: fetch
         arguments:
           url: "{{ url }}"
@@ -89,6 +87,7 @@ spec:
     # 4. Compose the final cited brief from the agent's research notes.
     - id: compose
       kind: Agent
+      mode: completion
       agent:
         model: default
         system: |
@@ -100,7 +99,7 @@ spec:
           on. Return JSON exactly as:
           {"brief": "<a few grounded paragraphs>",
            "sources": [{"url": "...", "title": "...", "takeaway": "..."}]}
-        output:
+        outcome:
           format: json
         retry:
           attempts: 2

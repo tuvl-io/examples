@@ -59,9 +59,10 @@ Put real secrets only in `.env` (gitignored); mirror the variable names into
 6. `nodes/*.py` — one `@node("name")` per file, filename equal to the name,
    async `(context) -> (context, signal)`. Emit exactly the signals the
    workflow routes.
-7. `agents/<workflow>__<stepId>/{steering,skills}/*.md` and
-   `agents/<workflow>__supervisor/steering/criteria.md` — where the spec
-   defines them; the scoped paths are enforced by validation.
+7. `artifacts/*.md` (prose: front-matter `name`/`type: steering|skill|prompt`/
+   `version`/`description`) and `artifacts/*.yaml` (structured `kind: Artifact`,
+   e.g. `type: mcp` servers) — where the spec defines them; reference them from
+   workflows as pinned `artifact://<name>@<version>` refs.
 
 ## 3. Validate → fix → repeat
 
@@ -71,7 +72,7 @@ tuvl validate
 
 Zero errors AND zero warnings. Common first-run failures: an unmapped signal,
 a missing tool description, a model absent from `spec.context`, a node
-filename/decorator mismatch, a criteria file outside its scoped directory.
+filename/decorator mismatch, an unpinned or unresolvable `artifact://` ref.
 
 ## 4. Smoke, then prove acceptance
 

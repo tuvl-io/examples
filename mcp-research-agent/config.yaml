@@ -2,7 +2,7 @@ kind: ProjectConfig
 metadata:
   name: mcp-research-agent
   description: >-
-    POST a question to /api/research and a bounded AutonomousAgent drives an MCP
+    POST a question to /api/research and a bounded autonomous Agent drives an MCP
     fetch tool across the web, summarizes sources, and returns a cited brief —
     capped by max_iterations and a token budget.
 dirs:

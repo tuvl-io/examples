@@ -1,4 +1,4 @@
-# Happy path: the bounded AutonomousAgent converges with >=2 independent
+# Happy path: the bounded autonomous agent converges with >=2 independent
 # sources, the composer writes a cited brief, it is persisted as `answered`,
 # and the `respond` step returns it. The agent tool-loop (investigate), the
 # composer LLM (compose) and the DB write (persist) are all stubbed with
