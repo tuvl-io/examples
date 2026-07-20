@@ -8,7 +8,7 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> **Early stable.** These examples track tuvl **2026.3.1.0** — the API and YAML
+> **Early stable.** These examples track tuvl **2026.4.0.0** — the API and YAML
 > schemas are stable and versioned. This repo is updated regularly as new samples
 > land.
 
