@@ -1,0 +1,15 @@
+kind: ProjectConfig
+metadata:
+  name: support-triage
+  description: >-
+    Triage a support ticket at POST /support/triage — a completion Agent
+    classifies it, then an autonomous Agent investigates billing tickets in a
+    bounded tool-loop. A side-by-side tour of both agent modes, artifacts, and a
+    guardrail. Runs locally on Ollama with no API key.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  nodes: nodes
+  artifacts: artifacts

@@ -1,0 +1,7 @@
+# tuvl
+.env
+.tuvl/
+__pycache__/
+*.pyc
+.venv/
+.python-version

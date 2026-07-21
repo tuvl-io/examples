@@ -1,0 +1,14 @@
+kind: DataSource
+version: v1
+enabled: true
+metadata:
+  name: main_postgres
+  primary: true
+spec:
+  type: postgres
+  connection:
+    host: ${POSTGRES_HOST}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}

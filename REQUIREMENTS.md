@@ -6,6 +6,7 @@ What each example needs before `tuvl dev` boots. All examples target **tuvl >= 2
 
 | Project | Difficulty | Postgres DB | pgvector | Redis | LLM calls | Embeddings | External |
 |---|---|---|---|---|---|---|---|
+| `support-triage` | Easy–Medium | `tuvl_support` | — | — | 2 chat calls (1 completion + 1 tool-calling loop) | — | Ollama (local, tool-capable model) — or any hosted LLM |
 | `invoice-extraction-api` | Easy | `tuvl_invoices` | — | — | 1 chat model | — | — |
 | `knowledge-base-qa` | Easy–Medium | `tuvl_kb` | **required** | — | 1 chat model | **required** | — |
 | `content-moderation-pipeline` | Medium | `tuvl_moderation` | — | — | 1 chat model | — | optional webhook URL |

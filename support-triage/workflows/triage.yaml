@@ -1,0 +1,99 @@
+kind: Workflow
+version: v1
+enabled: true
+metadata:
+  name: triage
+  description: Classify a support ticket, then autonomously investigate billing ones.
+spec:
+  context:
+    - SupportTicket
+
+  trigger:
+    path: /support/triage
+    method: POST
+    input_schema:
+      - { name: customer_id, type: string, required: true }
+      - { name: subject, type: string, required: true }
+      - { name: body, type: string, required: true }
+
+  steps:
+    # ── Agent #1: mode COMPLETION — one LLM call, routes on outcome.enum ──────
+    - id: classify
+      kind: Agent
+      mode: completion
+      agent:
+        model: default
+        system: artifact://triage-prompt@1     # prose lives in artifacts/, pinned
+        prompt: "Ticket subject: {{ subject }}\n\nBody: {{ body }}"
+        outcome:
+          format: json
+          enum: [billing, technical, account]  # the model's "outcome" field → route
+          # (category/urgency/summary all merge into context automatically)
+      routes:
+        billing: investigate       # billing tickets get the autonomous agent
+        technical: persist         # others skip straight to persistence
+        account: persist
+        error: persist
+
+    # ── Agent #2: mode AUTONOMOUS — bounded tool loop, steering artifact ──────
+    - id: investigate
+      kind: Agent
+      mode: autonomous
+      agent:
+        model: default
+        steering: artifact://investigator-steering@1
+        max_iterations: 5
+        tools:
+          - ref: lookup_account
+            parameters:
+              type: object
+              properties: { customer_id: { type: string } }
+              required: [customer_id]
+        guardrails:
+          output: [artifact://no-secrets@1]    # gate the final answer
+        outcome:
+          enum: [resolved, needs_human]
+          write: resolution                    # result payload → ctx["resolution"]
+      routes:
+        resolved: persist
+        needs_human: persist
+        # reserved exits — the engine routes these; map them explicitly
+        max_iterations: persist
+        budget_exceeded: persist
+        error: persist
+        aborted: persist
+        guardrail_violation: persist
+
+    # An off-spine tool: a declared Functional step the agent may call. Its
+    # top-level `description` is what the model sees when choosing the tool.
+    - id: lookup_account
+      kind: Functional
+      runner: lookup_account
+      description: Look up a customer's billing account (plan, balance due, dispute flag) by customer_id.
+
+    # ── Persist + respond ────────────────────────────────────────────────────
+    - id: persist
+      kind: ModelOp
+      model: SupportTicket
+      operation: create
+      description: Save the triaged ticket.
+      payload:
+        subject: "{{ subject }}"
+        body: "{{ body }}"
+        category: "{{ category }}"
+        urgency: "{{ urgency }}"
+        resolution: "{{ resolution }}"
+      output: saved
+      routes:
+        default: respond
+        error: respond
+
+    - id: respond
+      kind: Response
+      mapping:
+        ticket_id: saved.id
+        category: category
+        urgency: urgency
+        resolution: resolution
+      routes:
+        default: END
