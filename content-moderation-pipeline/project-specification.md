@@ -43,7 +43,7 @@ Trigger: `POST /api/moderate`, body `{ author_id, region, content }`. Gate the w
 
 **Step order is load-bearing** because of the HITL resume rule — keep the document order exactly as specified:
 
-1. **`classify`** — `Agent`, `output: {format: json, output_key: classification}` → `{ category: safe|borderline|violation, reason, confidence }`. Region-specific guidance goes in the prompt as *context*, but the **decision routing stays deterministic**. Routes: `error|timeout|parse_error → hitl_review` (fail toward human review, never fail open).
+1. **`classify`** — `Agent`, `mode: completion`, `outcome: {format: json}` — the prompt asks for a single `classification` object → `{ category: safe|borderline|violation, reason, confidence }`. Region-specific guidance goes in the prompt as *context*, but the **decision routing stays deterministic**. Routes: `error|timeout|parse_error → hitl_review` (fail toward human review, never fail open).
 2. **`route_region`** — `Router` with `match:` on `{{region}}` mapping `eu → apply_eu_policy`, everything else default-continues. (`apply_eu_policy` is a small `Functional` node that tightens `classification.category` per a stricter EU threshold — demonstrates `match:` without inventing complex policy.)
 3. **`route_category`** — `Router` `match:` on `{{classification.category}}`:
    `safe → persist_approved` · `violation → notify` · `borderline → hitl_review`.

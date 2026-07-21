@@ -1,3 +1,9 @@
+---
+name: red-flags
+type: skill
+version: 1
+description: Checklist for recognizing KYC red flags when interpreting screening results and policies.
+---
 # Skill: recognizing KYC red flags (apply when relevant)
 
 Use this checklist when interpreting the screening result and policies. Any one

@@ -5,40 +5,40 @@ options:
 
 ### Body
 
-1. Add a step of `kind: AutonomousAgent`. Unlike `kind: Agent` (one LLM call), it
-   loops: the model picks tools, observes the results, and re-decides until done.
+1. Add a step of `kind: Agent` with `mode: autonomous`. Unlike `mode: completion`
+   (one LLM call), it loops: the model picks tools, observes the results, and
+   re-decides until done. Every `Agent` step must declare one of the two modes.
 2. Declare the tools — each `ref` names ANOTHER step in the same workflow (an
    `APICall` / `MCP` / `ModelOp` / `Functional`). The description the model uses
    to choose a tool comes from that **referenced step's own top-level
-   `description:`** (REQUIRED — set it on the step); an inline `description:`
-   here overrides it. `parameters` (JSON Schema) is optional:
+   `description:`** (REQUIRED — the single source; a tool-entry `description:`
+   is ignored). `parameters` (JSON Schema) is optional:
    ```yaml
    - id: triage_agent
-     kind: AutonomousAgent
+     kind: Agent
+     mode: autonomous
      agent:
        # `steering` = the agent's persistent instruction, ALWAYS injected.
-       steering: "Resolve the customer ticket using the available tools."
+       # Inline text or a pinned artifact:// reference to a `type: steering`
+       # prose artifact in artifacts/ (front-matter .md).
+       steering: artifact://triage-operating-policy@1
        model: default
-       # steering_files (always injected) and skills (injected when relevant) are
-       # per-agent markdown, scoped to agents/<workflow>__<stepId>/{steering,skills}/.
-       steering_files:
-         - agents/support__triage_agent/steering/operating-policy.md
+       # skills (injected when relevant) are pinned artifact refs to
+       # `type: skill` prose artifacts in artifacts/.
        skills:
-         - agents/support__triage_agent/skills/refund-policy.md
+         - artifact://refund-policy@1
        max_iterations: 8          # hard cap (default 8)
        token_budget: 50000        # OPTIONAL cap on cumulative tokens
        tools:
          - ref: lookup_order
-           description: "Fetch order details by order id."
            parameters:
              type: object
              properties: { order_id: { type: string } }
              required: [order_id]
          - ref: issue_refund
-           description: "Issue a refund for an order id and amount."
        outcome:
          enum: [resolved, escalate, needs_human]   # the closed set of exits
-         output_key: agent_result                  # the single data output
+         write: agent_result                       # the single data output key
      routes:
        resolved:        format_reply
        escalate:        notify_manager
@@ -46,12 +46,16 @@ options:
        max_iterations:  fallback_summary           # reserved abnormal exits
        error:           alert_ops
        budget_exceeded: fallback_summary
+       aborted:         alert_ops
    ```
 3. **Every** `outcome.enum` value MUST be mapped in `routes:`, plus the reserved
-   abnormal exits `max_iterations` / `budget_exceeded` / `error`.
-4. The agent reads context and writes only `output_key`. Tool results return to
-   the agent; set `writes_context: true` on a tool only if it should also mutate
-   the shared workflow context.
+   abnormal exits `max_iterations` / `budget_exceeded` / `error` / `aborted`
+   (and `guardrail_violation` when the agent has guardrails attached).
+4. The agent reads context and writes only `outcome.write`. Its final no-tool
+   turn must be `{"outcome": <enum value>, "result": <payload>}` — the engine
+   appends that contract clause to the steering automatically. Tool results
+   return to the agent; set `writes_context: true` on a tool only if it should
+   also mutate the shared workflow context.
 5. For data-driven branching after an outcome (e.g. by country), route into a
    deterministic `Router` with `match:` — NEVER push that logic into the agent:
    ```yaml
@@ -60,12 +64,13 @@ options:
      match: { field: user.country }
      routes: { US: resolve_us, DE: resolve_eu, default: resolve_other }
    ```
-6. **Steering vs skills** — both are per-agent markdown under
-   `agents/<workflow>__<stepId>/{steering,skills}/` (scoped to THIS agent, so
-   same-named files never collide across agents, and an agent can only read its
-   own). `steering` (inline) + `steering_files` are ALWAYS injected (persistent
-   operating context); `skills` are injected as capabilities to apply when
-   relevant. Missing or out-of-scope paths are skipped at runtime.
+6. **Steering vs skills** — both are versioned prose artifacts in the project's
+   `artifacts/` directory: markdown files with YAML front-matter
+   (`name` / `type: steering|skill` / `version` / `description`). `steering`
+   (inline text or one artifact ref) is ALWAYS injected (persistent operating
+   context); `skills` (a list of artifact refs) are injected as capabilities to
+   apply when relevant. Always pin versions (`artifact://name@1`) — floating
+   refs draw a validate warning.
 7. OPTIONAL supervision — add a `spec.supervisor` block to the workflow to watch
    this agent live and pause / abort / steer it. See the
    `supervise-autonomous-agent` skill.

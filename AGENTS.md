@@ -17,8 +17,9 @@ same directory**.
    `functional-node.md`, `model-op.md`, `response.md`, `auth.md`) explain the
    internals the specs reference.
 3. **Never invent kinds or fields.** Document kinds and step kinds are closed
-   sets. Step kinds are PascalCase: `Functional`, `Agent`, `AutonomousAgent`,
-   `Router`, `APICall`, `MCP`, `ModelOp`, `Response`, `HumanInTheLoop`.
+   sets. Step kinds are PascalCase: `Functional`, `Agent`, `Router`, `APICall`,
+   `MCP`, `ModelOp`, `Response`, `HumanInTheLoop`. Every `Agent` step declares
+   `mode: completion` (single call) or `mode: autonomous` (bounded tool loop).
 4. **`tuvl validate` must pass with zero errors and zero warnings** before you
    run anything. Treat every warning as a bug in your YAML.
 5. Check the infra prerequisites in [`REQUIREMENTS.md`](./REQUIREMENTS.md)
@@ -40,7 +41,7 @@ cd <project-dir>                 # the dir holding project-specification.md
 # Answer y + creds for Postgres; answer n at the LLM prompt — the specs use
 # Gemini, which init has no preset for, so you write llms/default.yaml yourself:
 printf 'y\nlocalhost\n5432\n<db-name>\npostgres\npostgres\nn\n' | tuvl init .
-# then: write llms/ models/ datasources/ workflows/ nodes/ agents/ per the spec
+# then: write llms/ models/ datasources/ workflows/ nodes/ artifacts/ per the spec
 # (llms/default.yaml = gemini/gemini-3.1-flash-lite, api_key: ${GEMINI_API_KEY})
 tuvl validate                    # loop until clean
 tuvl dev                         # smoke the endpoints with the spec's curl demos
@@ -50,13 +51,16 @@ tuvl test                        # the spec's test suite
 ## The traps that fail first-time implementations
 
 - **Every non-`default` emitted signal must be mapped in `routes:`** — including
-  the four `AutonomousAgent` reserved exits `max_iterations` /
-  `budget_exceeded` / `error` / `aborted` when the spec routes them.
-- **`AutonomousAgent` uses `steering:`** — `goal:` is not a recognized key and
-  is silently ignored.
-- **Tool descriptions live on the referenced step's `description:`** (the tool
-  entry's `description:` is only a fallback). A tool without one is a validate
-  error.
+  the autonomous-agent reserved exits `max_iterations` / `budget_exceeded` /
+  `error` / `aborted` when the spec routes them (plus `guardrail_violation`
+  when guardrails are attached).
+- **Autonomous agents (`kind: Agent`, `mode: autonomous`) use `steering:`** —
+  `goal:` is not a recognized key and is silently ignored. Steering is inline
+  text or a pinned `artifact://` reference to a `type: steering` prose artifact
+  in `artifacts/`.
+- **Tool descriptions live on the referenced step's `description:`** (the
+  single source — a tool-entry `description:` is ignored). A tool without one
+  is a validate error.
 - **HITL resume continues at the next step in document order** — the HITL
   step's `routes:` are never consulted on resume. The specs order steps
   accordingly; keep that order.

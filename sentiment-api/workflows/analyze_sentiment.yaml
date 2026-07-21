@@ -18,12 +18,13 @@ spec:
     # contract downstream at the persist ModelOp step.
 
   steps:
-    # 1. LLM classification. output.format: json merges the returned object into
+    # 1. LLM classification. outcome.format: json merges the returned object into
     #    context; the prompt asks for a single `analysis` object so the persist
     #    step can read context["analysis"]. The review text is auto-appended by
     #    the engine as an "## Input Data" block (Golden Rule 15).
     - id: classify
       kind: Agent
+      mode: completion
       agent:
         model: default
         system: |
@@ -35,7 +36,7 @@ spec:
         prompt: |
           Classify the sentiment of the product review in the Input Data block
           below. Return the analysis object exactly as specified.
-        output:
+        outcome:
           format: json
         retry:
           attempts: 2

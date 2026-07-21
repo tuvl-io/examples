@@ -204,10 +204,10 @@ engine disagree (the engine is authoritative per the spec's ground-truth rule):
    directory holds at least one `ModelDefinition`. The spec explicitly allows an
    optional `Document` bookkeeping model, so it is included (CRUD only; the
    workflows do not touch it).
-4. **Answer shaping.** The spec's `answer` step lists `output.output_key: answer`
-   and a `Response` with `source: answer`. An `Agent` step has no `output_key` —
-   the engine merges all JSON fields into context. So the step uses
-   `output: { format: json }` (fields `answer` / `sources` / `confident` merge
+4. **Answer shaping.** The spec's `answer` step returns JSON and a `Response`
+   with `source: answer`. A completion-mode `Agent` step without an explicit
+   `outcome.write` merges all JSON fields into context. So the step uses
+   `outcome: { format: json }` (fields `answer` / `sources` / `confident` merge
    into context) and the `respond` step uses `mapping:` to project exactly the
    `{ answer, sources, confident }` shape the spec intends.
 5. **Ingest response.** The spec's ingest `respond` maps `{ ingested: true, title }`.
