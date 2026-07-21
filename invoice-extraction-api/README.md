@@ -13,8 +13,9 @@ Built with [tuvl](https://tuvl.io) `>= 2026.3.1.0`. See the full brief in
 - A `ModelDefinition` with `enum` fields (`currency`, `status`), a `secure: true`
   PII field (`vendor_tax_id`), and `input: false` server fields (`id`,
   `created_at`).
-- An `Agent` step with `output.format: json` for structured extraction (input is
-  auto-merged — the prompt never pastes `raw_text` manually).
+- An `Agent` step (`mode: completion`) with `outcome.format: json` for
+  structured extraction (input is auto-merged — the prompt never pastes
+  `raw_text` manually).
 - A custom `Functional` node (`verify_totals`) emitting business signals
   (`valid` / `mismatch`) routed via `routes:`.
 - `ModelOp` persistence coexisting with the auto-generated CRUD routes.

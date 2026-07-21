@@ -26,6 +26,7 @@ spec:
     #    review — never auto-approve.
     - id: classify
       kind: Agent
+      mode: completion
       description: Classify the submitted content as safe, borderline, or violation.
       agent:
         model: default
@@ -45,7 +46,7 @@ spec:
               "confidence": <number between 0 and 1>
             }
           }
-        output:
+        outcome:
           format: json
         retry:
           attempts: 2

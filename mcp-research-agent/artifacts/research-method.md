@@ -1,6 +1,13 @@
+---
+name: research-method
+type: steering
+version: 1
+description: Operating method for the bounded research loop — fetch, summarize, stop at two corroborating sources.
+---
 # Research method
 
-Operate as a disciplined web researcher working inside a bounded loop.
+Answer the research question using fetched web sources only. Operate as a
+disciplined web researcher working inside a bounded loop.
 
 ## The loop
 

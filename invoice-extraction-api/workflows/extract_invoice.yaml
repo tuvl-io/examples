@@ -18,12 +18,13 @@ spec:
     # Create schema at the persist ModelOp step.
 
   steps:
-    # 1. LLM structured extraction. output.format: json merges the model's JSON
+    # 1. LLM structured extraction. outcome.format: json merges the model's JSON
     #    into context; the prompt asks for a single `extracted` object so the
     #    downstream node/ModelOp can read context["extracted"]. raw_text is
     #    auto-appended by the engine as an "## Input Data" block (Golden Rule 15).
     - id: extract
       kind: Agent
+      mode: completion
       agent:
         model: default
         system: |
@@ -43,7 +44,7 @@ spec:
           Extract the structured invoice fields from the invoice text provided
           in the Input Data block below. Do not invent values; use null for
           fields that are not present.
-        output:
+        outcome:
           format: json
         retry:
           attempts: 2

@@ -1,6 +1,6 @@
 # mcp-research-agent
 
-> Built with [tuvl](https://tuvl.io) — a bounded **AutonomousAgent** that drives
+> Built with [tuvl](https://tuvl.io) — a bounded **autonomous agent** that drives
 > an **MCP fetch tool** across the web and returns a cited research brief.
 
 `POST /api/research` hands a question to a bounded ReAct agent. The agent fetches
@@ -14,11 +14,16 @@ signal — normal or reserved — is routed to a real response.
 ## What this example demonstrates
 
 - **`kind: MCP` over stdio** — the only example that exercises the MCP step.
-- **`kind: AutonomousAgent`** — a declared tool set, `outcome.enum`,
-  `max_iterations`, `token_budget`, and **all four reserved exits routed**
-  (`max_iterations` / `budget_exceeded` / `error` / `aborted`).
-- **Per-agent scoped markdown** — `steering` (inline), `steering_files`, and
-  `skills` under `agents/research__investigate/`.
+  The server's transport config is a `type: mcp` structured artifact
+  (`artifacts/fetch-web.yaml`), referenced from the step as
+  `mcp.server: artifact://fetch-web@1`.
+- **`kind: Agent`, `mode: autonomous`** — a declared tool set, `outcome.enum`,
+  `outcome.write`, `max_iterations`, `token_budget`, and **all four reserved
+  exits routed** (`max_iterations` / `budget_exceeded` / `error` / `aborted`;
+  `guardrail_violation` is also reserved, for agents with guardrails attached).
+- **Versioned prose artifacts** — the agent's `steering` and `skills` are
+  pinned `artifact://` refs to front-matter markdown in `artifacts/`
+  (`research-method` steering, `citation-style` skill).
 - **Tool descriptions from the referenced step's `description:`** — required, or
   `tuvl validate` errors.
 - **Live `agent_progress` frames** consumed by the SDK (`client/watch.ts`).
@@ -162,10 +167,10 @@ terminal signal (not the model's opinion):
 
 | Step | Kind | Role |
 |---|---|---|
-| `investigate` | `AutonomousAgent` | the bounded loop; routes 2 outcomes + 4 reserved exits |
-| `fetch_page` | `MCP` (stdio) | tool — `uvx mcp-server-fetch`, tool `fetch` |
+| `investigate` | `Agent` (`mode: autonomous`) | the bounded loop; routes 2 outcomes + 4 reserved exits |
+| `fetch_page` | `MCP` (stdio) | tool — server artifact `fetch-web` (`uvx mcp-server-fetch`), tool `fetch` |
 | `summarize_source` | `Functional` | tool — pure-Python `{url, title, takeaway}` |
-| `compose` | `Agent` | composes the final cited brief (JSON) |
+| `compose` | `Agent` (`mode: completion`) | composes the final cited brief (JSON) |
 | `persist` / `persist_partial` | `ModelOp` | create `ResearchBrief` (`answered` / `capped`) |
 | `respond` / `respond_partial` / `respond_failed` | `Response` | shape the three exit bodies |
 

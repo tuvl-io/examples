@@ -1,6 +1,6 @@
 # Infrastructure & LLM Requirements
 
-What each example needs before `tuvl dev` boots. All examples target **tuvl >= 2026.3.1.0** (the 2026.2.6.1 patch carries fixes these projects rely on — HITL resume with versioned contexts, ISO-string persistence, embedding dimensions).
+What each example needs before `tuvl dev` boots. All examples target **tuvl >= 2026.4.0.0** (the unified `kind: Agent` + `mode:` contract, the `outcome` block, and `artifact://` references require the 2026.4 engine — older engines reject these projects at load).
 
 ## Summary matrix
 
@@ -37,7 +37,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 All model access goes through LiteLLM, configured per project in `llms/*.yaml` (`kind: AgentModel`). The specs default to Google Gemini — one `GEMINI_API_KEY` covers everything:
 
-- **Chat model** (`llms/default.yaml`): `gemini/gemini-3.1-flash-lite` — used by every `Agent` / `AutonomousAgent` step.
+- **Chat model** (`llms/default.yaml`): `gemini/gemini-3.1-flash-lite` — used by every `Agent` step (both `mode: completion` and `mode: autonomous`).
 - **Judge model** (`kyc-onboarding` only, `llms/judge.yaml`): a second preset for the `spec.supervisor` LLM judge and the `tuvl test` evaluations. Can be the same model id; a separate preset keeps cost/temperature tunable independently.
 - **Embeddings** (`knowledge-base-qa`, `kyc-onboarding`): `gemini/gemini-embedding-001` declared in `models/embeddings.yaml` with `dimensions: 1536` — the engine passes the declared dimensions to the provider (Matryoshka truncation from the model's native 3072), and the collection's vector dimension must match.
 
@@ -55,6 +55,6 @@ Estimated cost to run every acceptance test once with the Gemini defaults: well 
 
 ## Engine
 
-- `tuvl[standard] >= 2026.3.1.0` — published on PyPI: `uv tool install "tuvl[standard]>=2026.3.1.0"`, Python 3.12+.
+- `tuvl[standard] >= 2026.4.0.0` — published on PyPI: `uv tool install "tuvl[standard]>=2026.4.0.0"`, Python 3.12+.
 - Each project is scaffolded with `tuvl init <name>` and validated with `tuvl validate` before first boot.
 - Production-mode extras (Biscuit signing key via `tuvl keys generate`, IAM roles) are only needed where a spec says so (`content-moderation-pipeline`, `kyc-onboarding` — their HITL group gates need real tokens; `tuvl dev` covers everything else).
