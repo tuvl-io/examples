@@ -35,13 +35,14 @@ tuvl-examples/
 
 ## Projects
 
-> Six complete projects — clone one and run it. Contributors and coding agents
+> Seven complete projects — clone one and run it. Contributors and coding agents
 > start at
 > [AGENTS.md](./AGENTS.md); infrastructure and LLM needs per project:
 > [REQUIREMENTS.md](./REQUIREMENTS.md).
 
 | Project | Difficulty | What it shows | Step kinds used | Status |
 |---------|------------|---------------|-----------------|--------|
+| [`support-triage`](./support-triage) | Easy–Medium | Both agent modes side by side — completion classify → autonomous investigate — with artifacts + a guardrail. Runs locally on Ollama, no API key | Agent (completion + autonomous) · Functional · ModelOp · Response | ✅ runnable |
 | [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → validated structured records via one LLM step | Agent · Functional · ModelOp · Response | ✅ runnable |
 | [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers — RAG on built-in rails | Functional (DataIngest/DataSearch) · Agent · Response | ✅ runnable |
 | [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → region-aware routing → group-gated human review (no self-approval) | Agent · Router (match) · APICall · HumanInTheLoop · Functional · ModelOp · Response | ✅ runnable |

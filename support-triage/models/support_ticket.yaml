@@ -1,0 +1,16 @@
+kind: ModelDefinition
+version: v1
+enabled: true
+metadata:
+  name: SupportTicket
+  schema_version: v1
+spec:
+  tablename: support_tickets
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: subject, type: string }
+    - { name: body, type: text }
+    - { name: category, type: string }
+    - { name: urgency, type: string }
+    - { name: resolution, type: text }
+    - { name: created_at, type: timestamptz, input: false }
