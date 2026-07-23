@@ -1,7 +1,7 @@
 # Knowledge-Base Q&A — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Easy–Medium
-> **Engine:** tuvl >= 2026.3.1.0 · **Ground truth for all YAML:** `tuvl-agentic-manual.md` (esp. §4.2 built-in runners, Golden Rule 16)
+> **Engine:** tuvl >= 1.0.0 · **Ground truth for all YAML:** `tuvl-agentic-manual.md` (esp. §4.2 built-in runners, Golden Rule 16)
 > **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kb` **with pgvector**, `GEMINI_API_KEY` for chat + embeddings)
 
 Ingest markdown documents, then ask questions and get answers grounded in — and citing — the ingested content. The entire RAG pipeline runs on tuvl's built-in rails: **zero custom Python**.

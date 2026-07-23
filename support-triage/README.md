@@ -12,12 +12,12 @@ ticket. Along the way it runs **both modes of the unified `kind: Agent` step**:
 It also shows the **artifact subsystem** (prompt / steering / guardrail assets
 referenced by `artifact://`), a **guardrail** on the agent's output, and a
 tool wired as an off-spine step. This is the clearest single-file tour of how
-agents work in tuvl `>= 2026.4.0.0`.
+agents work in tuvl `>= 1.0.0`.
 
 **Runs fully locally on [Ollama](https://ollama.com) — no cloud API key.** (A
 one-line switch to a hosted model like Gemini is documented in `llms/default.yaml`.)
 
-Built with [tuvl](https://tuvl.io) `>= 2026.4.0.0`.
+Built with [tuvl](https://tuvl.io) `>= 1.0.0`.
 
 ## What it demonstrates
 
@@ -139,8 +139,8 @@ workflow, and (in `tuvl dev`) `.md` edits apply without a restart:
 
   Prefer a hosted model? Edit `llms/default.yaml` (a commented Gemini block is
   right there) and set the key in `.env`.
-- **tuvl** `>= 2026.4.0.0` on PATH:
-  `uv tool install "tuvl[standard]>=2026.4.0.0"`.
+- **tuvl** `>= 1.0.0` on PATH:
+  `uv tool install "tuvl[standard]>=1.0.0"`.
 
 ```sql
 CREATE DATABASE tuvl_support;

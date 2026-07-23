@@ -35,7 +35,7 @@ project specifically:
 - **`GEMINI_API_KEY`** — used for both the chat model
   (`gemini/gemini-3.1-flash-lite`) and the embedding model
   (`gemini/gemini-embedding-001`, truncated to 1536 dims via Matryoshka).
-- tuvl **>= 2026.3.1.0** (`uv tool install "tuvl[standard]>=2026.3.1.0"`).
+- tuvl **>= 1.0.0** (`uv tool install "tuvl[standard]>=1.0.0"`).
 
 ## Run
 

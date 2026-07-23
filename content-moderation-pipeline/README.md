@@ -10,7 +10,7 @@ submitter cannot approve their own content.
 - **`Router` `match:` switches** — data-driven, multi-way branching by `region`
   and by `classification.category`. The branching decision is deterministic and
   never pushed into the LLM.
-- **`HumanInTheLoop` with `auth.required_group`** (engine >= 2026.2.6): the
+- **`HumanInTheLoop` with `auth.required_group`** (engine >= 1.0.0): the
   resume is enforced against a group — the submitting token cannot approve its
   own content (403); only a `moderators`-group token (or `iam:admin`) can.
 - **The HITL resume rule**: a HITL step's `routes:` are never consulted on
@@ -59,7 +59,7 @@ See [`../REQUIREMENTS.md`](../REQUIREMENTS.md) for the full matrix. For this pro
 - **`GEMINI_API_KEY`** for the `classify` Agent (`gemini/gemini-3.1-flash-lite`).
 - **`MODERATION_WEBHOOK_URL`** (optional) — violation notification target;
   defaults to `https://httpbin.org/post` so the demo runs with no setup.
-- tuvl >= 2026.3.1.0 (`uv tool install "tuvl[standard]>=2026.3.1.0"`).
+- tuvl >= 1.0.0 (`uv tool install "tuvl[standard]>=1.0.0"`).
 
 ## Run
 

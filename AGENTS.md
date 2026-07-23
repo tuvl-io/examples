@@ -33,7 +33,7 @@ Follow the skill at
 
 ```
 # engine 2026.3.1.0 is published on PyPI — install/upgrade it first:
-uv tool install "tuvl[standard]>=2026.3.1.0"
+uv tool install "tuvl[standard]>=1.0.0"
 tuvl --version                   # must print v2026.3.1.0 or later
 
 cd <project-dir>                 # the dir holding project-specification.md

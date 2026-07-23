@@ -1,6 +1,6 @@
 # Infrastructure & LLM Requirements
 
-What each example needs before `tuvl dev` boots. All examples target **tuvl >= 2026.4.0.0** (the unified `kind: Agent` + `mode:` contract, the `outcome` block, and `artifact://` references require the 2026.4 engine — older engines reject these projects at load).
+What each example needs before `tuvl dev` boots. All examples target **tuvl >= 1.0.0** (the unified `kind: Agent` + `mode:` contract, the `outcome` block, and `artifact://` references require the 1.0 engine — older engines reject these projects at load).
 
 ## Summary matrix
 
@@ -56,6 +56,6 @@ Estimated cost to run every acceptance test once with the Gemini defaults: well 
 
 ## Engine
 
-- `tuvl[standard] >= 2026.4.0.0` — published on PyPI: `uv tool install "tuvl[standard]>=2026.4.0.0"`, Python 3.13 (3.14 is not yet supported — biscuit-python ships no cp314 wheels; uv picks 3.13 automatically, or pass `--python 3.13`).
+- `tuvl[standard] >= 1.0.0` — published on PyPI: `uv tool install "tuvl[standard]>=1.0.0"`, Python 3.13 (3.14 is not yet supported — biscuit-python ships no cp314 wheels; uv picks 3.13 automatically, or pass `--python 3.13`).
 - Each project is scaffolded with `tuvl init <name>` and validated with `tuvl validate` before first boot.
 - Production-mode extras (Biscuit signing key via `tuvl keys generate`, IAM roles) are only needed where a spec says so (`content-moderation-pipeline`, `kyc-onboarding` — their HITL group gates need real tokens; `tuvl dev` covers everything else).

@@ -5,7 +5,7 @@ sentiment classification. One LLM step, typed persistence, a clean response —
 the smallest complete service, chosen to show the **production packaging path**
 with [`tuvl ship`](https://tuvl.dev/cli/commands/#tuvl-ship).
 
-Built with [tuvl](https://tuvl.io) `>= 2026.3.1.0` (early stable). See the CLI
+Built with [tuvl](https://tuvl.io) `>= 1.0.0`. See the CLI
 reference for [`tuvl ship`](https://tuvl.dev/cli/commands/#tuvl-ship).
 
 ## What it demonstrates
@@ -25,7 +25,7 @@ reference for [`tuvl ship`](https://tuvl.dev/cli/commands/#tuvl-ship).
 - **PostgreSQL 15+**, database `tuvl_reviews` (plain Postgres — no pgvector).
 - **`GEMINI_API_KEY`** — the `classify` Agent uses `gemini/gemini-3.1-flash-lite`
   via LiteLLM.
-- **tuvl** `>= 2026.3.1.0` on PATH (`uv tool install "tuvl[standard]>=2026.3.1.0"`).
+- **tuvl** `>= 1.0.0` on PATH (`uv tool install "tuvl[standard]>=1.0.0"`).
 
 ```sql
 CREATE DATABASE tuvl_reviews;

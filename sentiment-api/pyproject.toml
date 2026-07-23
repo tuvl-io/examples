@@ -17,7 +17,7 @@ readme = "README.md"
 requires-python = ">=3.13,<3.14"
 license = { text = "MIT" }
 dependencies = [
-    "tuvl>=2026.4.0.0",
+    "tuvl>=1.0.0",
 ]
 
 [project.urls]
@@ -29,7 +29,7 @@ dependencies = [
 [dependency-groups]
 # Development: uv injects the UI and tools automatically for local work
 dev = [
-    "tuvl[standard]>=2026.4.0.0",
+    "tuvl[standard]>=1.0.0",
 ]
 
 [tool.uv]

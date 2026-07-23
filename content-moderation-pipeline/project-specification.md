@@ -1,7 +1,7 @@
 # Content Moderation Pipeline — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Medium
-> **Engine:** tuvl >= 2026.3.1.0 · **Ground truth:** `tuvl-agentic-manual.md` (§4.5 Router `match:`, §4.10 HITL) + engine `docs/human-in-the-loop.md`
+> **Engine:** tuvl >= 1.0.0 · **Ground truth:** `tuvl-agentic-manual.md` (§4.5 Router `match:`, §4.10 HITL) + engine `docs/human-in-the-loop.md`
 > **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_moderation`, `GEMINI_API_KEY`; optional `MODERATION_WEBHOOK_URL`)
 
 User-generated content arrives on a webhook; an LLM classifies it; deterministic routing applies region-specific policy; violations notify an external channel; borderline cases suspend for **group-gated human review** — where the submitter cannot approve their own content.
@@ -9,7 +9,7 @@ User-generated content arrives on a webhook; an LLM classifies it; deterministic
 ## What it demonstrates
 
 - `Router` **`match:`** switch (data-driven, multi-way branching — never pushed into the LLM)
-- `HumanInTheLoop` with **`auth.required_group`** (engine >= 2026.2.6: enforced on resume, no self-approval, 403 otherwise)
+- `HumanInTheLoop` with **`auth.required_group`** (engine >= 1.0.0: enforced on resume, no self-approval, 403 otherwise)
 - The resume rule that matters for step ordering: **HITL `routes:` are never consulted on resume — execution continues at the next step in document order**
 - `APICall` fire-and-forget notification, `enum` model fields, audit trail via `ModelOp`
 - Workflow auth gate: `metadata.required_scope`
