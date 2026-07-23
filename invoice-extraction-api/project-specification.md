@@ -1,7 +1,7 @@
 # Invoice Extraction API — Project Specification
 
 > **Status:** SPECIFICATION — ready to implement · **Difficulty:** Easy
-> **Engine:** tuvl >= 2026.3.1.0 · **Ground truth for all YAML:** `tuvl-agentic-manual.md` in the engine repo (golden rules are hard constraints)
+> **Engine:** tuvl >= 1.0.0 · **Ground truth for all YAML:** `tuvl-agentic-manual.md` in the engine repo (golden rules are hard constraints)
 > **Requirements:** see repo-root `REQUIREMENTS.md` (Postgres `tuvl_invoices`, `GEMINI_API_KEY`; no pgvector, no Redis)
 
 Paste raw invoice text at `POST /api/invoices/extract` and get back a validated, persisted, structured invoice record. One LLM step, deterministic verification, typed persistence — the smallest example that proves "declare a model and a workflow in YAML, get a production API."
