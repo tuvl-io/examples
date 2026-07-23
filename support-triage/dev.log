@@ -1,0 +1,322 @@
+╭────────────────────────────────── tuvl dev ──────────────────────────────────╮
+│ Starting tuvl engine in dev mode on port 8345.                               │
+│ Project:                                                                     │
+│ /Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-tria │
+│ ge                                                                           │
+│                                                                              │
+│ Open http://127.0.0.1:8345/insight/ and it will authenticate automatically.  │
+│ The key is stored in .tuvl/.dev-session if needed.                           │
+╰──────────────────────────────────────────────────────────────────────────────╯
+INFO:     Will watch for changes in these directories: ['/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage']
+INFO:     Uvicorn running on http://127.0.0.1:8345 (Press CTRL+C to quit)
+INFO:     Started reloader process [59028] using WatchFiles
+2026-07-21T20:04:52Z INFO  tuvl Settings loaded  app=tuvl project=/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage db=localhost:5432/tuvl_support
+2026-07-21T20:04:52Z WARN  tuvl auth.key.ephemeral  env_var=TUVL_BISCUIT_PRIVATE_KEY reason="env var not set; tokens will be invalid after process restart" hint="set TUVL_BISCUIT_PRIVATE_KEY in your .env for persistent sessions"
+2026-07-21T20:04:53Z INFO  tuvl Dev mode enabled — /dev/* routes active, insight loaded via tuvl.main.
+2026-07-21T20:04:53Z INFO  tuvl gRPC-Web (sonora) mounted at /grpc — ExecutionService, DevService, IamService
+2026-07-21T20:04:53Z INFO  tuvl Skipping bundled /insight mount; tuvl_insight package will own /insight.
+2026-07-21T20:04:53Z INFO  tuvl_insight Tuvl Insight router mounted at /api/insight
+2026-07-21T20:04:53Z INFO  tuvl_insight Tuvl Insight UI mounted at /insight
+2026-07-21T20:04:53Z INFO  tuvl.main Tuvl Insight developer portal attached (routes: /api/insight/*, /insight)
+INFO:     Started server process [59030]
+INFO:     Waiting for application startup.
+2026-07-21T20:04:53Z INFO  tuvl tuvl starting up
+2026-07-21T20:04:53Z INFO  tuvl Loading all configurations
+2026-07-21T20:04:53Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=investigator-steering type=steering version=1 source=file
+2026-07-21T20:04:53Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=triage-prompt type=prompt version=1 source=file
+2026-07-21T20:04:53Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=no-secrets type=guardrail source=file
+2026-07-21T20:04:53Z INFO  tuvl.core.models.agent_models AgentModel loaded  name=default model=ollama_chat/llama3.1:latest enabled=true
+2026-07-21T20:04:53Z INFO  tuvl.models Loaded model  model=SupportTicket table=support_tickets datasource=main_postgres
+2026-07-21T20:04:53Z INFO  tuvl.models Schemas generated  model=SupportTicket schemas="SupportTicketCreate, SupportTicketRead, SupportTicketUpdate"
+2026-07-21T20:04:53Z INFO  tuvl Primary datasource explicitly marked  datasource=main_postgres
+2026-07-21T20:04:53Z INFO  tuvl DataSource loaded  name=main_postgres type=postgres host=localhost port=5432 db=tuvl_support
+2026-07-21T20:04:53Z INFO  tuvl.core.api.manager Workflow loaded  workflow=triage schema_version=v1
+2026-07-21T20:04:53Z INFO  tuvl config.loaded  artifacts=3 agent_models=1 models=1 embeddings=0 collections=0 datasources=1 federation=0 workflows=1
+2026-07-21T20:04:53Z INFO  tuvl Project config loaded  path=/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/config.yaml
+2026-07-21T20:04:53Z INFO  tuvl Model registry loaded  models=['SupportTicket']
+2026-07-21T20:04:53Z INFO  tuvl Schema registry loaded  schemas=['SupportTicket']
+2026-07-21T20:04:53Z INFO  tuvl Embedding registry loaded  embeddings=[]
+2026-07-21T20:04:53Z INFO  tuvl Collection registry loaded  collections=[]
+2026-07-21T20:04:53Z INFO  tuvl DataSource registry loaded  datasources=['main_postgres']
+2026-07-21T20:04:53Z INFO  tuvl Workflow registry loaded  workflows=['triage']
+2026-07-21T20:04:53Z INFO  tuvl Running deployment mode pre-flight check
+2026-07-21T20:04:53Z INFO  tuvl bootstrap.brownfield_boot  pid=59030 deployment_mode=single_tenant
+2026-07-21T20:04:53Z INFO  tuvl.core.api.crud_router CRUD router mounted  model=supportticket n_routes=5
+2026-07-21T20:04:53Z INFO  tuvl.core.api.crud_router CRUD routers built  count=1
+2026-07-21T20:04:53Z INFO  tuvl Initialising Redis (if configured)
+2026-07-21T20:04:53Z INFO  tuvl redis.not_configured  reason="no DataSource with spec.type=redis was registered" consequence="OAuth state and token blacklist use in-process memory" multi_worker_safe=false
+2026-07-21T20:04:53Z INFO  tuvl postgres.engine.building  pid=59030 datasource=main_postgres host=localhost port=5432 database=tuvl_support
+2026-07-21T20:04:53Z INFO  tuvl postgres.engine.ready  pid=59030 datasource=main_postgres pool=5…20
+2026-07-21T20:04:53Z INFO  tuvl Pinging datasource  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl Datasource ping successful  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl Creating tables on datasource  datasource=main_postgres pid=59030 tables=support_tickets
+2026-07-21T20:04:53Z INFO  tuvl Schema ready  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl IAM tables ready  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl HITL tables ready  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl Workflow version tracking table ready  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl Model version tracking table ready  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl Artifact table ready  datasource=main_postgres pid=59030
+2026-07-21T20:04:53Z INFO  tuvl rag.vector_store.ready  pid=59030 datasource=main_postgres dimensions=1536
+2026-07-21T20:04:53Z INFO  tuvl Syncing workflow versions to DB
+2026-07-21T20:04:53Z INFO  tuvl.models workflow_versions.sync.complete  count=1
+2026-07-21T20:04:53Z INFO  tuvl Syncing model versions to DB
+2026-07-21T20:04:53Z INFO  tuvl.models model_versions.sync.complete  count=1
+2026-07-21T20:04:53Z INFO  tuvl.core.artifacts.loader Artifact refs resolved  artifacts=3
+2026-07-21T20:04:53Z INFO  tuvl Loading node definitions
+2026-07-21T20:04:53Z INFO  tuvl.core.nodes.loader Node module loaded  file=lookup_account.py
+2026-07-21T20:04:53Z INFO  tuvl.core.nodes.rag node.registered  name=DataIngest builtin=true
+2026-07-21T20:04:53Z INFO  tuvl.core.nodes.rag node.registered  name=DataSearch builtin=true
+2026-07-21T20:04:53Z INFO  tuvl Node registry loaded  nodes=['lookup_account', 'DataIngest', 'DataSearch']
+2026-07-21T20:04:53Z INFO  tuvl.core.api.manager Workflow input schema resolved  workflow=triage schema=TriageInput
+2026-07-21T20:04:53Z INFO  tuvl.core.api.manager Workflow route mounted  method=POST path=/support/triage workflow=triage
+2026-07-21T20:04:53Z INFO  tuvl.core.api.manager Workflows mounted  count=1
+2026-07-21T20:04:53Z INFO  tuvl tuvl is ready
+2026-07-21T20:04:53Z INFO  uvicorn.error Application startup complete.
+2026-07-21T20:04:53Z INFO  uvicorn.access 127.0.0.1:64672 - "GET /health HTTP/1.1" 200
+2026-07-21T20:04:53Z INFO  uvicorn.access 127.0.0.1:64677 - "GET /insight/ HTTP/1.1" 200
+2026-07-21T20:04:54Z INFO  uvicorn.access 127.0.0.1:64677 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-21T20:04:54Z INFO  uvicorn.access 127.0.0.1:64678 - "POST /grpc/tuvl.v1.DevService/Ping HTTP/1.1" 200
+2026-07-21T20:04:54Z INFO  uvicorn.access 127.0.0.1:64678 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-21T20:04:54Z INFO  uvicorn.access 127.0.0.1:64677 - "POST /grpc/tuvl.v1.DevService/ListFiles HTTP/1.1" 200
+2026-07-21T20:05:04Z INFO  uvicorn.access 127.0.0.1:64719 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-21T20:05:11Z INFO  uvicorn.access 127.0.0.1:64752 - "GET /health HTTP/1.1" 200
+2026-07-21T20:05:11Z INFO  uvicorn.access 127.0.0.1:64754 - "GET /insight HTTP/1.1" 200
+2026-07-21T20:05:14Z INFO  uvicorn.access 127.0.0.1:64770 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-21T20:05:17Z INFO  uvicorn.access 127.0.0.1:64770 - "POST /grpc/tuvl.v1.DevService/GetFile HTTP/1.1" 200
+2026-07-21T20:05:20Z INFO  uvicorn.access 127.0.0.1:64770 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404
+2026-07-21T20:05:22Z INFO  tuvl.core.api.manager Workflow triggered  workflow=triage
+2026-07-21T20:05:22Z INFO  tuvl.core.engine.runner Workflow execution started  workflow=triage
+2026-07-21T20:05:22Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=classify node_kind=Agent
+[92m21:05:22 - LiteLLM:WARNING[0m: common_utils.py:979 - litellm: could not pre-load bedrock-runtime response stream shape — Bedrock event-stream decoding will be unavailable. Error: No module named 'botocore'
+2026-07-21T20:05:22Z WARN  LiteLLM litellm: could not pre-load bedrock-runtime response stream shape — Bedrock event-stream decoding will be unavailable. Error: No module named 'botocore'
+[92m21:05:23 - LiteLLM:WARNING[0m: common_utils.py:24 - litellm: could not pre-load sagemaker-runtime response stream shape — SageMaker event-stream decoding will be unavailable. Error: No module named 'botocore'
+2026-07-21T20:05:23Z WARN  LiteLLM litellm: could not pre-load sagemaker-runtime response stream shape — SageMaker event-stream decoding will be unavailable. Error: No module named 'botocore'
+2026-07-21T20:05:23Z INFO  tuvl.core.engine.agent_core Agent LLM call  step_id=classify model=ollama_chat/llama3.1:latest attempt=1 max_attempts=1
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64770 - "POST /grpc/tuvl.v1.DevService/ListFiles HTTP/1.1" 200
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64815 - "POST /grpc/tuvl.v1.DevService/SystemModels HTTP/1.1" 200
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64819 - "POST /grpc/tuvl.v1.DevService/GetFile HTTP/1.1" 200
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64816 - "GET /api/_system/collections HTTP/1.1" 200
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64770 - "GET /api/_system/vector-status HTTP/1.1" 200
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64817 - "GET /api/_system/embeddings HTTP/1.1" 200
+[92m21:05:23 - LiteLLM:INFO[0m: utils.py:4054 - 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:23Z INFO  LiteLLM 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:23Z INFO  uvicorn.access 127.0.0.1:64818 - "POST /grpc/tuvl.v1.IamService/ListRoles HTTP/1.1" 200
+2026-07-21T20:05:24Z INFO  uvicorn.access 127.0.0.1:64818 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-21T20:05:24Z INFO  uvicorn.access 127.0.0.1:64818 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-21T20:05:24Z INFO  uvicorn.access 127.0.0.1:64817 - "GET /dev/artifacts HTTP/1.1" 200
+2026-07-21T20:05:25Z INFO  tuvl.core.engine.agent_core Agent LLM response  step_id=classify model=ollama_chat/llama3.1:latest input_tokens=258 output_tokens=44
+2026-07-21T20:05:25Z INFO  tuvl.core.engine.agent_core Agent run complete  step_id=classify signal=billing
+2026-07-21T20:05:25Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=classify node_kind=Agent signal=billing duration_ms=3052.04
+2026-07-21T20:05:25Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=investigate node_kind=Agent
+[92m21:05:25 - LiteLLM:INFO[0m: utils.py:4054 - 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:25Z INFO  LiteLLM 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:26Z INFO  uvicorn.access 127.0.0.1:64817 - "GET /dev/artifacts/investigator-steering?version=1 HTTP/1.1" 200
+2026-07-21T20:05:26Z INFO  tuvl.core.engine.agent_core agent.turn  step_id=investigate iteration=1 max_iterations=5 tool_calls=1 tokens_used=590
+2026-07-21T20:05:26Z INFO  tuvl.core.engine.agent_core agent.tool_call  step_id=investigate iteration=1 tool=lookup_account signal=default
+[92m21:05:26 - LiteLLM:INFO[0m: utils.py:4054 - 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:26Z INFO  LiteLLM 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.agent_core agent.turn  step_id=investigate iteration=2 max_iterations=5 tool_calls=0 tokens_used=1164
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=investigate node_kind=Agent signal=resolved duration_ms=3731.1
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=persist node_kind=ModelOp
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=persist node_kind=ModelOp signal=default duration_ms=42.75
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=respond node_kind=Response
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=respond node_kind=Response signal=default duration_ms=0.13
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Workflow execution complete  workflow=triage
+2026-07-21T20:05:28Z INFO  tuvl.core.api.manager Workflow complete  workflow=triage
+2026-07-21T20:05:28Z INFO  uvicorn.access 127.0.0.1:64809 - "POST /support/triage HTTP/1.1" 200
+2026-07-21T20:05:28Z INFO  tuvl.core.api.manager Workflow triggered  workflow=triage
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Workflow execution started  workflow=triage
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=classify node_kind=Agent
+2026-07-21T20:05:28Z INFO  tuvl.core.engine.agent_core Agent LLM call  step_id=classify model=ollama_chat/llama3.1:latest attempt=1 max_attempts=1
+[92m21:05:28 - LiteLLM:INFO[0m: utils.py:4054 - 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:28Z INFO  LiteLLM 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:29Z INFO  uvicorn.access 127.0.0.1:64817 - "GET /dev/artifacts/no-secrets?version=1 HTTP/1.1" 200
+2026-07-21T20:05:30Z INFO  tuvl.core.engine.agent_core Agent LLM response  step_id=classify model=ollama_chat/llama3.1:latest input_tokens=258 output_tokens=43
+2026-07-21T20:05:30Z INFO  tuvl.core.engine.agent_core Agent run complete  step_id=classify signal=billing
+2026-07-21T20:05:30Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=classify node_kind=Agent signal=billing duration_ms=2044.94
+2026-07-21T20:05:30Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=investigate node_kind=Agent
+[92m21:05:30 - LiteLLM:INFO[0m: utils.py:4054 - 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:30Z INFO  LiteLLM 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:32Z INFO  tuvl.core.engine.agent_core agent.turn  step_id=investigate iteration=1 max_iterations=5 tool_calls=1 tokens_used=589
+2026-07-21T20:05:32Z INFO  tuvl.core.engine.agent_core agent.tool_call  step_id=investigate iteration=1 tool=lookup_account signal=default
+[92m21:05:32 - LiteLLM:INFO[0m: utils.py:4054 - 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:32Z INFO  LiteLLM 
+LiteLLM completion() model= llama3.1:latest; provider = ollama_chat
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.agent_core agent.turn  step_id=investigate iteration=2 max_iterations=5 tool_calls=0 tokens_used=1160
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=investigate node_kind=Agent signal=needs_human duration_ms=3643.2
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=persist node_kind=ModelOp
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=persist node_kind=ModelOp signal=default duration_ms=7.25
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.runner Executing workflow node  workflow=triage node_id=respond node_kind=Response
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.runner Workflow node complete  workflow=triage node_id=respond node_kind=Response signal=default duration_ms=0.05
+2026-07-21T20:05:34Z INFO  tuvl.core.engine.runner Workflow execution complete  workflow=triage
+2026-07-21T20:05:34Z INFO  tuvl.core.api.manager Workflow complete  workflow=triage
+2026-07-21T20:05:34Z INFO  uvicorn.access 127.0.0.1:64859 - "POST /support/triage HTTP/1.1" 200
+2026-07-21T20:07:32Z INFO  uvicorn.access 127.0.0.1:65390 - "GET /insight HTTP/1.1" 200
+2026-07-21T20:07:32Z INFO  uvicorn.access 127.0.0.1:65392 - "GET /insight/assets/ArtifactsPage-B9DDpcq_.js HTTP/1.1" 200
+2026-07-21T20:19:12Z INFO  uvicorn.access 127.0.0.1:51976 - "GET /insight/assets/LoginPage-DcNaCKoQ.js HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53649 - "GET /insight/artifacts HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53649 - "GET /insight/assets/index-CebRj3z5.js HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53649 - "GET /insight/assets/ArtifactsPage-B9DDpcq_.js HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53650 - "GET /insight/assets/TopBar-B-rCQpgq.js HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53651 - "POST /grpc/tuvl.v1.DevService/Ping HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53652 - "GET /insight/logo.png HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53652 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-22T06:25:30Z INFO  uvicorn.access 127.0.0.1:53649 - "GET /dev/artifacts HTTP/1.1" 200
+2026-07-22T06:25:31Z INFO  uvicorn.access 127.0.0.1:53649 - "POST /grpc/tuvl.v1.DevService/Ping HTTP/1.1" 200
+2026-07-22T06:25:31Z INFO  uvicorn.access 127.0.0.1:53649 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+2026-07-22T06:25:31Z INFO  uvicorn.access 127.0.0.1:53652 - "GET /dev/artifacts HTTP/1.1" 200
+2026-07-22T06:34:34Z INFO  uvicorn.access 127.0.0.1:53792 - "POST /grpc/tuvl.v1.DevService/Health HTTP/1.1" 200
+WARNING:  WatchFiles detected changes in '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/bin/activate_this.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/_virtualenv.py'. Reloading...
+2026-07-22T06:37:27Z INFO  uvicorn.error Shutting down
+2026-07-22T06:37:27Z INFO  uvicorn.error Waiting for application shutdown.
+2026-07-22T06:37:27Z INFO  tuvl tuvl shutting down
+2026-07-22T06:37:27Z INFO  tuvl Disposing PostgreSQL connection pools  pid=59030
+2026-07-22T06:37:27Z INFO  tuvl Connection pools disposed  pid=59030
+2026-07-22T06:37:27Z INFO  tuvl Shutdown complete.
+2026-07-22T06:37:27Z INFO  uvicorn.error Application shutdown complete.
+2026-07-22T06:37:27Z INFO  uvicorn.error Finished server process [59030]
+WARNING:  WatchFiles detected changes in '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/cidict.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/distro.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/instrumentor.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/sqlcommenter_utils.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/typing_extensions.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/version.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/six.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/environment_variables.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/_semconv.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/utils.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/propagators.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/google/cloud/common_resources_pb2.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/log_utils.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/google/cloud/version.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/google/cloud/extended_operations_pb2.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/bootstrap.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/bootstrap_gen.py', '/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/.venv/lib/python3.13/site-packages/opentelemetry/instrumentation/dependencies.py'. Reloading...
+2026-07-22T06:37:31Z INFO  tuvl Settings loaded  app=tuvl project=/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage db=localhost:5432/tuvl_support
+2026-07-22T06:37:31Z WARN  tuvl auth.key.ephemeral  env_var=TUVL_BISCUIT_PRIVATE_KEY reason="env var not set; tokens will be invalid after process restart" hint="set TUVL_BISCUIT_PRIVATE_KEY in your .env for persistent sessions"
+2026-07-22T06:37:33Z INFO  tuvl Dev mode enabled — /dev/* routes active, insight loaded via tuvl.main.
+2026-07-22T06:37:33Z INFO  tuvl gRPC-Web (sonora) mounted at /grpc — ExecutionService, DevService, IamService
+2026-07-22T06:37:33Z INFO  tuvl Skipping bundled /insight mount; tuvl_insight package will own /insight.
+2026-07-22T06:37:33Z INFO  tuvl_insight Tuvl Insight router mounted at /api/insight
+2026-07-22T06:37:33Z INFO  tuvl_insight Tuvl Insight UI mounted at /insight
+2026-07-22T06:37:33Z INFO  tuvl.main Tuvl Insight developer portal attached (routes: /api/insight/*, /insight)
+INFO:     Started server process [23981]
+INFO:     Waiting for application startup.
+2026-07-22T06:37:33Z INFO  tuvl tuvl starting up
+2026-07-22T06:37:33Z INFO  tuvl Loading all configurations
+2026-07-22T06:37:33Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=investigator-steering type=steering version=1 source=file
+2026-07-22T06:37:33Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=triage-prompt type=prompt version=1 source=file
+2026-07-22T06:37:33Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=no-secrets type=guardrail source=file
+2026-07-22T06:37:33Z INFO  tuvl.core.models.agent_models AgentModel loaded  name=default model=ollama_chat/llama3.1:latest enabled=true
+2026-07-22T06:37:33Z INFO  tuvl.models Loaded model  model=SupportTicket table=support_tickets datasource=main_postgres
+2026-07-22T06:37:33Z INFO  tuvl.models Schemas generated  model=SupportTicket schemas="SupportTicketCreate, SupportTicketRead, SupportTicketUpdate"
+2026-07-22T06:37:33Z INFO  tuvl Primary datasource explicitly marked  datasource=main_postgres
+2026-07-22T06:37:33Z INFO  tuvl DataSource loaded  name=main_postgres type=postgres host=localhost port=5432 db=tuvl_support
+2026-07-22T06:37:33Z INFO  tuvl.core.api.manager Workflow loaded  workflow=triage schema_version=v1
+2026-07-22T06:37:33Z INFO  tuvl config.loaded  artifacts=3 agent_models=1 models=1 embeddings=0 collections=0 datasources=1 federation=0 workflows=1
+2026-07-22T06:37:33Z INFO  tuvl Project config loaded  path=/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/config.yaml
+2026-07-22T06:37:33Z INFO  tuvl Model registry loaded  models=['SupportTicket']
+2026-07-22T06:37:33Z INFO  tuvl Schema registry loaded  schemas=['SupportTicket']
+2026-07-22T06:37:33Z INFO  tuvl Embedding registry loaded  embeddings=[]
+2026-07-22T06:37:33Z INFO  tuvl Collection registry loaded  collections=[]
+2026-07-22T06:37:33Z INFO  tuvl DataSource registry loaded  datasources=['main_postgres']
+2026-07-22T06:37:33Z INFO  tuvl Workflow registry loaded  workflows=['triage']
+2026-07-22T06:37:33Z INFO  tuvl Running deployment mode pre-flight check
+2026-07-22T06:37:33Z INFO  tuvl bootstrap.brownfield_boot  pid=23981 deployment_mode=single_tenant
+2026-07-22T06:37:33Z INFO  tuvl.core.api.crud_router CRUD router mounted  model=supportticket n_routes=5
+2026-07-22T06:37:33Z INFO  tuvl.core.api.crud_router CRUD routers built  count=1
+2026-07-22T06:37:33Z INFO  tuvl Initialising Redis (if configured)
+2026-07-22T06:37:33Z INFO  tuvl redis.not_configured  reason="no DataSource with spec.type=redis was registered" consequence="OAuth state and token blacklist use in-process memory" multi_worker_safe=false
+2026-07-22T06:37:33Z INFO  tuvl postgres.engine.building  pid=23981 datasource=main_postgres host=localhost port=5432 database=tuvl_support
+2026-07-22T06:37:33Z INFO  tuvl postgres.engine.ready  pid=23981 datasource=main_postgres pool=5…20
+2026-07-22T06:37:33Z INFO  tuvl Pinging datasource  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl Datasource ping successful  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl Creating tables on datasource  datasource=main_postgres pid=23981 tables=support_tickets
+2026-07-22T06:37:33Z INFO  tuvl Schema ready  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl IAM tables ready  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl HITL tables ready  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl Workflow version tracking table ready  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl Model version tracking table ready  datasource=main_postgres pid=23981
+2026-07-22T06:37:33Z INFO  tuvl Artifact table ready  datasource=main_postgres pid=23981
+2026-07-22T06:37:34Z INFO  tuvl rag.vector_store.ready  pid=23981 datasource=main_postgres dimensions=1536
+2026-07-22T06:37:34Z INFO  tuvl Syncing workflow versions to DB
+2026-07-22T06:37:34Z INFO  tuvl.models workflow_versions.sync.complete  count=1
+2026-07-22T06:37:34Z INFO  tuvl Syncing model versions to DB
+2026-07-22T06:37:34Z INFO  tuvl.models model_versions.sync.complete  count=1
+2026-07-22T06:37:34Z INFO  tuvl.core.artifacts.loader Artifact refs resolved  artifacts=3
+2026-07-22T06:37:34Z INFO  tuvl Loading node definitions
+2026-07-22T06:37:34Z INFO  tuvl.core.nodes.loader Node module loaded  file=lookup_account.py
+2026-07-22T06:37:34Z INFO  tuvl.core.nodes.rag node.registered  name=DataIngest builtin=true
+2026-07-22T06:37:34Z INFO  tuvl.core.nodes.rag node.registered  name=DataSearch builtin=true
+2026-07-22T06:37:34Z INFO  tuvl Node registry loaded  nodes=['lookup_account', 'DataIngest', 'DataSearch']
+2026-07-22T06:37:34Z INFO  tuvl.core.api.manager Workflow input schema resolved  workflow=triage schema=TriageInput
+2026-07-22T06:37:34Z INFO  tuvl.core.api.manager Workflow route mounted  method=POST path=/support/triage workflow=triage
+2026-07-22T06:37:34Z INFO  tuvl.core.api.manager Workflows mounted  count=1
+2026-07-22T06:37:34Z INFO  tuvl tuvl is ready
+2026-07-22T06:37:34Z INFO  uvicorn.error Application startup complete.
+2026-07-22T06:37:34Z INFO  uvicorn.error Shutting down
+2026-07-22T06:37:34Z INFO  uvicorn.error Waiting for application shutdown.
+2026-07-22T06:37:34Z INFO  tuvl tuvl shutting down
+2026-07-22T06:37:34Z INFO  tuvl Disposing PostgreSQL connection pools  pid=23981
+2026-07-22T06:37:34Z INFO  tuvl Connection pools disposed  pid=23981
+2026-07-22T06:37:34Z INFO  tuvl Shutdown complete.
+2026-07-22T06:37:34Z INFO  uvicorn.error Application shutdown complete.
+2026-07-22T06:37:34Z INFO  uvicorn.error Finished server process [23981]
+2026-07-22T06:37:35Z INFO  tuvl Settings loaded  app=tuvl project=/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage db=localhost:5432/tuvl_support
+2026-07-22T06:37:35Z WARN  tuvl auth.key.ephemeral  env_var=TUVL_BISCUIT_PRIVATE_KEY reason="env var not set; tokens will be invalid after process restart" hint="set TUVL_BISCUIT_PRIVATE_KEY in your .env for persistent sessions"
+2026-07-22T06:37:35Z INFO  tuvl Dev mode enabled — /dev/* routes active, insight loaded via tuvl.main.
+2026-07-22T06:37:35Z INFO  tuvl gRPC-Web (sonora) mounted at /grpc — ExecutionService, DevService, IamService
+2026-07-22T06:37:35Z INFO  tuvl Skipping bundled /insight mount; tuvl_insight package will own /insight.
+2026-07-22T06:37:35Z INFO  tuvl_insight Tuvl Insight router mounted at /api/insight
+2026-07-22T06:37:35Z INFO  tuvl_insight Tuvl Insight UI mounted at /insight
+2026-07-22T06:37:35Z INFO  tuvl.main Tuvl Insight developer portal attached (routes: /api/insight/*, /insight)
+INFO:     Started server process [24013]
+INFO:     Waiting for application startup.
+2026-07-22T06:37:35Z INFO  tuvl tuvl starting up
+2026-07-22T06:37:35Z INFO  tuvl Loading all configurations
+2026-07-22T06:37:35Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=investigator-steering type=steering version=1 source=file
+2026-07-22T06:37:35Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=triage-prompt type=prompt version=1 source=file
+2026-07-22T06:37:35Z INFO  tuvl.core.artifacts.loader Artifact loaded  name=no-secrets type=guardrail source=file
+2026-07-22T06:37:35Z INFO  tuvl.core.models.agent_models AgentModel loaded  name=default model=ollama_chat/llama3.1:latest enabled=true
+2026-07-22T06:37:35Z INFO  tuvl.models Loaded model  model=SupportTicket table=support_tickets datasource=main_postgres
+2026-07-22T06:37:35Z INFO  tuvl.models Schemas generated  model=SupportTicket schemas="SupportTicketCreate, SupportTicketRead, SupportTicketUpdate"
+2026-07-22T06:37:35Z INFO  tuvl Primary datasource explicitly marked  datasource=main_postgres
+2026-07-22T06:37:35Z INFO  tuvl DataSource loaded  name=main_postgres type=postgres host=localhost port=5432 db=tuvl_support
+2026-07-22T06:37:35Z INFO  tuvl.core.api.manager Workflow loaded  workflow=triage schema_version=v1
+2026-07-22T06:37:35Z INFO  tuvl config.loaded  artifacts=3 agent_models=1 models=1 embeddings=0 collections=0 datasources=1 federation=0 workflows=1
+2026-07-22T06:37:35Z INFO  tuvl Project config loaded  path=/Users/sooraj/Documents/workspace/63_btai/tuvl_project/examples/support-triage/config.yaml
+2026-07-22T06:37:35Z INFO  tuvl Model registry loaded  models=['SupportTicket']
+2026-07-22T06:37:35Z INFO  tuvl Schema registry loaded  schemas=['SupportTicket']
+2026-07-22T06:37:35Z INFO  tuvl Embedding registry loaded  embeddings=[]
+2026-07-22T06:37:35Z INFO  tuvl Collection registry loaded  collections=[]
+2026-07-22T06:37:35Z INFO  tuvl DataSource registry loaded  datasources=['main_postgres']
+2026-07-22T06:37:35Z INFO  tuvl Workflow registry loaded  workflows=['triage']
+2026-07-22T06:37:35Z INFO  tuvl Running deployment mode pre-flight check
+2026-07-22T06:37:35Z INFO  tuvl bootstrap.brownfield_boot  pid=24013 deployment_mode=single_tenant
+2026-07-22T06:37:35Z INFO  tuvl.core.api.crud_router CRUD router mounted  model=supportticket n_routes=5
+2026-07-22T06:37:35Z INFO  tuvl.core.api.crud_router CRUD routers built  count=1
+2026-07-22T06:37:35Z INFO  tuvl Initialising Redis (if configured)
+2026-07-22T06:37:35Z INFO  tuvl redis.not_configured  reason="no DataSource with spec.type=redis was registered" consequence="OAuth state and token blacklist use in-process memory" multi_worker_safe=false
+2026-07-22T06:37:35Z INFO  tuvl postgres.engine.building  pid=24013 datasource=main_postgres host=localhost port=5432 database=tuvl_support
+2026-07-22T06:37:35Z INFO  tuvl postgres.engine.ready  pid=24013 datasource=main_postgres pool=5…20
+2026-07-22T06:37:35Z INFO  tuvl Pinging datasource  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl Datasource ping successful  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl Creating tables on datasource  datasource=main_postgres pid=24013 tables=support_tickets
+2026-07-22T06:37:36Z INFO  tuvl Schema ready  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl IAM tables ready  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl HITL tables ready  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl Workflow version tracking table ready  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl Model version tracking table ready  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl Artifact table ready  datasource=main_postgres pid=24013
+2026-07-22T06:37:36Z INFO  tuvl rag.vector_store.ready  pid=24013 datasource=main_postgres dimensions=1536
+2026-07-22T06:37:36Z INFO  tuvl Syncing workflow versions to DB
+2026-07-22T06:37:36Z INFO  tuvl.models workflow_versions.sync.complete  count=1
+2026-07-22T06:37:36Z INFO  tuvl Syncing model versions to DB
+2026-07-22T06:37:36Z INFO  tuvl.models model_versions.sync.complete  count=1
+2026-07-22T06:37:36Z INFO  tuvl.core.artifacts.loader Artifact refs resolved  artifacts=3
+2026-07-22T06:37:36Z INFO  tuvl Loading node definitions
+2026-07-22T06:37:36Z INFO  tuvl.core.nodes.loader Node module loaded  file=lookup_account.py
+2026-07-22T06:37:36Z INFO  tuvl.core.nodes.rag node.registered  name=DataIngest builtin=true
+2026-07-22T06:37:36Z INFO  tuvl.core.nodes.rag node.registered  name=DataSearch builtin=true
+2026-07-22T06:37:36Z INFO  tuvl Node registry loaded  nodes=['lookup_account', 'DataIngest', 'DataSearch']
+2026-07-22T06:37:36Z INFO  tuvl.core.api.manager Workflow input schema resolved  workflow=triage schema=TriageInput
+2026-07-22T06:37:36Z INFO  tuvl.core.api.manager Workflow route mounted  method=POST path=/support/triage workflow=triage
+2026-07-22T06:37:36Z INFO  tuvl.core.api.manager Workflows mounted  count=1
+2026-07-22T06:37:36Z INFO  tuvl tuvl is ready
+2026-07-22T06:37:36Z INFO  uvicorn.error Application startup complete.
+2026-07-22T06:41:22Z INFO  uvicorn.access 127.0.0.1:54021 - "GET /insight/assets/LoginPage-DcNaCKoQ.js HTTP/1.1" 304
