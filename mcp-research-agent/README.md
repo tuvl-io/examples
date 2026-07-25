@@ -108,18 +108,19 @@ Expected: HTTP 200, envelope `{"success": true, ...}`, and `data` shaped by the
 
 The brief is persisted — verify with the auto-generated CRUD route. This route
 is **auth-protected**: an unauthenticated request returns **HTTP 401**. In dev
-mode, mint a short-lived dev token and pass it as a bearer header:
+mode, `tuvl dev` mints a per-session key (persisted to `.tuvl/.dev-session`,
+mode `0600`) that dev mode accepts as a Bearer token:
 
 ```bash
-# Dev-mode auth: mint a token, then call the protected CRUD route.
-TOKEN=$(tuvl auth dev-token 2>/dev/null || echo "$TUVL_DEV_TOKEN")
+# Dev-mode auth: read the session key, then call the protected CRUD route.
+KEY=$(python3 -c "import json; print(json.load(open('.tuvl/.dev-session'))['key'])")
 curl -sS http://localhost:8000/models/researchbrief/ \
-  -H "Authorization: Bearer $TOKEN" | jq
+  -H "Authorization: Bearer $KEY" | jq
 ```
 
 > Without the bearer header this returns `401 Unauthorized` — that is expected,
 > not a failure of persistence. The `POST /api/research` trigger itself is open
-> in dev; only the auto-generated model CRUD routes require the dev token.
+> in dev; only the auto-generated model CRUD routes require the dev key.
 
 ## Live progress (SDK)
 
