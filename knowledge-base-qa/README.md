@@ -149,7 +149,7 @@ Hits (and therefore citations) are limited to the `security`-tagged document.
 ### 5. TypeScript SDK
 
 ```bash
-pnpm add @tuvl/client@2026.3.1 tsx
+pnpm add @tuvl/client@^1.0.0 tsx
 pnpm tsx client/ask.ts
 ```
 
@@ -182,12 +182,12 @@ override) to go green. To swap judges globally without editing the YAML, set
 
 ## Implementation notes / engine discrepancies
 
-These are faithful adaptations where the spec's literal YAML and the tuvl 2026.2.6
+These are faithful adaptations where the spec's literal YAML and the tuvl
 engine disagree (the engine is authoritative per the spec's ground-truth rule):
 
 1. **`nodes/DataIngest.py` + `nodes/DataSearch.py` shims.** The engine registers
    `DataIngest` / `DataSearch` as built-in runners at boot, but `tuvl validate`
-   (2026.2.6) only resolves a step's `runner:` against files under `nodes/` — it
+   only resolves a step's `runner:` against files under `nodes/` — it
    has no knowledge of the built-ins, so a bare `runner: DataIngest` fails
    validation. Each shim is a one-line delegate to the engine's own
    implementation (`tuvl.core.nodes.rag._data_ingest` / `_data_search`), so

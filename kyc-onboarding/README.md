@@ -1,10 +1,10 @@
 # KYC Onboarding — a compliance-grade tuvl example
 
-Compliance-grade applicant onboarding on **tuvl ≥ 2026.3.1.0**: PII-safe intake,
+Compliance-grade applicant onboarding on **tuvl ≥ 1.0.0**: PII-safe intake,
 sanctions screening, policy-grounded autonomous investigation under a
 **fail-closed supervisor**, risk routing, **group-gated human approval**, and
 **versioned risk schemas**. This is the "can I trust it in a regulated flow?"
-example — it deliberately exercises every 2026.2.6-hardened surface.
+example — it deliberately exercises every security-hardened surface.
 
 ## What it demonstrates
 
@@ -23,7 +23,7 @@ example — it deliberately exercises every 2026.2.6-hardened surface.
   (`supervisor-criteria`) are front-matter markdown, referenced as pinned
   `artifact://<name>@1` refs.
 - **`HumanInTheLoop`** with `auth.required_group: compliance` — no self-approval
-  (enforced on resume in 2026.2.6).
+  (enforced on resume).
 - **`secure: true` PII masking** end-to-end (spans/streamed snapshots); the
   `Response` steps are the redaction layer (mapping-only, no PII on the wire).
 - **Model versioning**: `RiskAssessment` v1 (enabled) + v2 (authored

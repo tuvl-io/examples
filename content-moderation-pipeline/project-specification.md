@@ -57,7 +57,7 @@ Trigger: `POST /api/moderate`, body `{ author_id, region, content }`. Gate the w
    auth: { required_group: moderators }
    display_context: [content, region, classification]
    ```
-   Suspends with HTTP 202 + `instance_id`. Resume: `POST /api/workflows/resume` `{instance_id, human_input}` — only a `moderators`-group token (or `iam:admin`) may resume; the submitting token gets **403** (this is the 2026.2.6 behavior — demo it).
+   Suspends with HTTP 202 + `instance_id`. Resume: `POST /api/workflows/resume` `{instance_id, human_input}` — only a `moderators`-group token (or `iam:admin`) may resume; the submitting token gets **403** (demo this).
 6. **`apply_review`** — `Functional`, `runner: apply_review` — **must be the next step in document order after `hitl_review`** (resume continues here; HITL `routes:` are not consulted). Reads `review.decision`, emits `approved` / `removed`. Routes: `approved → persist_approved`, `removed → persist_removed`, `error → persist_removed`.
 7. **`persist_approved`** / **`persist_removed`** — each a `ModelOp` create on `ContentItem` (status accordingly) followed by a `ModelOp` create on `ModerationAction` (actor = `"system"` or `{{_user_id}}` on the human path; reason from `classification.reason` or `review.note`), then →
 8. **`respond`** — `Response` mapping `{ item_id, status, category, action }`.

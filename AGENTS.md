@@ -32,9 +32,9 @@ Follow the skill at
 — short version:
 
 ```
-# engine 2026.3.1.0 is published on PyPI — install/upgrade it first:
+# engine 1.0.0 is published on PyPI — install/upgrade it first:
 uv tool install "tuvl[standard]>=1.0.0"
-tuvl --version                   # must print v2026.3.1.0 or later
+tuvl --version                   # must print v1.0.0 or later
 
 cd <project-dir>                 # the dir holding project-specification.md
 # scaffold IN PLACE (init refuses existing dirs, but "." is allowed).
