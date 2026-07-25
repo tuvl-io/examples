@@ -113,7 +113,7 @@ Both are front-matter markdown artifacts in `artifacts/`, referenced from the wo
 
 ## SDK script — `client/watch.ts`
 
-`client.execute("research", { payload, onProgress })` printing: iteration frames (`iteration n, tokens_used`), tool calls (`→ fetch_page: <url>`), and the terminal signal — via `agentProgress(ev)` (returns `null` for non-progress frames; handle all four reserved exits). Pin `@tuvl/client@2026.3.1`.
+`client.execute("research", { payload, onProgress })` printing: iteration frames (`iteration n, tokens_used`), tool calls (`→ fetch_page: <url>`), and the terminal signal — via `agentProgress(ev)` (returns `null` for non-progress frames; handle all four reserved exits). Pin `@tuvl/client@^1.0.0`.
 
 ## Acceptance criteria
 

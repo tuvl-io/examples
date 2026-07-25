@@ -69,7 +69,7 @@ No `ModelDefinition` is needed — the vector store rows live in the engine's sy
 
 ## SDK script — `client/ask.ts`
 
-A ~40-line `@tuvl/client` script (documented in the README): `client.execute("ingest_doc", ...)` for two sample docs, then `client.execute("ask_kb", { payload: { question } , onProgress })` printing step events. Uses `mode` defaults (REST, SSE when `onProgress` present). Pin `@tuvl/client@2026.3.1`.
+A ~40-line `@tuvl/client` script (documented in the README): `client.execute("ingest_doc", ...)` for two sample docs, then `client.execute("ask_kb", { payload: { question } , onProgress })` printing step events. Uses `mode` defaults (REST, SSE when `onProgress` present). Pin `@tuvl/client@^1.0.0`.
 
 ## Acceptance criteria
 

@@ -4,12 +4,12 @@
 > **Engine:** tuvl >= 1.0.0 · **Ground truth:** `tuvl-agentic-manual.md` (§4.13–4.14, §6.8, Golden Rules 25/26) + engine `docs/supervisor.md`, `docs/human-in-the-loop.md`, `docs/auth.md`
 > **Requirements:** see `REQUIREMENTS.md` (Postgres `tuvl_kyc` **with pgvector**, `GEMINI_API_KEY`, judge preset; screening API stubbed)
 
-Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, policy-grounded autonomous investigation under a **fail-closed supervisor**, risk routing, **group-gated human approval**, and versioned risk schemas. This is the example that answers the "can I trust it in a regulated flow?" question — and it deliberately exercises every 2026.2.6-hardened surface.
+Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, policy-grounded autonomous investigation under a **fail-closed supervisor**, risk routing, **group-gated human approval**, and versioned risk schemas. This is the example that answers the "can I trust it in a regulated flow?" question — and it deliberately exercises every security-hardened surface.
 
 ## What it demonstrates
 
 - `spec.supervisor`: deterministic `rules` (`when:`/`then:`) + LLM judge with `criteria` referencing a pinned steering artifact, `on_violation: pause`, **`on_judge_error: abort` (fail-closed)** — plus the `aborted` reserved exit routed (Golden Rule 26)
-- `HumanInTheLoop` with `auth.required_group: compliance` (no self-approval, 2026.2.6)
+- `HumanInTheLoop` with `auth.required_group: compliance` (no self-approval)
 - `secure: true` PII masking end-to-end (spans, streamed snapshots); `Response` mapping as the redaction layer
 - **Model versioning**: `RiskAssessment` v1 enabled + v2 authored `enabled: false`, activated via the admin toggle + restart (manual §6.8 flow), workflow pinned via `context.models[].version`
 - IAM: roles/scopes/groups, `metadata.required_scope`, `iam:admin` bypass
