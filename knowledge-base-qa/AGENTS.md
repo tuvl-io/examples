@@ -46,7 +46,7 @@ Use only these `kind:` values in workflow steps — never invent others:
 - PII fields must be marked with `secure: true`.
 
 ## 7. Developer Tooling & CLI
-- **Running locally:** Use `tuvl dev` (or `uv run tuvl dev`) to start the hot-reloading dev server on `http://localhost:8000`.
+- **Running locally:** Use `tuvl dev` (or `uv run tuvl dev`) to start the hot-reloading dev server on `http://localhost:8885`.
 - **Auto-Login:** Use `tuvl dev --auto-login` to automatically inject the security key and bypass the Insight developer portal security screen (useful for rapid automated testing).
 
 > For complete syntax and schema details, refer to `docs/TUVL_AGENTIC_MANUAL.md`.

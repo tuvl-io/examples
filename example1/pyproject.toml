@@ -1,0 +1,43 @@
+# ── tuvl project ─────────────────────────────────────────────────────────────
+#
+# Built with tuvl — YAML-driven AI workflow orchestration for Python backends.
+#
+#   Website:       https://tuvl.io
+#   Documentation: https://tuvl.dev
+#   PyPI:          https://pypi.org/project/tuvl/
+#   GitHub:        https://github.com/tuvl-io/
+#
+# Add extra dependencies with: uv add <package>
+# ─────────────────────────────────────────────────────────────────────────────
+[project]
+name = "example1"
+version = "0.1.0"
+description = "A tuvl project — see https://tuvl.io"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+dependencies = [
+    "tuvl>=1.0.0",
+]
+
+[project.urls]
+"Homepage"      = "https://tuvl.io"
+"Documentation" = "https://tuvl.dev"
+"tuvl on PyPI"  = "https://pypi.org/project/tuvl/"
+"Source"        = "https://github.com/tuvl-io/"
+
+[dependency-groups]
+# Development: uv injects the UI and tools automatically for local work
+dev = [
+    "tuvl[standard]>=1.0.0",
+]
+
+[tool.uv.sources]
+# Tell uv to grab this specific package from a local path instead of PyPI
+tuvl = { path = "/Users/sooraj/Documents/workspace/63_btai/tuvl_project/tuvl-private" }
+
+[tool.uv]
+# uv manages the virtual environment.
+# Run: uv sync          — install / refresh the venv
+# Run: uv add <pkg>     — add a new runtime dependency
+# Run: uv add --dev <pkg> — add a dev-only dependency

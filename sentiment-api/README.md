@@ -44,7 +44,7 @@ cp .env.example .env          # then edit .env — set GEMINI_API_KEY and Postgr
 uv run tuvl dev
 
 # 3. Classify a review
-curl -X POST http://localhost:8000/api/reviews/analyze \
+curl -X POST http://localhost:8885/api/reviews/analyze \
   -H 'Content-Type: application/json' \
   -d '{"text": "Battery lasts two days and the screen is gorgeous.", "source": "web"}'
 ```

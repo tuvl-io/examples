@@ -8,11 +8,11 @@
  *
  * Run:
  *   npm i @tuvl/client@2026.3.1 tsx
- *   TUVL_URL=http://localhost:8000 npx tsx client/watch.ts "How does HTTP caching work?"
+ *   TUVL_URL=http://localhost:8885 npx tsx client/watch.ts "How does HTTP caching work?"
  */
 import { TuvlClient, agentProgress } from "@tuvl/client";
 
-const BASE_URL = process.env.TUVL_URL ?? "http://localhost:8000";
+const BASE_URL = process.env.TUVL_URL ?? "http://localhost:8885";
 
 // The four reserved abnormal exits, mapped to human-readable notes.
 const RESERVED_EXITS: Record<string, string> = {

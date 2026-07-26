@@ -48,7 +48,7 @@ cp .env.example .env          # then edit .env — set GEMINI_API_KEY and Postgr
 tuvl validate
 
 # 3. Boot the dev server
-tuvl dev                      # http://localhost:8000  (+ /insight)
+tuvl dev                      # http://localhost:8885  (+ /insight)
 ```
 
 ## Demo
@@ -56,7 +56,7 @@ tuvl dev                      # http://localhost:8000  (+ /insight)
 ### 1. Happy path — a balanced invoice is extracted and persisted
 
 ```bash
-curl -s -X POST http://localhost:8000/api/invoices/extract \
+curl -s -X POST http://localhost:8885/api/invoices/extract \
   -H 'Content-Type: application/json' \
   -d '{"raw_text": "ACME CORP\nInvoice #INV-1001\nDate: 2026-06-01\nSubtotal: 100.00 USD\nTax: 8.50 USD\nTotal: 108.50 USD\nTax ID: US-99-1234567"}'
 ```
@@ -88,7 +88,7 @@ header (run `tuvl dev --show-key` to print it):
 
 ```bash
 KEY=$(python3 -c "import json; print(json.load(open('.tuvl/.dev-session'))['key'])")
-curl -s http://localhost:8000/models/invoice/ -H "Authorization: Bearer $KEY"
+curl -s http://localhost:8885/models/invoice/ -H "Authorization: Bearer $KEY"
 ```
 
 Without the header the route returns `401 Unauthorized`. The raw model row here
@@ -99,7 +99,7 @@ from this scoped CRUD API. In production, mint a real Biscuit with `invoice:read
 ### 2. Mismatch path — total ≠ subtotal + tax → rejected with reasons
 
 ```bash
-curl -s -X POST http://localhost:8000/api/invoices/extract \
+curl -s -X POST http://localhost:8885/api/invoices/extract \
   -H 'Content-Type: application/json' \
   -d '{"raw_text": "ACME CORP\nInvoice #INV-2002\nSubtotal: 100.00 USD\nTax: 8.50 USD\nTotal: 200.00 USD"}'
 ```
@@ -110,7 +110,7 @@ list explains the total mismatch. The record is persisted with `status: rejected
 ### 3. Garbage input — routes through `parse_error` / `mismatch`, never a 500
 
 ```bash
-curl -s -X POST http://localhost:8000/api/invoices/extract \
+curl -s -X POST http://localhost:8885/api/invoices/extract \
   -H 'Content-Type: application/json' \
   -d '{"raw_text": "###### not an invoice ######"}'
 ```

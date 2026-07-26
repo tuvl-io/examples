@@ -152,11 +152,11 @@ CREATE DATABASE tuvl_support;
 # 1. Configure
 cp .env.example .env      # set POSTGRES_* to your database
 
-# 2. Start the dev server (hot-reloading; Insight UI at http://localhost:8000/insight)
+# 2. Start the dev server (hot-reloading; Insight UI at http://localhost:8885/insight)
 tuvl dev --project-dir .
 
 # 3. Send a billing ticket → completion classify → autonomous investigate → resolve
-curl -s -X POST http://localhost:8000/support/triage \
+curl -s -X POST http://localhost:8885/support/triage \
   -H 'Content-Type: application/json' \
   -d '{
         "customer_id": "cust_001",
@@ -179,7 +179,7 @@ Add `Accept: text/event-stream` to stream the per-iteration frames the
 autonomous agent emits — you'll see `iteration → tool_call → outcome`:
 
 ```bash
-curl -sN -X POST http://localhost:8000/support/triage \
+curl -sN -X POST http://localhost:8885/support/triage \
   -H 'Content-Type: application/json' -H 'Accept: text/event-stream' \
   -d '{"customer_id":"cust_001","subject":"charged twice","body":"two Pro charges, please refund"}'
 ```

@@ -67,12 +67,12 @@ cp .env.example .env
 # 3. Validate — must be zero errors, zero warnings
 tuvl validate --project-dir .
 
-# 4. Start the dev server (http://localhost:8000, portal at /insight)
+# 4. Start the dev server (http://localhost:8885, portal at /insight)
 tuvl dev --project-dir .
 ```
 
 > **Port note:** the curl examples below and `client/watch.ts` default to
-> **`http://localhost:8000`** (hardcoded). If you start the server on another
+> **`http://localhost:8885`** (hardcoded). If you start the server on another
 > port (`tuvl dev --port 8004`), point the client at it with
 > `TUVL_URL=http://localhost:8004` and adjust the curl URLs accordingly.
 
@@ -81,11 +81,11 @@ tuvl dev --project-dir .
 Two researchable questions that resolve cleanly with ≥2 sources:
 
 ```bash
-curl -sS -X POST http://localhost:8000/api/research \
+curl -sS -X POST http://localhost:8885/api/research \
   -H 'Content-Type: application/json' \
   -d '{"question": "What is the CAP theorem and what are its three properties?"}' | jq
 
-curl -sS -X POST http://localhost:8000/api/research \
+curl -sS -X POST http://localhost:8885/api/research \
   -H 'Content-Type: application/json' \
   -d '{"question": "What does HTTP status code 429 mean and how should a client respond?"}' | jq
 ```
@@ -114,7 +114,7 @@ mode `0600`) that dev mode accepts as a Bearer token:
 ```bash
 # Dev-mode auth: read the session key, then call the protected CRUD route.
 KEY=$(python3 -c "import json; print(json.load(open('.tuvl/.dev-session'))['key'])")
-curl -sS http://localhost:8000/models/researchbrief/ \
+curl -sS http://localhost:8885/models/researchbrief/ \
   -H "Authorization: Bearer $KEY" | jq
 ```
 
@@ -130,7 +130,7 @@ signal:
 
 ```bash
 npm i @tuvl/client@^1.0.0 tsx
-TUVL_URL=http://localhost:8000 npx tsx client/watch.ts "How does HTTP caching work?"
+TUVL_URL=http://localhost:8885 npx tsx client/watch.ts "How does HTTP caching work?"
 ```
 
 ## Reserved-exit drills

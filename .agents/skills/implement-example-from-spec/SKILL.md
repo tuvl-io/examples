@@ -78,7 +78,7 @@ filename/decorator mismatch, an unpinned or unresolvable `artifact://` ref.
 
 ```bash
 cp .env.example .env   # fill real values
-tuvl dev               # http://localhost:8000 (+ /insight)
+tuvl dev               # http://localhost:8885 (+ /insight)
 ```
 
 Run every curl/demo command the spec's acceptance criteria list, in order,
