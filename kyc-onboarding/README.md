@@ -64,7 +64,7 @@ See [`../REQUIREMENTS.md`](../REQUIREMENTS.md) (the `kyc-onboarding` row). In sh
 uv sync
 cp .env.example .env          # fill GEMINI_API_KEY; DB/screening defaults are fine
 tuvl validate                 # must print: 0 errors, 0 warnings
-tuvl dev                      # http://localhost:8000  (+ /insight)
+tuvl dev                      # http://localhost:8885  (+ /insight)
 ```
 
 `tuvl dev` runs in dev mode: the printed dev key acts as an `iam:admin`
@@ -80,14 +80,14 @@ two-token flow with real tokens (`tuvl keys generate` first, then `tuvl run`):
 
 ```bash
 # 1. First admin (only works while the IAM users table is empty)
-ADMIN=$(curl -s -X POST localhost:8000/auth/bootstrap \
+ADMIN=$(curl -s -X POST localhost:8885/auth/bootstrap \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@example.com","password":"admin-pw"}' | jq -r .access_token)
 
 # 2. A role for submitters (scope kyc:submit) and one for reviewers (group `compliance`)
-curl -s -X POST localhost:8000/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
+curl -s -X POST localhost:8885/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
   -H 'Content-Type: application/json' -d '{"name":"applicants"}'
-curl -s -X POST localhost:8000/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
+curl -s -X POST localhost:8885/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
   -H 'Content-Type: application/json' -d '{"name":"compliance"}'
 # assign scopes (PATCH .../roles/{id}/scopes): applicants -> [kyc:submit];
 #   compliance -> [kyc:submit, kyc:assess:read]
@@ -109,7 +109,7 @@ needs an `Authorization` header. In dev mode the printed dev key is an
 
 ```bash
 for f in policies/*.md; do
-  curl -s -X POST localhost:8000/api/kyc/policies \
+  curl -s -X POST localhost:8885/api/kyc/policies \
     -H "Authorization: Bearer $ADMIN" \
     -H 'Content-Type: application/json' \
     -d "$(jq -n --arg t "$(basename "$f")" --rawfile c "$f" '{title:$t, content:$c}')"
@@ -121,7 +121,7 @@ done
 ### 1. Happy path — `clear` + `low`, auto-approved (no suspension)
 
 ```bash
-curl -s -X POST localhost:8000/api/kyc/apply -H 'Content-Type: application/json' \
+curl -s -X POST localhost:8885/api/kyc/apply -H 'Content-Type: application/json' \
   -d '{"full_name":"Alice Benign","dob":"1990-01-01","national_id":"AL-1001",
        "email":"alice@example.com","country":"us"}' | jq
 ```
@@ -136,7 +136,7 @@ The watchlist stub seeds two names (`nodes/check_watchlist.py`): submit
 `"John Doe"` so the agent finds a hit and routes to `hitl_review`:
 
 ```bash
-curl -s -X POST localhost:8000/api/kyc/apply -H 'Content-Type: application/json' \
+curl -s -X POST localhost:8885/api/kyc/apply -H 'Content-Type: application/json' \
   -d '{"full_name":"John Doe","dob":"1980-02-02","national_id":"JD-9",
        "email":"jd@example.com","country":"gb"}' | jq
 # → HTTP 202  {"instance_id":"<id>","paused_step_id":"hitl_review","ui":{…},
@@ -147,13 +147,13 @@ Resume — **two-token drill** (`POST /api/workflows/resume`):
 
 ```bash
 # a) submitter resuming their own request  ->  403 (no self-approval)
-curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8000/api/workflows/resume \
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8885/api/workflows/resume \
   -H "Authorization: Bearer $SUBMITTER_TOKEN" -H 'Content-Type: application/json' \
   -d '{"instance_id":"<id>","human_input":{"decision":"approve","band":"medium","note":"ok"}}'
 # -> 403
 
 # b) a `compliance` group member resuming  ->  200, decision applied
-curl -s -X POST localhost:8000/api/workflows/resume \
+curl -s -X POST localhost:8885/api/workflows/resume \
   -H "Authorization: Bearer $COMPLIANCE_TOKEN" -H 'Content-Type: application/json' \
   -d '{"instance_id":"<id>","human_input":{"decision":"approve","band":"medium","note":"cleared"}}' | jq
 # -> 200  {"data":{"applicant_id":"…","status":"approved","band":"medium"}}
@@ -180,7 +180,7 @@ next step).
 1. Run the happy path (§1) on **v1**.
 2. Flip the staged v2 flag (admin token / dev key):
    ```bash
-   curl -s -X PATCH localhost:8000/admin/models/RiskAssessment/v2/toggle \
+   curl -s -X PATCH localhost:8885/admin/models/RiskAssessment/v2/toggle \
      -H "Authorization: Bearer $ADMIN"      # -> the DB enabled flag flips
    ```
 3. **Restart tuvl.** The boot log shows the override applied and the

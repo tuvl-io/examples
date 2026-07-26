@@ -66,7 +66,7 @@ See [`../REQUIREMENTS.md`](../REQUIREMENTS.md) for the full matrix. For this pro
 ```bash
 cp .env.example .env          # fill GEMINI_API_KEY; DB creds default to postgres/postgres
 tuvl validate                 # zero errors, zero warnings
-tuvl dev                      # http://localhost:8000  (+ /insight)
+tuvl dev                      # http://localhost:8885  (+ /insight)
 ```
 
 `tuvl dev` runs in dev mode: the dev session key acts as an `iam:admin`
@@ -81,7 +81,7 @@ borderline content. Bootstrap two roles and one user each:
 
 1. **Bootstrap the first admin** (only works while the IAM tables are empty):
    ```bash
-   curl -sX POST localhost:8000/auth/bootstrap \
+   curl -sX POST localhost:8885/auth/bootstrap \
      -H 'Content-Type: application/json' \
      -d '{"email":"admin@example.com","password":"admin-pw"}'
    # -> returns an iam:admin token; use it as ADMIN below.
@@ -90,14 +90,14 @@ borderline content. Bootstrap two roles and one user each:
    `moderation:submit`, and a `moderators` role — membership in `moderators` is
    what the HITL resume requires:
    ```bash
-   curl -sX POST localhost:8000/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
+   curl -sX POST localhost:8885/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
      -H 'Content-Type: application/json' \
      -d '{"name":"submitter","description":"can submit content"}'
-   curl -sX POST localhost:8000/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
+   curl -sX POST localhost:8885/auth/admin/roles -H "Authorization: Bearer $ADMIN" \
      -H 'Content-Type: application/json' \
      -d '{"name":"moderators","description":"can resolve human review"}'
    # Assign scopes (replace {id} with each role id from the responses):
-   curl -sX PATCH localhost:8000/auth/admin/roles/{submitter_id}/scopes \
+   curl -sX PATCH localhost:8885/auth/admin/roles/{submitter_id}/scopes \
      -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
      -d '{"scopes":["moderation:submit"]}'
    # `moderators` only needs group membership for resume; also give it
@@ -107,9 +107,9 @@ borderline content. Bootstrap two roles and one user each:
    role via `POST /auth/admin/users/{user_id}/roles/{role_id}` — both are path
    params, no body), then log each in to mint a token:
    ```bash
-   SUBMITTER=$(curl -sX POST localhost:8000/auth/token \
+   SUBMITTER=$(curl -sX POST localhost:8885/auth/token \
      -d 'username=submitter@example.com&password=sub-pw' | jq -r .access_token)
-   MODERATOR=$(curl -sX POST localhost:8000/auth/token \
+   MODERATOR=$(curl -sX POST localhost:8885/auth/token \
      -d 'username=mod@example.com&password=mod-pw'       | jq -r .access_token)
    ```
 
@@ -118,7 +118,7 @@ borderline content. Bootstrap two roles and one user each:
 ### 1. Safe content -> approved, no suspension
 
 ```bash
-curl -sX POST localhost:8000/api/moderate -H "Authorization: Bearer $SUBMITTER" \
+curl -sX POST localhost:8885/api/moderate -H "Authorization: Bearer $SUBMITTER" \
   -H 'Content-Type: application/json' \
   -d '{"author_id":"u1","region":"us","content":"I love this community, thanks!"}'
 ```
@@ -128,7 +128,7 @@ No suspension; one `content_items` row (approved) + one `moderation_actions` row
 ### 2. Violation -> webhook fired + removed + audit row
 
 ```bash
-curl -sX POST localhost:8000/api/moderate -H "Authorization: Bearer $SUBMITTER" \
+curl -sX POST localhost:8885/api/moderate -H "Authorization: Bearer $SUBMITTER" \
   -H 'Content-Type: application/json' \
   -d '{"author_id":"u2","region":"us","content":"<something that violates policy>"}'
 ```
@@ -140,26 +140,26 @@ default the echoed JSON is visible in the httpbin response / server logs.
 
 ```bash
 # Submit borderline content -> suspends with 202 + instance_id
-INSTANCE=$(curl -sX POST localhost:8000/api/moderate -H "Authorization: Bearer $SUBMITTER" \
+INSTANCE=$(curl -sX POST localhost:8885/api/moderate -H "Authorization: Bearer $SUBMITTER" \
   -H 'Content-Type: application/json' \
   -d '{"author_id":"u3","region":"us","content":"<borderline text>"}' | jq -r .instance_id)
 # -> HTTP 202; NO content_items row yet (only a suspended-instance row exists).
 
 # a) Submitter tries to approve their own content -> 403 (no self-approval)
-curl -isX POST localhost:8000/api/workflows/resume -H "Authorization: Bearer $SUBMITTER" \
+curl -isX POST localhost:8885/api/workflows/resume -H "Authorization: Bearer $SUBMITTER" \
   -H 'Content-Type: application/json' \
   -d "{\"instance_id\":\"$INSTANCE\",\"human_input\":{\"decision\":\"approve\",\"note\":\"looks fine\"}}"
 # -> HTTP 403 (caller lacks required group 'moderators')
 
 # b) Moderator approves -> workflow completes, audit row actor = moderator id
-curl -sX POST localhost:8000/api/workflows/resume -H "Authorization: Bearer $MODERATOR" \
+curl -sX POST localhost:8885/api/workflows/resume -H "Authorization: Bearer $MODERATOR" \
   -H 'Content-Type: application/json' \
   -d "{\"instance_id\":\"$INSTANCE\",\"human_input\":{\"decision\":\"approve\",\"note\":\"ok on review\"}}"
 # -> HTTP 200; status: "approved", action: "human_approved";
 #    moderation_actions.actor = the moderator's user id.
 
 # c) Double-resume of the same instance -> 404 (one-shot instances)
-curl -isX POST localhost:8000/api/workflows/resume -H "Authorization: Bearer $MODERATOR" \
+curl -isX POST localhost:8885/api/workflows/resume -H "Authorization: Bearer $MODERATOR" \
   -H 'Content-Type: application/json' \
   -d "{\"instance_id\":\"$INSTANCE\",\"human_input\":{\"decision\":\"approve\"}}"
 # -> HTTP 404

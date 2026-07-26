@@ -67,7 +67,7 @@ tuvl-examples/
 3. **Run it in dev mode and open the editor:**
    ```bash
    tuvl dev --project-dir .
-   # → http://localhost:8000/insight
+   # → http://localhost:8885/insight
    ```
 4. **Validate, then run in production mode:**
    ```bash

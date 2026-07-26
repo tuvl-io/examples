@@ -13,7 +13,7 @@
 import { createClient } from "@tuvl/client";
 
 const client = createClient({
-  baseUrl: process.env.TUVL_BASE_URL ?? "http://localhost:8000",
+  baseUrl: process.env.TUVL_BASE_URL ?? "http://localhost:8885",
 });
 
 const docs = [

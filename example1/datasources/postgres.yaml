@@ -1,0 +1,19 @@
+kind: DataSource
+version: v1
+enabled: true
+metadata:
+  name: main_postgres
+  primary: true
+  description: Primary PostgreSQL database
+spec:
+  type: postgresql
+  driver: asyncpg
+  connection:
+    host: ${POSTGRES_HOST:localhost}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DB:example}
+    username: ${POSTGRES_USER:tuvl}
+    password: ${POSTGRES_PASSWORD}
+  pooling:
+    min_size: 5
+    max_size: 20

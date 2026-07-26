@@ -43,7 +43,7 @@ project specifically:
 cp .env.example .env       # fill in POSTGRES_PASSWORD + GEMINI_API_KEY
 uv sync
 tuvl validate              # → 0 errors, 0 warnings
-tuvl dev --project-dir .   # http://localhost:8000  (+ /insight)
+tuvl dev --project-dir .   # http://localhost:8885  (+ /insight)
 # Pick another port with `tuvl dev --port 8002`; then point the demo curls and
 # client/ask.ts at it via TUVL_BASE_URL (see below).
 ```
@@ -69,7 +69,7 @@ knowledge-base-qa/
 ## Demo commands & expected output
 
 > **Port note.** The commands below assume the server is on the default
-> `localhost:8000`. If you started `tuvl dev --port <N>` (e.g. `--port 8002`),
+> `localhost:8885`. If you started `tuvl dev --port <N>` (e.g. `--port 8002`),
 > substitute that port in every `curl` URL, and export `TUVL_BASE_URL` so
 > `client/ask.ts` targets it too:
 > ```bash
@@ -84,7 +84,7 @@ for f in sample-docs/*.md; do
   # tags line at the bottom, e.g. "Tags: finance, policy"
   tags=$(grep -i '^Tags:' "$f" | sed 's/^Tags:[[:space:]]*//' \
         | awk -F', *' '{printf "["; for(i=1;i<=NF;i++){printf "%s\"%s\"",(i>1?",":""),$i}; printf "]"}')
-  curl -s localhost:8000/api/kb/ingest \
+  curl -s localhost:8885/api/kb/ingest \
     -H 'content-type: application/json' \
     -d "{\"title\": \"$title\", \"content\": $(jq -Rs . < "$f"), \"tags\": $tags}"
   echo
@@ -100,7 +100,7 @@ Each call returns the success envelope:
 ### 2. Ask a question answerable from document 2 → cites document 2's title
 
 ```bash
-curl -s localhost:8000/api/kb/ask -H 'content-type: application/json' \
+curl -s localhost:8885/api/kb/ask -H 'content-type: application/json' \
   -d '{"question": "What is the daily meal allowance while travelling?"}' | jq .data
 ```
 
@@ -115,7 +115,7 @@ curl -s localhost:8000/api/kb/ask -H 'content-type: application/json' \
 ### 3. Ask something not in the knowledge base → no hallucinated citation
 
 ```bash
-curl -s localhost:8000/api/kb/ask -H 'content-type: application/json' \
+curl -s localhost:8885/api/kb/ask -H 'content-type: application/json' \
   -d '{"question": "What is the company vacation carry-over limit?"}' | jq .data
 ```
 
@@ -140,7 +140,7 @@ Then a request carrying a `tag` only draws hits from documents ingested with tha
 tag:
 
 ```bash
-curl -s localhost:8000/api/kb/ask -H 'content-type: application/json' \
+curl -s localhost:8885/api/kb/ask -H 'content-type: application/json' \
   -d '{"question": "What are the password requirements?", "tag": "security"}' | jq .data
 ```
 
