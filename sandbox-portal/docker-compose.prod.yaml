@@ -1,0 +1,47 @@
+# tuvl sandbox portal — PRODUCTION (image-only; images shipped via docker load).
+services:
+  shared-pg:
+    image: pgvector/pgvector:pg16
+    container_name: tuvl-sandbox-pg
+    environment:
+      POSTGRES_USER: tuvl
+      POSTGRES_PASSWORD: tuvl
+      POSTGRES_DB: postgres
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks: [sandnet]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tuvl"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  portal:
+    image: tuvl-sandbox-portal:latest
+    environment:
+      PORT: "3000"
+      PORTAL_HOST: ${PORTAL_HOST:-try.tuvl.online}
+      BASE_DOMAIN: ${BASE_DOMAIN:-tuvl.online}
+      SANDBOX_SCHEME: ${SANDBOX_SCHEME:-https}
+      SHARED_PG: tuvl-sandbox-pg
+      SANDBOX_NETWORK: tuvl-sandbox-net
+      TTL_MINUTES: ${TTL_MINUTES:-20}
+      SLOT_COUNT: ${SLOT_COUNT:-20}
+      MAX_PER_SESSION: ${MAX_PER_SESSION:-2}
+      SANDBOX_MEM_MB: ${SANDBOX_MEM_MB:-512}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+    ports:
+      - "8120:3000"
+    networks: [sandnet]
+    depends_on:
+      shared-pg: { condition: service_healthy }
+    restart: unless-stopped
+
+networks:
+  sandnet:
+    name: tuvl-sandbox-net

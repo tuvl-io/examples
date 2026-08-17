@@ -1,0 +1,33 @@
+# ── tuvl example — DEV-MODE sandbox image ────────────────────────────────────────
+# Runs `tuvl dev` (Tuvl Insight editor at /insight + workflow API + /docs). The
+# project is BAKED IN (not bind-mounted) and the container FS is ephemeral, so any
+# Insight edits a visitor makes live only in the writable layer — a scheduled
+# `--force-recreate` throws them away (the sandbox reset). Dev mode auto-creates the
+# schema on boot over an empty (also ephemeral) Postgres.
+#
+# Build per project (context = the project dir):
+#   docker build -t tuvl-example-<name>:latest -f Dockerfile.dev <project-dir>
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+
+WORKDIR /app
+
+# Deps first (incl. the dev group → tuvl[standard] → the Insight UI that `tuvl dev`
+# serves). Cached until pyproject/lock change.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
+
+# Project source (the tuvl tree: models/workflows/nodes/llms/datasources/…).
+COPY . .
+# .env is excluded by .dockerignore — config is injected via compose env (12-factor).
+RUN uv sync --frozen
+
+ENV PATH="/app/.venv/bin:$PATH"
+EXPOSE 8000
+
+# Dev server: Insight editor + live workflow runner, all surfaces same-origin.
+#  --allow-host 0.0.0.0/0 : accept remote connections (they arrive via the nginx
+#     reverse proxy). Dev mode otherwise permits only localhost.
+#  --auto-login           : bypass the Insight security screen so public visitors
+#     can explore freely — safe here because this is an ephemeral, hourly-reset
+#     sandbox (see the deploy README / reset cron).
+CMD ["tuvl", "dev", "--project-dir", ".", "--port", "8000", "--no-browser", "--allow-host", "0.0.0.0/0", "--auto-login"]

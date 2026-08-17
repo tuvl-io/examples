@@ -1,0 +1,5 @@
+# secrets + runtime state — never commit
+.env
+data/
+node_modules/
+*.log
