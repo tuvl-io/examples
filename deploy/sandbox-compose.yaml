@@ -1,0 +1,95 @@
+# ── tuvl examples — public DEV-MODE sandboxes (ephemeral, hourly-reset) ──────────
+# 4 projects, each = one `tuvl dev` app + its own pgvector Postgres. NOTHING is
+# persisted: the DBs have NO volumes and the app FS is the image's writable layer,
+# so `docker compose up -d --force-recreate` (the hourly reset cron) wipes every
+# Insight edit and DB row back to pristine.
+#
+#   support-triage       -> :8110  -> support-triage.tuvl.online
+#   content-moderation   -> :8111  -> content-moderation.tuvl.online
+#   kyc-onboarding       -> :8112  -> kyc-onboarding.tuvl.online
+#   mcp-research         -> :8113  -> mcp-research.tuvl.online
+#
+# Each app auto-redirects / -> /insight/ (the Tuvl Insight editor) and serves /docs.
+x-db: &db-base
+  image: pgvector/pgvector:pg16
+  # RAM-backed data dir → truly ephemeral. The postgres image declares
+  # VOLUME /var/lib/postgresql/data, so WITHOUT this tmpfs Docker keeps an
+  # anonymous volume that survives --force-recreate (DB rows would persist).
+  # tmpfs is wiped whenever the container is recreated → clean sandbox reset.
+  tmpfs:
+    - /var/lib/postgresql/data
+  environment: &db-env
+    POSTGRES_USER: tuvl
+    POSTGRES_PASSWORD: tuvl
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U tuvl"]
+    interval: 5s
+    timeout: 5s
+    retries: 20
+  restart: unless-stopped
+
+x-app: &app-base
+  restart: unless-stopped
+  environment: &app-env
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: tuvl
+    POSTGRES_PASSWORD: tuvl
+    GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+
+services:
+  # ── support-triage ──────────────────────────────────────────────────────────
+  support-triage-db:
+    <<: *db-base
+    environment: { <<: *db-env, POSTGRES_DB: support_triage }
+  support-triage-app:
+    <<: *app-base
+    image: tuvl-example-support-triage:latest
+    environment:
+      <<: *app-env
+      POSTGRES_HOST: support-triage-db
+      POSTGRES_DB: support_triage
+    depends_on: { support-triage-db: { condition: service_healthy } }
+    ports: ["8110:8000"]
+
+  # ── content-moderation ──────────────────────────────────────────────────────
+  content-moderation-db:
+    <<: *db-base
+    environment: { <<: *db-env, POSTGRES_DB: content_moderation }
+  content-moderation-app:
+    <<: *app-base
+    image: tuvl-example-content-moderation:latest
+    environment:
+      <<: *app-env
+      POSTGRES_HOST: content-moderation-db
+      POSTGRES_DB: content_moderation
+    depends_on: { content-moderation-db: { condition: service_healthy } }
+    ports: ["8111:8000"]
+
+  # ── kyc-onboarding ──────────────────────────────────────────────────────────
+  kyc-onboarding-db:
+    <<: *db-base
+    environment: { <<: *db-env, POSTGRES_DB: kyc_onboarding }
+  kyc-onboarding-app:
+    <<: *app-base
+    image: tuvl-example-kyc-onboarding:latest
+    environment:
+      <<: *app-env
+      POSTGRES_HOST: kyc-onboarding-db
+      POSTGRES_DB: kyc_onboarding
+    depends_on: { kyc-onboarding-db: { condition: service_healthy } }
+    ports: ["8112:8000"]
+
+  # ── mcp-research ────────────────────────────────────────────────────────────
+  mcp-research-db:
+    <<: *db-base
+    environment: { <<: *db-env, POSTGRES_DB: mcp_research }
+  mcp-research-app:
+    <<: *app-base
+    image: tuvl-example-mcp-research:latest
+    environment:
+      <<: *app-env
+      POSTGRES_HOST: mcp-research-db
+      POSTGRES_DB: mcp_research
+    depends_on: { mcp-research-db: { condition: service_healthy } }
+    ports: ["8113:8000"]

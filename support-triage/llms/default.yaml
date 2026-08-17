@@ -7,9 +7,10 @@ metadata:
     Local, tool-capable chat model shared by both agent steps. llama3.1 supports
     native tool-calling, which the autonomous `investigate` step requires.
 spec:
-  # Runs fully locally via Ollama — no cloud API key needed.
-  #   ollama pull llama3.1:latest   (start Ollama first: `ollama serve`)
-  model: ollama_chat/llama3.1:latest
+  # Public sandbox: hosted Gemini (no local Ollama on the demo box). Supports
+  # native tool-calling, which the autonomous `investigate` step requires.
+  # Reads GEMINI_API_KEY from the environment.
+  model: gemini/gemini-3.1-flash-lite
   temperature: 0.1
 
   # ── Prefer a hosted model? Swap the two lines above for a LiteLLM string ──

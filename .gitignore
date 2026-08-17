@@ -1,3 +1,4 @@
 
 # runtime logs
 *.log
+deploy/.env

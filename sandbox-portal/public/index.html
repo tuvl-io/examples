@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>tuvl examples — live sandboxes</title>
+<style>
+  :root{
+    --bg:#f8fafc; --surface:#fff; --border:#e2e8f0; --fg:#0f172a; --muted:#64748b;
+    --teal:#0d9488; --teal-d:#0f766e; --accent:#14b8a6; --danger:#dc2626; --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0b1220; --surface:#111a2e; --border:#233047; --fg:#e6edf6; --muted:#93a4bd; --teal:#2dd4bf; --teal-d:#14b8a6;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a{color:var(--teal);text-decoration:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 1.25rem}
+  header.top{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 0;border-bottom:1px solid var(--border)}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1.05rem}
+  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--teal),var(--accent));display:grid;place-items:center;color:#fff;font-weight:800}
+  .who{font-size:.85rem;color:var(--muted)}
+  .ghlink{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;color:var(--muted)}
+  .ghlink:hover{color:var(--fg)}
+  .hero{padding:2.6rem 0 1.4rem}
+  .hero h1{font-size:1.9rem;margin:.2rem 0 .5rem}
+  .hero p{color:var(--muted);max-width:44rem;margin:0}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+  /* login */
+  .login{max-width:26rem;margin:8vh auto;padding:1.6rem}
+  .login h2{margin:.2rem 0 .3rem}
+  .login p{color:var(--muted);margin:0 0 1.1rem;font-size:.92rem}
+  label{display:block;font-size:.82rem;color:var(--muted);margin:.7rem 0 .25rem}
+  input{width:100%;padding:.6rem .7rem;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--fg);font-size:.95rem}
+  input:focus{outline:2px solid var(--teal);border-color:var(--teal)}
+  button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:.6rem 1rem;font-weight:600}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-primary:hover{background:var(--teal-d)}
+  .btn-primary:disabled{opacity:.6;cursor:default}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  .err{color:var(--danger);font-size:.85rem;margin-top:.6rem;min-height:1rem}
+  /* gallery */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.2rem 0 3rem}
+  .ex{padding:1.1rem;display:flex;flex-direction:column;gap:.55rem}
+  .ex .diff{font-size:.7rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--teal)}
+  .ex h3{margin:0;font-size:1.08rem}
+  .ex .blurb{color:var(--muted);font-size:.9rem;flex:1;margin:0}
+  .steps{display:flex;flex-wrap:wrap;gap:.3rem}
+  .chip{font-size:.68rem;background:color-mix(in srgb,var(--teal) 12%,transparent);color:var(--teal);padding:.12rem .5rem;border-radius:999px}
+  .ex .actions{margin-top:.4rem}
+  .run-state{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .open{background:var(--teal);color:#fff;padding:.5rem .9rem;border-radius:10px;font-weight:600;display:inline-block}
+  .count{font-variant-numeric:tabular-nums}
+  footer{border-top:1px solid var(--border);padding:1.4rem 0;text-align:center;color:var(--muted);font-size:.85rem}
+  .hidden{display:none}
+  .note{font-size:.8rem;color:var(--muted);background:color-mix(in srgb,var(--teal) 8%,transparent);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin:.4rem 0 0}
+  .cap{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--muted);margin-top:.9rem}
+  .cap .dot{width:8px;height:8px;border-radius:50%;background:var(--teal)}
+  .cap .dot.full{background:var(--danger)}
+  .cap .bar{flex:0 0 120px;height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+  .cap .fill{height:100%;background:var(--teal);transition:width .4s}
+  .banner{margin-top:.8rem;padding:.7rem 1rem;border-radius:10px;font-size:.9rem;background:color-mix(in srgb,var(--danger) 10%,transparent);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);color:var(--danger)}
+  button:disabled{opacity:.55;cursor:default}
+  .toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:.65rem 1.1rem;border-radius:10px;font-size:.88rem;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:60;max-width:90vw;text-align:center}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+  <div class="brand"><span class="logo">t</span> tuvl examples</div>
+  <div style="display:flex;align-items:center;gap:1.1rem">
+    <a class="ghlink" href="https://github.com/tuvl-io/examples" target="_blank" rel="noopener" title="Verify the source on GitHub">
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>Source</span>
+    </a>
+    <div class="who" id="who"></div>
+  </div>
+</div></header>
+
+<!-- LOGIN -->
+<section id="login" class="wrap hidden">
+  <div class="card login">
+    <h2>Try tuvl, live</h2>
+    <p>Spin up a real tuvl project in a throwaway sandbox — no install. Tell us who you are and pick an example.</p>
+    <div class="cap" id="loginCap"></div>
+    <form id="loginForm">
+      <label for="name">Name</label>
+      <input id="name" name="name" autocomplete="name" placeholder="Ada Lovelace" required />
+      <label for="email">Work email</label>
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="ada@company.com" required />
+      <div class="err" id="loginErr"></div>
+      <button class="btn-primary" type="submit" style="width:100%;margin-top:1rem">Enter the sandbox →</button>
+    </form>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery" class="wrap hidden">
+  <div class="hero">
+    <h1>Pick an example. Run it in a live sandbox.</h1>
+    <p>Each one launches a real, running tuvl project with the visual <strong>Insight</strong> editor. Sandboxes are private to you and self-destruct after a short while.</p>
+    <div class="cap" id="cap"></div>
+    <div class="banner hidden" id="fullBanner">All sandboxes are in use right now — they free up automatically as timers expire. Try again in a minute or two.</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<footer>Engineered with <a href="https://tuvl.io" target="_blank" rel="noopener">tuvl.io</a> — apps like this, built in days, not months. · <a href="https://github.com/tuvl-io/examples" target="_blank" rel="noopener">View source on GitHub ↗</a></footer>
+
+<script>
+const $ = (s,r=document)=>r.querySelector(s)
+const api = (p,opt)=>fetch(p,{headers:{'Content-Type':'application/json'},...opt}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.message||j.error||r.statusText),{status:r.status});return j})
+let EXAMPLES=[], running={}, capFull=false // exampleId -> sandbox record
+
+function fmtLeft(ms){const s=Math.max(0,Math.floor(ms/1000));const m=Math.floor(s/60);return `${m}:${String(s%60).padStart(2,'0')}`}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),4500)}
+
+async function refreshCap(){
+  try{
+    const c=await api('/api/capacity')
+    capFull = c.available<=0
+    const pct = c.total ? Math.round(c.used/c.total*100) : 0
+    const html = `<span class="dot ${capFull?'full':''}"></span><span>${c.used} of ${c.total} sandboxes in use · ${c.available} available</span><span class="bar"><span class="fill" style="width:${pct}%"></span></span>`
+    const cap=$('#cap'); if(cap) cap.innerHTML=html
+    const lcap=$('#loginCap'); if(lcap) lcap.innerHTML=html
+    const fb=$('#fullBanner'); if(fb) fb.classList.toggle('hidden', !capFull)
+    document.querySelectorAll('[data-run]').forEach(b=>{ b.disabled=capFull; b.textContent = capFull?'No slots free':'▶ Run in sandbox' })
+  }catch{}
+}
+
+function cardHTML(ex){
+  return `<div class="card ex" data-ex="${ex.id}">
+    <div class="diff">${ex.difficulty}</div>
+    <h3>${ex.title}</h3>
+    <p class="blurb">${ex.blurb}</p>
+    <div class="steps">${ex.steps.map(s=>`<span class="chip">${s}</span>`).join('')}</div>
+    <div class="actions" data-slot="${ex.id}">
+      <button class="btn-primary run" data-run="${ex.id}">▶ Run in sandbox</button>
+    </div>
+  </div>`
+}
+
+function renderSlot(ex){
+  const slot = $(`[data-slot="${ex}"]`); if(!slot) return
+  const sb = running[ex]
+  if(!sb){ slot.innerHTML = `<button class="btn-primary run" data-run="${ex}" ${capFull?'disabled':''}>${capFull?'No slots free':'▶ Run in sandbox'}</button>`; return }
+  if(sb.status==='starting'){
+    slot.innerHTML = `<div class="run-state"><span class="spin"></span> Provisioning your sandbox… (~30s)</div>`
+  } else if(sb.status==='ready'){
+    const left = Date.parse(sb.expiresAt)-Date.now()
+    slot.innerHTML = `<div class="run-state">
+        <a class="open" href="${sb.url}" target="_blank" rel="noopener">Open sandbox ↗</a>
+        <span>expires in <span class="count" data-exp="${sb.expiresAt}">${fmtLeft(left)}</span></span>
+        <button class="btn-ghost stop" data-stop="${sb.id}" data-ex="${ex}">Stop</button>
+      </div>
+      <div class="note">Opens the Insight editor. This link is private and dies when the timer runs out.</div>`
+  } else {
+    slot.innerHTML = `<div class="run-state">Something went wrong. <button class="btn-ghost run" data-run="${ex}">Retry</button></div>`
+  }
+}
+
+async function launch(exId){
+  running[exId]={status:'starting'}; renderSlot(exId)
+  try{
+    const sb = await api('/api/launch',{method:'POST',body:JSON.stringify({exampleId:exId})})
+    running[exId]=sb; renderSlot(exId); poll(exId); refreshCap()
+  }catch(e){ running[exId]=null; renderSlot(exId); toast(e.message); refreshCap() }
+}
+async function poll(exId){
+  const sb = running[exId]; if(!sb||!sb.id) return
+  try{
+    const s = await api('/api/sandbox/'+sb.id)
+    running[exId]=s; renderSlot(exId)
+    if(s.status==='starting') setTimeout(()=>poll(exId),2000)
+  }catch{ running[exId]=null; renderSlot(exId) }
+}
+async function stop(id,exId){
+  try{ await api('/api/stop',{method:'POST',body:JSON.stringify({id})}) }catch{}
+  running[exId]=null; renderSlot(exId); refreshCap()
+}
+
+// live countdowns
+setInterval(()=>{
+  document.querySelectorAll('[data-exp]').forEach(el=>{
+    const left = Date.parse(el.dataset.exp)-Date.now()
+    el.textContent = fmtLeft(left)
+    if(left<=0){ const ex=el.closest('[data-ex]')?.dataset.ex; if(ex){running[ex]=null;renderSlot(ex)} }
+  })
+},1000)
+
+document.addEventListener('click',e=>{
+  const run=e.target.closest('[data-run]'); if(run) return launch(run.dataset.run)
+  const st=e.target.closest('[data-stop]'); if(st) return stop(st.dataset.stop, st.dataset.ex)
+})
+
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault(); $('#loginErr').textContent=''
+  const name=$('#name').value.trim(), email=$('#email').value.trim()
+  try{ await api('/api/signup',{method:'POST',body:JSON.stringify({name,email})}); await boot() }
+  catch(err){ $('#loginErr').textContent=err.message }
+})
+
+async function showGallery(me){
+  $('#login').classList.add('hidden'); $('#gallery').classList.remove('hidden')
+  $('#who').textContent = `${me.name} · ${me.email}`
+  const {examples} = await api('/api/examples'); EXAMPLES=examples
+  $('#grid').innerHTML = examples.map(cardHTML).join('')
+  // restore any running sandboxes for this session
+  try{ const {sandboxes} = await api('/api/mine'); for(const sb of sandboxes){ running[sb.exampleId]=sb; renderSlot(sb.exampleId); if(sb.status==='starting') poll(sb.exampleId) } }catch{}
+  refreshCap()
+}
+async function boot(){
+  refreshCap()
+  if(!window._capT) window._capT=setInterval(refreshCap,8000)
+  try{ const me=await api('/api/me'); await showGallery(me) }
+  catch{ $('#gallery').classList.add('hidden'); $('#login').classList.remove('hidden') }
+}
+boot()
+</script>
+</body>
+</html>

@@ -8,9 +8,23 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> **Stable.** These examples track tuvl **1.0.0** — the API and YAML schemas
+> **Stable.** These examples track tuvl **1.0.1** — the API and YAML schemas
 > are stable and versioned. This repo is updated regularly as new samples
 > land.
+
+## ▶ Try it live — no install
+
+Don't want to clone anything? Run any of these examples in a **live, throwaway
+sandbox** right in your browser:
+
+### **→ [try.tuvl.online](https://try.tuvl.online)**
+
+Enter your name + email, pick an example, and hit **Run in sandbox**. In a few
+seconds you get a private URL to a real running instance with the **Tuvl Insight**
+editor — poke at the workflows, run them, read the code. Each sandbox is isolated,
+resets automatically, and self-destructs after ~20 minutes. The landing page shows
+live slot availability. The sandbox platform itself is open source too — see
+[`sandbox-portal/`](./sandbox-portal).
 
 ---
 
