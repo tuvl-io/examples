@@ -8,9 +8,11 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> **Stable.** These examples track tuvl **1.0.1** — the API and YAML schemas
-> are stable and versioned. This repo is updated regularly as new samples
-> land.
+> **tuvl 2.0 (in development) on this branch.** Every workflow is a 2.0
+> agent graph (`version: tuvl/v2`) with typed contracts; Python lives in
+> `agents/` as `@agent` code agents. `support-triage`, `mcp-research-agent` and
+> `kyc-onboarding` run their autonomous investigators as `pending` contract
+> stubs until loop agents land. The `main` branch tracks tuvl 1.0.1.
 
 ## ▶ Try it live — no install
 
