@@ -1,86 +1,64 @@
+# tuvl 2.0 — answer a question from kb_docs, citing the sources used.
+# Hybrid retrieval (vector + full-text, RRF) → a grounded, structured answer.
 kind: Workflow
+version: tuvl/v2
 metadata:
   name: ask_kb
-  schema_version: v1
   description: Retrieve grounding passages from kb_docs and answer, citing sources.
-  group: knowledge-base
-enabled: true
+  tags: [knowledge-base]
 spec:
-  # RAG only — no ModelDefinition is accessed, so spec.context has no models.
-  # The `default` chat model is an AgentModel preset (llms/default.yaml), not a
-  # ModelDefinition, so it is not enumerated here.
   trigger:
-    path: /api/kb/ask
-    method: POST
-    # Untyped body: { "question": "...", "tag": "optional-filter" }.
-  steps:
-    # 1) Hybrid (RRF) retrieval over the shared collection. Writes a
-    #    list[{content, metadata, score}] to context under `kb_hits`.
-    - id: search
-      kind: Functional
-      runner: DataSearch
-      collection: kb_docs
-      query: "{{question}}"
-      top_k: 5
-      output_key: kb_hits
-      # Metadata filter (extension point — see README "Filtered retrieval").
-      # Enabling this unconditionally would filter every request, so it is left
-      # off by default; uncomment to restrict hits to a single tag:
-      # metadata_filter:
-      #   tags: "{{tag}}"
-      routes:
-        error: respond_failed
-        default: answer
+    http: { path: /api/kb/ask, method: POST }
+    input:
+      question: str
 
-    # 2) Golden Rule 16: DataSearch -> Agent with context_injection. The engine
-    #    injects the retrieved passages; the prompt must NOT concatenate them.
+  agents:
+    - id: search
+      description: Find the passages most relevant to the question
+      engine: code
+      effect: read
+      inputs: { question: str }
+      outputs: { passages: "list[json]" }     # [{content, metadata, score}]
+      code:
+        run: tuvl.data_search
+        with: { collection: kb_docs, query: "{{ question }}", top_k: 5 }
+      routes:
+        default: answer
+        error: END.failed
+
     - id: answer
-      kind: Agent
-      mode: completion
-      agent:
+      description: Answer strictly from the retrieved passages
+      engine: llm
+      inputs: { question: str, passages: "list[json]" }
+      outputs:
+        answer: str
+        sources: list[str]
+        confident: bool
+      budget:
+        timeout: 30s
+        max_tokens: 1000
+        retry: { attempts: 2, errors: [parse_error, timeout], backoff: 2 }
+      llm:
         model: default
         system: |
-          You answer questions strictly from the provided knowledge-base sources.
-          Rules:
-          - Use ONLY the injected sources. Never rely on outside knowledge.
-          - Cite the `title` (from each source's metadata) of every source you use.
-          - If the sources do not contain the answer, set answer to exactly
-            "not in the knowledge base", return an empty sources list, and set
-            confident to false. Never invent a citation.
-        prompt: |
-          Answer the user's question using the injected knowledge-base sources.
-          Question: {{question}}
-
-          Respond with a JSON object of exactly this shape:
-          {"answer": "<string>", "sources": ["<title>", ...], "confident": <true|false>}
-        context_injection:
-          - kb_hits
-        outcome:
-          format: json
-        retry:
-          attempts: 2
-          on: [parse_error, timeout]
-          backoff: 2
-        timeout: 30
-      routes:
-        error: respond_failed
-        timeout: respond_failed
-        parse_error: respond_failed
-        default: respond
-
-    # 3) Project the merged answer fields into the HTTP body.
-    - id: respond
-      kind: Response
-      mapping:
-        answer: answer
-        sources: sources
-        confident: confident
+          You answer questions strictly from the provided knowledge-base passages.
+          - Use ONLY the passages. Never rely on outside knowledge.
+          - In `sources`, list the metadata `title` of every passage you used.
+          - If the passages do not contain the answer, set answer to exactly
+            "not in the knowledge base", sources to [], and confident to false.
+            Never invent a citation.
+        prompt: Answer the question from the passages.
       routes:
         default: END
+        parse_error: END.failed
+        timeout: END.failed
+        budget_exceeded: END.failed
+        error: END.failed
 
-    - id: respond_failed
-      kind: Response
-      mapping:
-        error: _last_error
-      routes:
-        default: END
+  outputs:
+    default:
+      status: 200
+      body: { answer: "{{ answer }}", sources: "{{ sources }}", confident: "{{ confident }}" }
+    failed:
+      status: 502
+      body: { error: the question could not be answered }
