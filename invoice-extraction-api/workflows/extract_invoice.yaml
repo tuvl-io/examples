@@ -59,10 +59,15 @@ spec:
         total: float?
         vendor_tax_id: str?
         raw_text: str
-      outputs:
-        # Set on valid/mismatch, null on incomplete — see spec open question Q10.
-        invoice: Invoice.create?
-        verification: json
+      outputs:                       # per signal: no invoice when incomplete
+        valid:
+          invoice: Invoice.create
+          verification: json
+        mismatch:
+          invoice: Invoice.create
+          verification: json
+        incomplete:
+          verification: json
       code: { run: verify_totals }
       routes:
         valid: persist
@@ -74,7 +79,7 @@ spec:
       description: Store a verified invoice
       engine: tool
       inputs:
-        invoice: Invoice.create?
+        invoice: Invoice.create
       outputs:
         saved: Invoice
       tool:
@@ -101,7 +106,7 @@ spec:
       description: Store an invoice whose totals do not add up, marked rejected
       engine: tool
       inputs:
-        invoice: Invoice.create?
+        invoice: Invoice.create
       outputs:
         rejected: Invoice
       tool:
