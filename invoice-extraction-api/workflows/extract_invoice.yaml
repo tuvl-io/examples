@@ -1,150 +1,150 @@
+# tuvl 2.0 — extract, verify and persist a structured invoice from raw text.
+# LLM extraction → deterministic verification → database write.
 kind: Workflow
-enabled: true
+version: tuvl/v2
 metadata:
   name: extract_invoice
-  schema_version: v1
   description: Extract, verify, and persist a structured invoice from raw text.
-  group: invoices
+  tags: [invoices]
 spec:
-  context:
-    models:
-      - name: Invoice
-        version: v1
+  models: [Invoice]
   trigger:
-    path: /api/invoices/extract
-    method: POST
-    # Untyped trigger: the request body { "raw_text": "..." } becomes the raw
-    # context dict. The model contract is enforced downstream by the Invoice
-    # Create schema at the persist ModelOp step.
+    http: { path: /api/invoices/extract, method: POST }
+    input:
+      raw_text: str
 
-  steps:
-    # 1. LLM structured extraction. outcome.format: json merges the model's JSON
-    #    into context; the prompt asks for a single `extracted` object so the
-    #    downstream node/ModelOp can read context["extracted"]. raw_text is
-    #    auto-appended by the engine as an "## Input Data" block (Golden Rule 15).
+  agents:
     - id: extract
-      kind: Agent
-      mode: completion
-      agent:
+      description: Extract structured invoice fields from raw invoice text
+      engine: llm
+      inputs:
+        raw_text: str
+      outputs:                       # null when a field is genuinely absent
+        vendor_name: str?
+        invoice_number: str?
+        invoice_date: date?
+        currency: enum[USD, EUR, GBP, INR]?
+        subtotal: float?
+        tax: float?
+        total: float?
+        vendor_tax_id: str?
+      budget:
+        timeout: 60s
+        max_tokens: 2000
+        retry: { attempts: 2, errors: [parse_error, timeout], backoff: 2 }
+      llm:
         model: default
         system: |
-          You are a precise invoice data extractor. You never invent values.
-          Return ONLY a JSON object with a single key "extracted" whose value is
-          an object with these keys:
-            vendor_name    (string)
-            invoice_number (string)
-            invoice_date   (ISO 8601 date string YYYY-MM-DD, or null)
-            currency       (one of "USD", "EUR", "GBP", "INR")
-            subtotal       (number)
-            tax            (number)
-            total          (number)
-            vendor_tax_id  (string, or null)
-          Use null for any field that is genuinely absent from the input.
-        prompt: |
-          Extract the structured invoice fields from the invoice text provided
-          in the Input Data block below. Do not invent values; use null for
-          fields that are not present.
-        outcome:
-          format: json
-        retry:
-          attempts: 2
-          on: [parse_error, timeout]
-          backoff: 2
-        timeout: 60
+          You are a precise invoice data extractor. You never invent values;
+          use null for any field that is absent from the input.
+        prompt: Extract the structured invoice fields from this invoice text.
       routes:
         default: verify_totals
-        error: respond_failed
-        timeout: respond_failed
-        parse_error: respond_failed
+        parse_error: END.failed
+        timeout: END.failed
+        budget_exceeded: END.failed
+        error: END.failed
 
-    # 2. Deterministic verification (pure Python, no I/O). Emits valid/mismatch
-    #    and writes context["verification"] = {ok, reasons}.
     - id: verify_totals
-      kind: Functional
-      runner: verify_totals
+      description: Check required fields are present and subtotal + tax equals total
+      engine: code
+      effect: read
+      inputs:
+        vendor_name: str?
+        invoice_number: str?
+        invoice_date: date?
+        currency: enum[USD, EUR, GBP, INR]?
+        subtotal: float?
+        tax: float?
+        total: float?
+        vendor_tax_id: str?
+        raw_text: str
+      outputs:
+        # Set on valid/mismatch, null on incomplete — see spec open question Q10.
+        invoice: Invoice.create?
+        verification: json
+      code: { run: verify_totals }
       routes:
         valid: persist
         mismatch: persist_rejected
-        # Missing/non-numeric required fields (garbage/empty extraction) can't be
-        # persisted — route to a clean business error, never a 500 (criterion 4).
-        incomplete: respond_failed
-        error: respond_failed
+        incomplete: END.failed
+        error: END.failed
 
-    # 3. Persist the accepted invoice (status: extracted).
     - id: persist
-      kind: ModelOp
-      model: Invoice
-      operation: create
-      output: saved_invoice
-      payload:
-        vendor_name: "{{extracted.vendor_name}}"
-        invoice_number: "{{extracted.invoice_number}}"
-        invoice_date: "{{extracted.invoice_date}}"
-        currency: "{{extracted.currency}}"
-        subtotal: "{{extracted.subtotal}}"
-        tax: "{{extracted.tax}}"
-        total: "{{extracted.total}}"
-        vendor_tax_id: "{{extracted.vendor_tax_id}}"
-        raw_text: "{{raw_text}}"
-        status: extracted
+      description: Store a verified invoice
+      engine: tool
+      inputs:
+        invoice: Invoice.create?
+      outputs:
+        saved: Invoice
+      tool:
+        use: db
+        model: Invoice
+        op: create
+        values:
+          vendor_name: "{{ invoice.vendor_name }}"
+          invoice_number: "{{ invoice.invoice_number }}"
+          invoice_date: "{{ invoice.invoice_date }}"
+          currency: "{{ invoice.currency }}"
+          subtotal: "{{ invoice.subtotal }}"
+          tax: "{{ invoice.tax }}"
+          total: "{{ invoice.total }}"
+          vendor_tax_id: "{{ invoice.vendor_tax_id }}"
+          raw_text: "{{ invoice.raw_text }}"
+          status: extracted
       routes:
-        default: respond_ok
-        error: respond_failed
+        default: END
+        conflict: END.duplicate
+        error: END.failed
 
-    # 4. Persist the rejected invoice (status: rejected).
     - id: persist_rejected
-      kind: ModelOp
-      model: Invoice
-      operation: create
-      output: rejected_invoice
-      payload:
-        vendor_name: "{{extracted.vendor_name}}"
-        invoice_number: "{{extracted.invoice_number}}"
-        invoice_date: "{{extracted.invoice_date}}"
-        currency: "{{extracted.currency}}"
-        subtotal: "{{extracted.subtotal}}"
-        tax: "{{extracted.tax}}"
-        total: "{{extracted.total}}"
-        vendor_tax_id: "{{extracted.vendor_tax_id}}"
-        raw_text: "{{raw_text}}"
-        status: rejected
+      description: Store an invoice whose totals do not add up, marked rejected
+      engine: tool
+      inputs:
+        invoice: Invoice.create?
+      outputs:
+        rejected: Invoice
+      tool:
+        use: db
+        model: Invoice
+        op: create
+        values:
+          vendor_name: "{{ invoice.vendor_name }}"
+          invoice_number: "{{ invoice.invoice_number }}"
+          invoice_date: "{{ invoice.invoice_date }}"
+          currency: "{{ invoice.currency }}"
+          subtotal: "{{ invoice.subtotal }}"
+          tax: "{{ invoice.tax }}"
+          total: "{{ invoice.total }}"
+          vendor_tax_id: "{{ invoice.vendor_tax_id }}"
+          raw_text: "{{ invoice.raw_text }}"
+          status: rejected
       routes:
-        default: respond_rejected
-        error: respond_failed
+        default: END.rejected
+        conflict: END.duplicate
+        error: END.failed
 
-    # 5a. Success response — mapping mode redacts the secure vendor_tax_id.
-    - id: respond_ok
-      kind: Response
-      mapping:
-        id: saved_invoice.id
-        vendor_name: saved_invoice.vendor_name
-        invoice_number: saved_invoice.invoice_number
-        currency: saved_invoice.currency
-        total: saved_invoice.total
-        status: saved_invoice.status
-      routes:
-        default: END
-
-    # 5b. Rejected response — includes verification reasons.
-    - id: respond_rejected
-      kind: Response
-      mapping:
-        id: rejected_invoice.id
-        vendor_name: rejected_invoice.vendor_name
-        invoice_number: rejected_invoice.invoice_number
-        currency: rejected_invoice.currency
-        total: rejected_invoice.total
-        status: rejected_invoice.status
-        verification: verification
-      routes:
-        default: END
-
-    # 5c. Failure response — no record persisted; surface the reason cleanly
-    #     (never a 500).
-    - id: respond_failed
-      kind: Response
-      mapping:
-        error: _last_error
-        verification: verification
-      routes:
-        default: END
+  outputs:
+    default:
+      status: 200
+      body:
+        id: "{{ saved.id }}"
+        vendor_name: "{{ saved.vendor_name }}"
+        invoice_number: "{{ saved.invoice_number }}"
+        currency: "{{ saved.currency }}"
+        total: "{{ saved.total }}"
+        status: "{{ saved.status }}"
+    rejected:
+      status: 200
+      body:
+        id: "{{ rejected.id }}"
+        invoice_number: "{{ rejected.invoice_number }}"
+        total: "{{ rejected.total }}"
+        status: "{{ rejected.status }}"
+        verification: "{{ verification }}"
+    duplicate:
+      status: 409
+      body: { error: an invoice with this number already exists }
+    failed:
+      status: 422
+      body: { error: the invoice could not be extracted or verified }
