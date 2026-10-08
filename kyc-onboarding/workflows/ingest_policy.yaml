@@ -1,40 +1,38 @@
+# tuvl 2.0 — seed the compliance_policies RAG collection (admin only).
 kind: Workflow
-version: v1
+version: tuvl/v2
 metadata:
   name: ingest_policy
-  schema_version: v1
   description: Ingest a compliance policy document into the compliance_policies RAG collection.
-  group: kyc
-  required_scope: iam:admin        # admin-only: seeding the policy corpus
-enabled: true
+  tags: [kyc]
+  required_scope: iam:admin
 spec:
   trigger:
-    path: /api/kyc/policies
-    method: POST
-    input_schema:
-      - { name: title, type: string, required: true }
-      - { name: content, type: string, required: true }
-  steps:
-    - id: ingest
-      kind: Functional
-      runner: DataIngest
-      collection: compliance_policies
-      scope: global
-      document: "{{ content }}"
-      metadata:
-        title: "{{ title }}"
-        source: compliance_policy
-      routes:
-        default: respond
-        error: respond
+    http: { path: /api/kyc/policies, method: POST }
+    input:
+      title: str
+      content: str
 
-    - id: respond
-      kind: Response
-      # Mapping resolves context dot-paths (no literals). Echo the ingested
-      # title back as confirmation; `_last_error` is null on success and
-      # carries the reason on the error branch.
-      mapping:
-        title: title
-        error: _last_error
+  agents:
+    - id: ingest
+      description: Embed the policy and store it in compliance_policies
+      engine: code
+      inputs: { title: str, content: str }
+      outputs: { doc_id: uuid }
+      code:
+        run: tuvl.data_ingest
+        with:
+          collection: compliance_policies
+          document: "{{ content }}"
+          metadata: { title: "{{ title }}", source: compliance_policy }
       routes:
         default: END
+        error: END.failed
+
+  outputs:
+    default:
+      status: 201
+      body: { doc_id: "{{ doc_id }}", title: "{{ title }}" }
+    failed:
+      status: 502
+      body: { error: the policy could not be ingested }

@@ -12,6 +12,6 @@ dirs:
   workflows: workflows
   datasources: datasources
   llms: llms
-  nodes: nodes
+  agents: agents
   embeddings: vectorstore
   collections: vectorstore
