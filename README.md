@@ -8,13 +8,9 @@ Each example is a complete, self-contained tuvl project: models, datasources, LL
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
-> **tuvl 2.0 (in development) on this branch.** Every workflow is a 2.0
-> agent graph (`version: tuvl/v2`) with typed contracts; Python lives in
-> `agents/` as `@agent` code agents. `support-triage` shows `decide` (rules and
-> a decision model) and a `loop` whose credit tool needs a team lead's
-> approval; `mcp-research-agent` a loop over an allow-listed MCP server;
-> `kyc-onboarding` a supervised loop with a calibrated judge. The `main` branch
-> tracks tuvl 1.0.1.
+> **tuvl 2.0.** Every project is a 2.0 agent graph (`version: tuvl/v2`) with typed contracts, a
+> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. The `main` branch tracks
+> tuvl 1.x until 2.0 is released.
 
 ## ▶ Try it live — no install
 
@@ -41,13 +37,16 @@ with its own README that explains what it does and how to run it.
 tuvl-examples/
 ├── <project-name>/
 │   ├── README.md          # what it demonstrates + how to run it
-│   ├── config.yaml        # project config (dirs, deployment mode)
-│   ├── .env.example       # required env vars (copy to .env — never commit secrets)
-│   ├── models/            # ModelDefinition / Collection / Embedding YAML
-│   ├── datasources/       # Postgres / Redis DataSource YAML
-│   ├── llms/              # AgentModel (LLM) presets
-│   ├── workflows/         # the workflow YAML files
-│   └── nodes/             # optional custom Python @node functions
+│   ├── specs/             # intent (<name>.md) + derived task plan (<name>.tasks.yaml)
+│   ├── workflows/         # kind: Workflow (version: tuvl/v2)
+│   ├── agents/            # code agents (@agent) + _generated/ schemas (tuvl codegen)
+│   ├── models/            # ModelDefinition / Embedding / Collection YAML
+│   ├── llms/              # AgentModel presets (llm and decision models)
+│   ├── artifacts/         # prompts, steering, MCP servers, judges
+│   ├── tests/             # Test documents generated from the spec examples
+│   ├── tuvl.lock          # pinned models, artifacts and MCP schemas
+│   ├── AGENTS.md, .agents/  # rules and skills for coding agents
+│   └── .env.example       # required env vars (copy to .env — never commit secrets)
 └── ...
 ```
 
@@ -58,55 +57,38 @@ tuvl-examples/
 > [AGENTS.md](./AGENTS.md); infrastructure and LLM needs per project:
 > [REQUIREMENTS.md](./REQUIREMENTS.md).
 
-| Project | Difficulty | What it shows | Step kinds used | Status |
-|---------|------------|---------------|-----------------|--------|
-| [`support-triage`](./support-triage) | Easy–Medium | Both agent modes side by side — completion classify → autonomous investigate — with artifacts + a guardrail. Runs locally on Ollama, no API key | Agent (completion + autonomous) · Functional · ModelOp · Response | ✅ runnable |
-| [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → validated structured records via one LLM step | Agent · Functional · ModelOp · Response | ✅ runnable |
-| [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers — RAG on built-in rails | Functional (DataIngest/DataSearch) · Agent · Response | ✅ runnable |
-| [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → region-aware routing → group-gated human review (no self-approval) | Agent · Router (match) · APICall · HumanInTheLoop · Functional · ModelOp · Response | ✅ runnable |
-| [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | Autonomous agent driving MCP tools to a cited research brief, on a token budget | Agent (autonomous + completion) · MCP · Functional · ModelOp · Response | ✅ runnable |
-| [`kyc-onboarding`](./kyc-onboarding) | Complex | Supervised investigation, compliance approval gate, PII masking, versioned schemas | Agent (autonomous + supervisor, completion) · APICall · Router (match) · HumanInTheLoop · Functional · ModelOp · Response | ✅ runnable |
-| [`sentiment-api`](./sentiment-api) | Easy | Classify a review's sentiment, persist it — the reference for packaging to production with `tuvl ship` | Agent · ModelOp · Response | ✅ runnable |
+| Project | Difficulty | What it shows | Engines |
+|---------|------------|---------------|---------|
+| [`sentiment-api`](./sentiment-api) | Easy | Classify a review and persist it — the reference for `tuvl ship` | llm · tool |
+| [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → a verified, persisted record; per-signal outputs; a secure field | llm · code · tool |
+| [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers on the built-in vector rails | code (`tuvl.data_*`) · llm |
+| [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → regional policy in code → moderator review → audit + notification | llm · code · human · tool |
+| [`support-triage`](./support-triage) | Medium | Rules-first `decide` with a decision model; an investigating `loop` whose credit tool needs approval | decide · loop · llm · tool · code |
+| [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | A bounded loop over an allow-listed MCP server to a cited brief | loop · llm · tool · code |
+| [`kyc-onboarding`](./kyc-onboarding) | Complex | PII-safe intake, sanctions screening, a judge-supervised investigation, a compliance decision | loop · human · llm · tool · code |
 
 ## Running an example
 
-1. **Install tuvl** (Python 3.13+):
-   ```bash
-   uv tool install "tuvl[standard]"     # [standard] bundles the Tuvl Insight UI
-   ```
-2. **Pick a project and configure it:**
-   ```bash
-   git clone https://github.com/tuvl-io/examples.git tuvl-examples
-   cd tuvl-examples/<project-name>
-   cp .env.example .env                 # fill in DB url, API keys, etc.
-   ```
-   Each example needs Postgres (with the `pgvector` extension for RAG samples) and,
-   for LLM steps, a provider key or a local model — see the project's own README.
-3. **Run it in dev mode and open the editor:**
-   ```bash
-   tuvl dev --project-dir .
-   # → http://localhost:8885/insight
-   ```
-4. **Validate, then run in production mode:**
-   ```bash
-   tuvl validate --project-dir .
-   tuvl run --project-dir .             # multi-worker uvicorn
-   ```
+```bash
+uv tool install "tuvl[standard]"           # Python 3.13; [standard] adds Insight
+git clone https://github.com/tuvl-io/examples.git tuvl-examples
+cd tuvl-examples/<project-name>
+cp .env.example .env                       # Postgres settings and a model key
+tuvl validate --strict && tuvl test        # offline checks
+tuvl dev --auto-login                      # Insight at http://localhost:8885/insight
+```
+
+Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md).
 
 ## Adding an example
 
-Contributions welcome — each example should be a clean, self-contained project:
-
-1. Create a new top-level directory named after the use case (kebab-case).
-2. Make it a runnable tuvl project (`tuvl init` is a good starting point) with:
-   - a **`README.md`** describing what it demonstrates, prerequisites, and run steps;
-   - a **`.env.example`** listing required variables — **never commit real secrets**;
-   - workflows that follow the schema in the
-     [agentic manual](https://tuvl.dev) (PascalCase step kinds, every signal mapped
-     in `routes:`, models declared in `spec.context.models`).
-3. Run `tuvl validate --project-dir <dir>` — it must pass.
-4. Add a row to the **[Projects](#projects)** table above.
-5. Open a pull request.
+1. Create a top-level directory named after the use case (kebab-case) with `tuvl init`.
+2. Write the intent in `specs/<name>.md` with `tuvl-example` acceptance cases, plan it with
+   `tuvl spec analyse`, and implement the tasks (`tuvl spec status` shows what is left).
+3. It must pass the CI gate:
+   `tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test && tuvl spec status --strict`.
+4. Add a README (what it demonstrates, prerequisites, run steps), a `.env.example` (never real
+   secrets), and a row to the table above. Open a pull request.
 
 ## About tuvl
 

@@ -8,13 +8,14 @@ this step's transaction.
 
 from __future__ import annotations
 
-from typing import Any
-
 from tuvl import Ctx, agent
+
+from agents._generated.schemas import FinalizeIn, FinalizeOut
 
 
 @agent("apply_decision")
-async def apply_decision(inp: Any, ctx: Ctx) -> dict[str, Any]:
+async def apply_decision(inp: FinalizeIn, ctx: Ctx) -> FinalizeOut:
+    """Record the assessment and the applicant's final status"""
     if inp.decision is not None:
         approved = inp.decision == "approve"
         band = inp.band or "high"
