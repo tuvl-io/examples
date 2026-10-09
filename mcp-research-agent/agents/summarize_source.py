@@ -6,9 +6,10 @@ Deterministic: derives a title and a two-sentence takeaway from the text.
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from tuvl import Ctx, agent
+
+from agents._generated.schemas import SummarizeSourceIn, SummarizeSourceOut
 
 
 def _normalize(text: str) -> str:
@@ -26,7 +27,10 @@ def _derive_title(text: str, url: str) -> str:
 
 
 @agent("summarize_source")
-async def summarize_source(inp: Any, ctx: Ctx) -> dict[str, Any]:
+async def summarize_source(inp: SummarizeSourceIn, ctx: Ctx) -> SummarizeSourceOut:
+    """
+    Summarize one fetched page into a title and a two-sentence takeaway with its URL
+    """
     url = str(inp.url or "").strip()
     content = _normalize(str(inp.content or ""))
     return {"summary": {"url": url, "title": _derive_title(content, url), "takeaway": _first_two_sentences(content)}}

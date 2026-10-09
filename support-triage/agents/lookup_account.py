@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from tuvl import Ctx, agent
+
+from agents._generated.schemas import LookupAccountIn, LookupAccountOut
 
 _ACCOUNTS = {
     "cust_001": {"plan": "pro", "balance_due": 42.0, "dispute": False,
@@ -18,5 +18,9 @@ _UNKNOWN = {"plan": "unknown", "balance_due": 0.0, "dispute": False, "note": "no
 
 
 @agent("lookup_account")
-async def lookup_account(inp: Any, ctx: Ctx) -> dict[str, Any]:
+async def lookup_account(inp: LookupAccountIn, ctx: Ctx) -> LookupAccountOut:
+    """
+    Look up a customer's billing account (plan, balance due, dispute flag) by
+    customer_id
+    """
     return {"account": _ACCOUNTS.get(str(inp.customer_id or "").strip(), _UNKNOWN)}

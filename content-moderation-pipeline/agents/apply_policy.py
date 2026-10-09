@@ -6,13 +6,14 @@ signal is the resulting category, so routing stays in the workflow.
 
 from __future__ import annotations
 
-from typing import Any
-
 from tuvl import Ctx, agent
+
+from agents._generated.schemas import ApplyPolicyIn, ApplyPolicyOut, ApplyPolicySignal
 
 
 @agent("apply_policy")
-async def apply_policy(inp: Any, ctx: Ctx) -> tuple[dict[str, Any], str]:
+async def apply_policy(inp: ApplyPolicyIn, ctx: Ctx) -> tuple[ApplyPolicyOut, ApplyPolicySignal]:
+    """Apply the regional policy (EU escalates borderline to violation)"""
     category, reason = inp.verdict, inp.rationale
     if inp.region == "eu" and category == "borderline":
         category = "violation"

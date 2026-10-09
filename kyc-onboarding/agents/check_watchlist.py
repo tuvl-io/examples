@@ -6,15 +6,16 @@ never passes through the model. A seeded stub matches against a fixed set.
 
 from __future__ import annotations
 
-from typing import Any
-
 from tuvl import Ctx, agent
+
+from agents._generated.schemas import CheckWatchlistIn, CheckWatchlistOut
 
 _SEEDED_WATCHLIST: set[str] = {"john doe", "ivan sanction"}
 
 
 @agent("check_watchlist")
-async def check_watchlist(inp: Any, ctx: Ctx) -> dict[str, Any]:
+async def check_watchlist(inp: CheckWatchlistIn, ctx: Ctx) -> CheckWatchlistOut:
+    """Check the applicant against the sanctions/PEP watchlist (by applicant id)"""
     applicant = await ctx.db.get("Applicant", inp.applicant_id)
     if applicant is None:
         return {"hit": False, "checked": False, "note": "no such applicant"}

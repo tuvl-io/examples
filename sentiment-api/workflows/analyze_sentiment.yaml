@@ -64,6 +64,9 @@ spec:
         conflict: END.failed
         error: END.failed
 
+  policy:
+    max_tokens_per_run: 1000
+
   outputs:
     default:
       status: 200

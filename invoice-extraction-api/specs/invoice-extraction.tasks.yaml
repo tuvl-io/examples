@@ -1,0 +1,101 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: invoice-extraction
+  spec: specs/invoice-extraction.md
+  spec_hash: 8947626eb423
+spec:
+  tasks:
+  - id: T1
+    title: Define Invoice model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: acab027fde25
+    target:
+      model: Invoice
+    effort:
+      size: XS
+      hours:
+      - 0.5
+      - 1.0
+      source: llm
+  - id: T2
+    title: Create extract_invoice workflow structure
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 0e0db2f0bdfa
+    target:
+      workflow: extract_invoice
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T1
+  - id: T3
+    title: Implement extraction agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 0e0db2f0bdfa
+    target:
+      workflow: extract_invoice
+      agent: extract
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T2
+  - id: T4
+    title: Implement verification agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 0e0db2f0bdfa
+    target:
+      workflow: extract_invoice
+      agent: verify_totals
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T2
+  - id: T5
+    title: Implement persistence agents
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 0e0db2f0bdfa
+    target:
+      workflow: extract_invoice
+      agent: persist
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T2
+  - id: T6
+    title: 'Assert: The vendor tax id is PII: it is stored but never returned.'
+    type: test
+    target:
+      workflow: extract_invoice
+      assertion: not contains(output.body, 'vendor_tax_id')
+  - id: T8
+    title: 'Assert: Text that yields no usable invoice is refused with 422.'
+    type: test
+    target:
+      workflow: extract_invoice
+      assertion: end == 'failed'

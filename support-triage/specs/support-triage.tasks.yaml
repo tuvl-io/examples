@@ -1,0 +1,84 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: support-triage
+  spec: specs/support-triage.md
+  spec_hash: b33adf827cd5
+spec:
+  tasks:
+  - id: T1
+    title: Implement issue_credit workflow and credit agent
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 3f85a77c243f
+    target:
+      workflow: issue_credit
+      agent: credit
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+  - id: T2
+    title: Implement triage workflow and classify agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 3f85a77c243f
+    target:
+      workflow: triage
+      agent: classify
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+  - id: T3
+    title: Implement route decide agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 3f85a77c243f
+    target:
+      workflow: triage
+      agent: route
+    depends_on:
+    - T2
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+  - id: T4
+    title: Implement investigate loop agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 3f85a77c243f
+    target:
+      workflow: triage
+      agent: investigate
+    depends_on:
+    - T3
+    effort:
+      size: L
+      hours:
+      - 4.0
+      - 8.0
+  - id: T5
+    title: Implement persist tool agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 3f85a77c243f
+    target:
+      workflow: triage
+      agent: persist
+    depends_on:
+    - T4
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0

@@ -20,6 +20,8 @@ from typing import Any
 
 from tuvl import Ctx, agent
 
+from agents._generated.schemas import VerifyTotalsIn, VerifyTotalsResult
+
 REQUIRED_FIELDS = ("vendor_name", "invoice_number", "currency", "subtotal", "tax", "total")
 TOLERANCE = Decimal("0.01")
 
@@ -38,7 +40,8 @@ def _present(value: Any) -> bool:
 
 
 @agent("verify_totals")
-async def verify_totals(inp: Any, ctx: Ctx) -> tuple[dict[str, Any], str]:
+async def verify_totals(inp: VerifyTotalsIn, ctx: Ctx) -> VerifyTotalsResult:
+    """Check required fields are present and subtotal + tax equals total"""
     fields = {name: getattr(inp, name) for name in REQUIRED_FIELDS}
     reasons = [f"missing required field: {name}" for name, value in fields.items() if not _present(value)]
 
