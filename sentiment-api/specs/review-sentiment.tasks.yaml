@@ -1,0 +1,56 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: review-sentiment
+  spec: specs/review-sentiment.md
+  spec_hash: e487e09e4e81
+spec:
+  tasks:
+  - id: T1
+    title: Define and configure analyze_sentiment workflow structure
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 3b810ab8d80b
+    target:
+      workflow: analyze_sentiment
+    effort:
+      size: XS
+      hours:
+      - 0.5
+      - 1.0
+      source: llm
+  - id: T3
+    title: Implement LLM classification agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 3b810ab8d80b
+    target:
+      workflow: analyze_sentiment
+      agent: classify
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T1
+  - id: T4
+    title: Implement database persist tool agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 3b810ab8d80b
+    target:
+      workflow: analyze_sentiment
+      agent: persist
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T1

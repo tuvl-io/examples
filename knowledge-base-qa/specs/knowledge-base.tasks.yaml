@@ -1,0 +1,55 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: knowledge-base
+  spec: specs/knowledge-base.md
+  spec_hash: 83ac0a27b2de
+spec:
+  tasks:
+  - id: T1
+    title: Implement search agent for ask_kb
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 7938ba8c7d25
+    target:
+      workflow: ask_kb
+      agent: search
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+  - id: T2
+    title: Implement answer agent for ask_kb
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 7938ba8c7d25
+    target:
+      workflow: ask_kb
+      agent: answer
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T1
+  - id: T3
+    title: Implement ingest agent for ingest_doc
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 7938ba8c7d25
+    target:
+      workflow: ingest_doc
+      agent: ingest
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
