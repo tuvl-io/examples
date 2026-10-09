@@ -1,0 +1,35 @@
+# tuvl 2.0 — issue a goodwill credit. Used as a `workflow:` tool by the
+# triage investigator (a child run with its own journal).
+kind: Workflow
+version: tuvl/v2
+metadata:
+  name: issue_credit
+  description: Issue a goodwill credit to a customer's account.
+spec:
+  models: [AccountCredit]
+  trigger:
+    input:
+      customer_id: str
+      amount: int
+      reason: str
+
+  agents:
+    - id: credit
+      description: Record the credit
+      engine: tool
+      inputs: { customer_id: str, amount: int, reason: str }
+      outputs: { credit: AccountCredit }
+      tool:
+        use: db
+        model: AccountCredit
+        op: create
+        values: { customer_id: "{{ customer_id }}", amount: "{{ amount }}", reason: "{{ reason }}" }
+      routes: { default: END, conflict: END.failed, error: END.failed }
+
+  outputs:
+    default:
+      status: 201
+      body: { credit_id: "{{ credit.id }}", amount: "{{ credit.amount }}" }
+    failed:
+      status: 502
+      body: { error: the credit could not be issued }
