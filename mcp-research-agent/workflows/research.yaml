@@ -2,9 +2,9 @@
 # returns a cited brief.
 #
 # `investigate` is a `loop` agent: it drives the MCP `fetch` tool on the
-# artifact://fetch-web server and the summarize_source code agent, bounded by
-# iterations and tokens. Loops arrive in tuvl 2.0 phase 2, so it runs as a
-# `pending` contract stub until then.
+# artifact://fetch-web server (allow-listed) and the summarize_source code
+# agent, bounded by iterations, tokens and tool calls, with a supervisor that
+# steers it to finish when it loops or runs low on budget.
 kind: Workflow
 version: tuvl/v2
 metadata:
@@ -22,12 +22,41 @@ spec:
   agents:
     - id: investigate
       description: Research the question across fetched web sources
-      engine: pending                       # becomes `engine: loop` in phase 2
+      engine: loop
       inputs: { question: str }
       outputs: { research: json }
+      budget: { max_iterations: 8, max_tokens: 40000, max_tool_calls: 6, timeout: 4m }
+      loop:
+        model: default
+        steering: artifact://research-method@2
+        skills: [artifact://citation-style@1]
+        tools:
+          - mcp: artifact://fetch-web@1
+            allow: [fetch]                    # the server's only tool we let the model use
+            max_calls: 4
+          - agent: summarize_source
+        supervisor:
+          rules:
+            - { when: tool_repeated, count: 2, then: steer }
+            - { when: budget_fraction, gt: 0.8, then: steer }
+          steer_message: You are repeating yourself or running out of budget — finish with what you have.
       routes:
         answered: compose
         insufficient_sources: persist_partial
+        max_iterations: persist_partial
+        budget_exceeded: persist_partial
+        timeout: persist_partial
+        aborted: persist_partial
+        error: persist_partial
+
+    - id: summarize_source
+      description: Summarize one fetched page into a title and a two-sentence takeaway with its URL
+      engine: code
+      effect: read
+      code: { run: summarize_source }
+      inputs: { url: str, content: str }
+      outputs: { summary: json }
+      routes: { default: END }
 
     - id: compose
       description: Compose a concise, cited brief from the research notes
