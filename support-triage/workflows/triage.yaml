@@ -1,14 +1,15 @@
-# tuvl 2.0 — classify a support ticket; billing tickets get an investigator.
+# tuvl 2.0 — classify a support ticket, decide where it goes, and let an
+# investigator resolve billing problems (crediting the customer, with a team
+# lead's approval above 50).
 #
-# `investigate` is an autonomous investigator (a `loop` agent with the
-# lookup_account tool and an output guardrail). Loops arrive in tuvl 2.0
-# phase 2, so it runs as a `pending` contract stub until then. `route` becomes
-# a `decide` rule (category == 'billing') when decide lands.
+#   classify (llm) → route (decide: rules first, then a decision model)
+#     investigate → investigate (loop: lookup_account, issue_credit) → persist
+#     store       → persist
 kind: Workflow
 version: tuvl/v2
 metadata:
   name: triage
-  description: Classify a support ticket, then investigate billing ones.
+  description: Classify a support ticket, route it, and investigate billing ones.
 spec:
   models: [SupportTicket]
   trigger:
@@ -42,24 +43,60 @@ spec:
         error: END.failed
 
     - id: route
-      description: Send billing tickets to the investigator, the rest straight to storage
-      engine: code
-      effect: read
-      code: { run: route_by_category }
-      inputs: { category: "enum[billing, technical, account]" }
+      description: Decide whether the ticket needs an investigation
+      engine: decide
+      inputs: { category: "enum[billing, technical, account]", urgency: "enum[low, medium, high]", subject: str, body: str }
+      outputs: { route: "enum[investigate, store]" }
+      budget: { timeout: 20s, retry: { attempts: 2 } }
+      decide:
+        rules:                              # deterministic first: the model is not called on a hit
+          - when: category == "technical"
+            then: store
+          - when: category == "billing" and urgency == "high"
+            then: investigate
+        model: { ref: triage-classifier, min_confidence: 0.7 }
       routes:
         investigate: investigate
         store: persist
-        error: END.failed
+        low_confidence: investigate        # unsure → let the investigator look
+        error: END.failed                  # covers a model outage: never a silent fallback
 
     - id: investigate
-      description: Investigate a billing issue with the account lookup tool
-      engine: pending                     # becomes `engine: loop` in phase 2
+      description: Investigate a billing issue and resolve it if possible
+      engine: loop
       inputs: { customer_id: str, subject: str, body: str }
       outputs: { resolution: str }
+      budget: { max_iterations: 6, max_tokens: 20000, max_tool_calls: 4, timeout: 3m }
+      loop:
+        model: default
+        steering: artifact://investigator-steering@2
+        tools:
+          - agent: lookup_account
+          - workflow: issue_credit
+            approval: { when: "args.amount > 50", required_group: team_leads }
+            max_calls: 1
+        supervisor:
+          rules:
+            - { when: tool_repeated, count: 3, then: abort }
+      guardrails: { output: [artifact://no-secrets@1] }
       routes:
         resolved: persist
         needs_human: persist
+        max_iterations: persist
+        budget_exceeded: persist
+        timeout: persist
+        aborted: persist
+        guardrail_violation: persist
+        error: END.failed
+
+    - id: lookup_account
+      description: Look up a customer's billing account (plan, balance due, dispute flag) by customer_id
+      engine: code
+      effect: read
+      code: { run: lookup_account }
+      inputs: { customer_id: str }
+      outputs: { account: json }
+      routes: { default: END }
 
     - id: persist
       description: Save the triaged ticket

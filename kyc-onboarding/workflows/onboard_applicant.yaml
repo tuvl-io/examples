@@ -4,10 +4,8 @@
 #     → assess (llm; the outcome IS the risk band)
 #         low → finalize            medium/high → review (compliance group)
 #
-# `investigate` is a bounded autonomous investigator (a `loop` agent with the
-# check_watchlist tool and a supervisor). Loops arrive in tuvl 2.0 phase 2, so
-# it runs as a `pending` contract stub until then: same inputs, outputs and
-# routes, a typed placeholder result.
+# `investigate` is a bounded loop with the check_watchlist tool under a
+# supervisor (rules plus a calibrated judge; a dead judge fails closed).
 #
 # PII (name, dob, national id — `secure: true` on Applicant) never reaches an
 # LLM: only screening results, policies and the investigation do. A failed run
@@ -51,9 +49,18 @@ spec:
           status: received
       compensate: discard_applicant
       routes:
-        default: sanctions_screen
+        default: applicant_ref
         conflict: END.duplicate
         error: END.failed
+
+    - id: applicant_ref
+      description: Keep only the applicant id for the investigator
+      engine: code
+      effect: read
+      code: { run: applicant_ref }
+      inputs: { applicant: Applicant }
+      outputs: { applicant_id: uuid }
+      routes: { default: sanctions_screen, error: END.failed }
 
     - id: sanctions_screen
       description: Screen the applicant against the sanctions provider (stubbed echo endpoint)
@@ -89,18 +96,47 @@ spec:
 
     - id: investigate
       description: Investigate red flags with the watchlist tool, under a supervisor
-      engine: pending                       # becomes `engine: loop` with check_watchlist in phase 2
-      inputs: { country: "enum[us, gb, de, in, sg]", policies: "list[json]" }
-      outputs: { investigation: json }
+      engine: loop
+      inputs: { applicant_id: uuid, country: "enum[us, gb, de, in, sg]", policies: "list[json]" }
+      outputs: { investigation: str }
+      budget: { max_iterations: 6, max_tokens: 30000, max_tool_calls: 4, timeout: 2m }
+      loop:
+        model: default
+        steering: artifact://investigation-policy@2
+        skills: [artifact://red-flags@1]
+        tools:
+          - agent: check_watchlist
+        supervisor:
+          rules:
+            - { when: iteration_reached, gte: 5, then: abort }
+            - { when: tool_repeated, count: 3, then: pause }
+          judge: artifact://supervisor-judge@1
+          every_n_iterations: 2
+          on_violation: pause
+          on_judge_error: abort        # fail-closed: a dead judge stops the investigation
       routes:
         clear: assess
         elevated: review
         refer_human: review
+        max_iterations: review
+        budget_exceeded: review
+        timeout: review
+        aborted: review
+        error: review
+
+    - id: check_watchlist
+      description: Check the applicant against the sanctions/PEP watchlist (by applicant id)
+      engine: code
+      effect: read
+      code: { run: check_watchlist }
+      inputs: { applicant_id: uuid }
+      outputs: { hit: bool, checked: bool, source: "str?" }
+      routes: { default: END }
 
     - id: assess
       description: Score the risk, grounded in the policies
       engine: llm
-      inputs: { investigation: json, policies: "list[json]" }
+      inputs: { investigation: str, policies: "list[json]" }
       outputs: { score: int, rationale: str }
       budget:
         timeout: 30s
@@ -128,7 +164,7 @@ spec:
       engine: human
       inputs:
         applicant: Applicant
-        investigation: json?
+        investigation: str?
         score: int?
         rationale: str?
       outputs:

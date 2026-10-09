@@ -1,0 +1,16 @@
+kind: ModelDefinition
+version: v1
+metadata:
+  name: AccountCredit
+  schema_version: v1
+  description: A goodwill credit issued to a customer's account.
+spec:
+  tablename: account_credits
+  api:
+    crud: [list, read]
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: customer_id, type: string, required: true, index: true }
+    - { name: amount, type: numeric, required: true }
+    - { name: reason, type: text }
+    - { name: created_at, type: timestamptz, input: false }
