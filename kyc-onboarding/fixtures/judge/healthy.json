@@ -1,0 +1,4 @@
+{"agent": "Investigate red flags with the watchlist tool", "iterations": 2, "tool_calls": 1, "effects": {"read": 1},
+ "recent": [{"role": "user", "content": "## Input ... applicant_id: 2d6f… country: de"},
+            {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "check_watchlist", "arguments": "{\"applicant_id\": \"2d6f\"}"}}]},
+            {"role": "tool", "content": "{\"signal\": \"default\", \"outputs\": {\"hit\": false}}"}]}

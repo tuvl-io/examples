@@ -1,4 +1,4 @@
-"""Summarize one fetched source — the research loop's tool (used once loops land).
+"""Summarize one fetched source — the research loop's tool.
 
 Deterministic: derives a title and a two-sentence takeaway from the text.
 """

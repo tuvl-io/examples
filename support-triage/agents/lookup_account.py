@@ -1,4 +1,4 @@
-"""Billing account lookup — the investigator's tool (used once loops land)."""
+"""Billing account lookup — the triage investigator's tool (seeded stub data)."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ _ACCOUNTS = {
                  "note": "double-charged for one month after a plan change"},
     "cust_002": {"plan": "enterprise", "balance_due": 1300.0, "dispute": True,
                  "note": "open chargeback dispute on the last invoice"},
+    "cust_003": {"plan": "team", "balance_due": 240.0, "dispute": False,
+                 "note": "billed twice for the annual renewal; overcharged by 120"},
 }
 _UNKNOWN = {"plan": "unknown", "balance_due": 0.0, "dispute": False, "note": "no account on file"}
 
