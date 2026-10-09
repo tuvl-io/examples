@@ -1,0 +1,124 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: content-moderation
+  spec: specs/content-moderation.md
+  spec_hash: d34694e3b039
+spec:
+  tasks:
+  - id: T1
+    title: Define ContentItem and ModerationAction models
+    type: model
+    spec_ref:
+      anchor: data
+      hash: 7c537c87c39b
+    target:
+      model: ContentItem
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+  - id: T2
+    title: Build moderate_content workflow
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 9f95f146e51e
+    target:
+      workflow: moderate_content
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T1
+  - id: T3
+    title: Implement classify agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 9f95f146e51e
+    target:
+      workflow: moderate_content
+      agent: classify
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T2
+  - id: T4
+    title: Implement apply_policy decide agent
+    type: agent
+    spec_ref:
+      anchor: policies
+      hash: 1206aac4bf70
+    target:
+      workflow: moderate_content
+      agent: apply_policy
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T2
+  - id: T5
+    title: Setup human review agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 9f95f146e51e
+    target:
+      workflow: moderate_content
+      agent: review
+    effort:
+      size: XS
+      hours:
+      - 0.5
+      - 1.0
+      source: llm
+    depends_on:
+    - T2
+  - id: T6
+    title: Implement record agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 9f95f146e51e
+    target:
+      workflow: moderate_content
+      agent: record
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T1
+    - T2
+  - id: T7
+    title: Implement notify tool integration
+    type: integration
+    spec_ref:
+      anchor: flows
+      hash: 9f95f146e51e
+    target:
+      workflow: moderate_content
+      agent: notify
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T2

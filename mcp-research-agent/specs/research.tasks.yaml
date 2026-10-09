@@ -1,0 +1,103 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: research
+  spec: specs/research.md
+  spec_hash: 098856952133
+spec:
+  tasks:
+  - id: T1
+    title: Implement investigate agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 79cf87537f28
+    target:
+      workflow: research
+      agent: investigate
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+  - id: T2
+    title: Implement summarize_source agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 79cf87537f28
+    target:
+      workflow: research
+      agent: summarize_source
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+  - id: T3
+    title: Implement compose agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 79cf87537f28
+    target:
+      workflow: research
+      agent: compose
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T1
+  - id: T4
+    title: Implement persist agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 79cf87537f28
+    target:
+      workflow: research
+      agent: persist
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T3
+  - id: T5
+    title: Implement persist_partial agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 79cf87537f28
+    target:
+      workflow: research
+      agent: persist_partial
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+    depends_on:
+    - T1
+  - id: T6
+    title: Configure MCP fetch server integration
+    type: integration
+    spec_ref:
+      anchor: policies
+      hash: b3815653d07a
+    target:
+      workflow: research
+    effort:
+      size: S
+      hours:
+      - 1.0
+      - 2.0
+      source: llm

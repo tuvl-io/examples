@@ -1,0 +1,136 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: kyc-onboarding
+  spec: specs/kyc-onboarding.md
+  spec_hash: 5a8d71015f1b
+spec:
+  tasks:
+  - id: T1
+    title: Implement ingest_policy workflow and ingestion agent
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 75b8090d18c1
+    target:
+      workflow: ingest_policy
+      agent: ingest
+    effort:
+      size: S
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+  - id: T2
+    title: Create investigation-policy artifact
+    type: artifact
+    spec_ref:
+      anchor: intent
+      hash: 1571f7f7bc86
+    target:
+      artifact: investigation-policy
+    effort:
+      size: XS
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+  - id: T3
+    title: Create red-flags artifact
+    type: artifact
+    spec_ref:
+      anchor: policies
+      hash: 2566a3569ba0
+    target:
+      artifact: red-flags
+    effort:
+      size: XS
+      hours:
+      - 1.0
+      - 2.0
+      source: llm
+  - id: T4
+    title: Implement onboard_applicant workflow intake and persistence agents
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 75b8090d18c1
+    target:
+      workflow: onboard_applicant
+      agent: persist_applicant
+    effort:
+      size: M
+      hours:
+      - 3.0
+      - 5.0
+      source: llm
+  - id: T5
+    title: Implement sanctions screening and policy context agents
+    type: workflow
+    spec_ref:
+      anchor: flows
+      hash: 75b8090d18c1
+    target:
+      workflow: onboard_applicant
+      agent: sanctions_screen
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T4
+  - id: T6
+    title: Implement investigation loop agent and watchlist check
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 75b8090d18c1
+    target:
+      workflow: onboard_applicant
+      agent: investigate
+    effort:
+      size: L
+      hours:
+      - 4.0
+      - 8.0
+      source: llm
+    depends_on:
+    - T5
+    - T2
+    - T3
+  - id: T7
+    title: Implement risk assessment LLM agent
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 75b8090d18c1
+    target:
+      workflow: onboard_applicant
+      agent: assess
+    effort:
+      size: M
+      hours:
+      - 2.0
+      - 4.0
+      source: llm
+    depends_on:
+    - T6
+  - id: T8
+    title: Implement human review and finalization agents
+    type: agent
+    spec_ref:
+      anchor: flows
+      hash: 75b8090d18c1
+    target:
+      workflow: onboard_applicant
+      agent: review
+    effort:
+      size: M
+      hours:
+      - 3.0
+      - 5.0
+      source: llm
+    depends_on:
+    - T7

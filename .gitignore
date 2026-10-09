@@ -2,3 +2,6 @@
 # runtime logs
 *.log
 deploy/.env
+
+# tuvl spec analysis cache (tuvl spec analyse)
+**/.tuvl/analysis/

@@ -13,13 +13,14 @@ step's checkpoint.
 
 from __future__ import annotations
 
-from typing import Any
-
 from tuvl import Ctx, agent
+
+from agents._generated.schemas import RecordIn, RecordOut, RecordSignal
 
 
 @agent("record_moderation")
-async def record_moderation(inp: Any, ctx: Ctx) -> tuple[dict[str, Any], str]:
+async def record_moderation(inp: RecordIn, ctx: Ctx) -> tuple[RecordOut, RecordSignal]:
+    """Store the item and its moderation action in one transaction"""
     category = inp.category or "borderline"
     if inp.decision is not None:
         removed = inp.decision == "remove"
