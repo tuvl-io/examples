@@ -62,7 +62,7 @@ Estimated cost to run every acceptance test once with the Gemini defaults: well 
 - `tuvl[standard]` 2.0 (`uv tool install "tuvl[standard]"`), Python 3.13.
 - Each project passes the CI gate (see the root README); `tuvl validate --strict` reports any missing
   configuration before first boot.
-- Production extras (a Biscuit signing key via `tuvl keys generate`, IAM roles) matter only where a
+- Production extras (a signing key via `tuvl keys generate`, IAM roles) matter only where a
   workflow gates on a group — the human reviews in `content-moderation-pipeline` and
   `kyc-onboarding`, and the credit approval in `support-triage`. In `tuvl dev` the session key covers
   them.

@@ -12,6 +12,6 @@ description: "Prepare a tuvl project for production: lock, the CI gate, tuvl shi
    ```
 3. `tuvl ship [--no-build] [--push]` validates, refuses a missing or stale lock (V024), writes
    `deploy/Dockerfile` (installs exactly the locked tuvl) and a Helm chart, then builds the image.
-- Production refuses dev keys and needs a real Biscuit key; triggers require a token unless
+- Production refuses dev keys and needs a real signing key (`TUVL_SIGNING_KEY`, from `tuvl keys generate`); triggers require a token unless
   `trigger.http.public: true`.
 - No `pending` agents may remain (V010) — `tuvl spec status` shows them as `todo`.

@@ -47,7 +47,7 @@ as a test fixture.
 ## Ship to production
 
 ```bash
-tuvl keys generate --write                      # persistent Biscuit key in .env
+tuvl keys generate --write                      # persistent signing key in .env
 tuvl ship --tag ghcr.io/acme/sentiment-api:0.1.0 --push
 kubectl create secret generic sentiment-api-env --from-env-file=.env
 helm install sentiment-api deploy/chart/sentiment-api --set image.repository=ghcr.io/acme/sentiment-api
