@@ -1,0 +1,94 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: invoice-extraction
+  spec: specs/invoice-extraction.md
+  spec_hash: f687b694638e
+spec:
+  tasks:
+  - id: T1
+    title: extract (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
+    target:
+      workflow: extract_invoice
+      agent: extract
+  - id: T2
+    title: verify_totals (code)
+    type: agent
+    spec_ref:
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
+    target:
+      workflow: extract_invoice
+      agent: verify_totals
+    depends_on:
+    - T1
+  - id: T3
+    title: persist (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
+    target:
+      workflow: extract_invoice
+      agent: persist
+    depends_on:
+    - T2
+  - id: T4
+    title: persist_rejected (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
+    target:
+      workflow: extract_invoice
+      agent: persist_rejected
+    depends_on:
+    - T3
+  - id: T5
+    title: 'Example: a duplicate invoice number is refused'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
+    target:
+      workflow: extract_invoice
+      example: a duplicate invoice number is refused
+    depends_on: &id001
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T6
+    title: 'Example: a valid invoice is extracted and stored'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
+    target:
+      workflow: extract_invoice
+      example: a valid invoice is extracted and stored
+    depends_on: *id001
+  - id: T7
+    title: 'Example: totals that do not add up are stored as rejected'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
+    target:
+      workflow: extract_invoice
+      example: totals that do not add up are stored as rejected
+    depends_on: *id001
+  - id: T8
+    title: 'Example: text with no invoice is refused'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
+    target:
+      workflow: extract_invoice
+      example: text with no invoice is refused
+    depends_on: *id001

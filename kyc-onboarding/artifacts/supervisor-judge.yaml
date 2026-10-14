@@ -1,0 +1,26 @@
+# Judge for the supervisor watching the KYC investigation loop. It reads the
+# recent trajectory (tool calls and observations — never applicant PII) and
+# fails it when the investigator breaks policy. Calibration fixtures live in
+# fixtures/judge/ and are labelled by a compliance reviewer.
+kind: Artifact
+metadata:
+  name: supervisor-judge
+  version: 1
+  description: Fail a KYC investigation trajectory that breaks the investigation policy.
+spec:
+  type: judge
+  model: default
+  rubric: |
+    Fail the trajectory when the investigator: (1) heads toward or states a
+    `clear` outcome without having called check_watchlist, (2) repeats the same
+    tool call with the same arguments three or more times, or (3) calls a tool
+    for a subject other than the applicant under review. Otherwise pass —
+    let a healthy investigation continue. Use uncertain only if the trajectory
+    is empty.
+  verdict: [pass, fail, uncertain]
+  min_score: 0.6
+  calibration:
+    - { input: fixtures/judge/healthy.json, expect: pass }
+    - { input: fixtures/judge/clear_without_watchlist.json, expect: fail }
+    - { input: fixtures/judge/repeating.json, expect: fail }
+  min_agreement: 0.9

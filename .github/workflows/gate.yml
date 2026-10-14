@@ -1,0 +1,43 @@
+name: CI gate
+
+# Runs every example's tuvl CI gate offline (no database or model keys needed).
+# tuvl 2.0 comes from PyPI (the beta needs --prerelease=allow).
+on:
+  push:
+    branches: [release, version2]
+  pull_request:
+    branches: [release, version2]
+  workflow_dispatch:
+
+jobs:
+  gate:
+    name: ${{ matrix.example }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - sentiment-api
+          - invoice-extraction-api
+          - content-moderation-pipeline
+          - knowledge-base-qa
+          - support-triage
+          - mcp-research-agent
+          - kyc-onboarding
+    defaults:
+      run:
+        working-directory: ${{ matrix.example }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install tuvl
+        run: uv tool install --python 3.13 --prerelease=allow "tuvl[standard]>=2.0.0b2,<3"
+      - name: Gate
+        run: |
+          tuvl spec check
+          tuvl validate --strict
+          tuvl codegen --check
+          tuvl lock --check --no-mcp
+          tuvl test --strict
+          tuvl spec verify --strict
+          tuvl spec status --strict

@@ -1,0 +1,9 @@
+# A decision model for the `route` agent: answers one value from a closed set.
+# Runs through the built-in litellm adapter (enum-constrained output).
+kind: AgentModel
+metadata:
+  name: triage-classifier
+spec:
+  type: decision
+  provider: litellm
+  model: gemini/gemini-3.1-flash-lite

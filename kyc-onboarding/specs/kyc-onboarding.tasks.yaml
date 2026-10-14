@@ -1,0 +1,183 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: kyc-onboarding
+  spec: specs/kyc-onboarding.md
+  spec_hash: c67bd175420b
+spec:
+  tasks:
+  - id: T1
+    title: ingest (code)
+    type: agent
+    spec_ref:
+      anchor: flow-ingest-policy
+      hash: 05d4dfd5726c
+    target:
+      workflow: ingest_policy
+      agent: ingest
+  - id: T2
+    title: persist_applicant (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: persist_applicant
+  - id: T3
+    title: applicant_ref (code)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: applicant_ref
+    depends_on:
+    - T2
+  - id: T4
+    title: sanctions_screen (tool http POST sanctions_screen)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: sanctions_screen
+    depends_on:
+    - T3
+  - id: T5
+    title: 'sanctions_screen: credentials and access'
+    type: manual
+    target:
+      workflow: onboard_applicant
+      agent: sanctions_screen
+    status: done
+  - id: T6
+    title: policy_context (code)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: policy_context
+    depends_on:
+    - T4
+  - id: T7
+    title: investigate (loop default)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: investigate
+    depends_on:
+    - T6
+  - id: T8
+    title: check_watchlist (code)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: check_watchlist
+    depends_on:
+    - T7
+  - id: T9
+    title: assess (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: assess
+    depends_on:
+    - T7
+  - id: T10
+    title: review (human group)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: review
+    depends_on:
+    - T9
+  - id: T11
+    title: finalize (code)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: finalize
+    depends_on:
+    - T10
+  - id: T12
+    title: discard_applicant (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-onboard-applicant
+      hash: 704a33f936d8
+    target:
+      workflow: onboard_applicant
+      agent: discard_applicant
+    depends_on:
+    - T11
+  - id: T13
+    title: 'Example: a low-risk applicant is approved automatically'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: d60b9c0169be
+    target:
+      workflow: ingest_policy
+      example: a low-risk applicant is approved automatically
+    depends_on: &id001
+    - T1
+  - id: T14
+    title: 'Example: an elevated investigation waits for a compliance officer'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: d60b9c0169be
+    target:
+      workflow: ingest_policy
+      example: an elevated investigation waits for a compliance officer
+    depends_on: *id001
+  - id: T15
+    title: 'Example: a policy document is ingested'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: d60b9c0169be
+    target:
+      workflow: ingest_policy
+      example: a policy document is ingested
+    depends_on: *id001
+  - id: T16
+    title: 'Example: a compliance officer rejects an elevated applicant'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: d60b9c0169be
+    target:
+      workflow: ingest_policy
+      example: a compliance officer rejects an elevated applicant
+    depends_on: *id001
+  - id: T17
+    title: 'Example: a processing failure rolls the applicant back'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: d60b9c0169be
+    target:
+      workflow: ingest_policy
+      example: a processing failure rolls the applicant back
+    depends_on: *id001

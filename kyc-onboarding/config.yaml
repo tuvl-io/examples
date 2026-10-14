@@ -11,7 +11,7 @@ dirs:
   workflows: workflows
   datasources: datasources
   llms: llms
-  nodes: nodes
+  agents: agents
   federation: federation
 # EmbeddingRegistry / CollectionRegistry live in vectors/ and are discovered at
 # runtime by `kind:` (load_all_configs walks the whole tree). They are kept out

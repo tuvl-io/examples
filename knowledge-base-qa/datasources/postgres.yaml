@@ -12,7 +12,7 @@ spec:
     port: ${POSTGRES_PORT:5432}
     database: ${POSTGRES_DB:tuvl_kb}
     username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD}
+    password: ${POSTGRES_PASSWORD:postgres}
   pooling:
     min_size: 5
     max_size: 20

@@ -1,0 +1,116 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: support-triage
+  spec: specs/support-triage.md
+  spec_hash: 3c213313e96f
+spec:
+  tasks:
+  - id: T1
+    title: classify (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-triage
+      hash: c440e13a1ee1
+    target:
+      workflow: triage
+      agent: classify
+  - id: T2
+    title: route (decide rules)
+    type: agent
+    spec_ref:
+      anchor: flow-triage
+      hash: c440e13a1ee1
+    target:
+      workflow: triage
+      agent: route
+    depends_on:
+    - T1
+  - id: T3
+    title: investigate (loop default)
+    type: agent
+    spec_ref:
+      anchor: flow-triage
+      hash: c440e13a1ee1
+    target:
+      workflow: triage
+      agent: investigate
+    depends_on:
+    - T2
+  - id: T4
+    title: lookup_account (code)
+    type: agent
+    spec_ref:
+      anchor: flow-triage
+      hash: c440e13a1ee1
+    target:
+      workflow: triage
+      agent: lookup_account
+    depends_on:
+    - T3
+  - id: T5
+    title: persist (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-triage
+      hash: c440e13a1ee1
+    target:
+      workflow: triage
+      agent: persist
+    depends_on:
+    - T3
+  - id: T6
+    title: credit (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-issue-credit
+      hash: 66148afe97c9
+    target:
+      workflow: issue_credit
+      agent: credit
+  - id: T7
+    title: 'Example: a technical ticket is stored without investigation'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: triage
+      example: a technical ticket is stored without investigation
+    depends_on: &id001
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
+  - id: T8
+    title: 'Example: an urgent billing ticket is investigated and stored with its resolution'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: triage
+      example: an urgent billing ticket is investigated and stored with its resolution
+    depends_on: *id001
+  - id: T9
+    title: 'Example: an uncertain routing decision is investigated'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: triage
+      example: an uncertain routing decision is investigated
+    depends_on: *id001
+  - id: T10
+    title: 'Example: a credit is recorded'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: issue_credit
+      example: a credit is recorded
+    depends_on:
+    - T6

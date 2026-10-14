@@ -14,10 +14,10 @@ name = "kyc-onboarding"
 version = "0.1.0"
 description = "A tuvl project — see https://tuvl.io"
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13,<3.15"
 license = { text = "MIT" }
 dependencies = [
-    "tuvl>=1.0.0",
+    "tuvl>=2.0.0b2",
 ]
 
 [project.urls]
@@ -29,10 +29,12 @@ dependencies = [
 [dependency-groups]
 # Development: uv injects the UI and tools automatically for local work
 dev = [
-    "tuvl[standard]>=1.0.0",
+    "tuvl[standard]>=2.0.0b2",
 ]
 
 [tool.uv]
+# tuvl 2.0 is in beta: allow its pre-release (and tuvl-insight's) until 2.0.0 is final.
+prerelease = "allow"
 # uv manages the virtual environment.
 # Run: uv sync          — install / refresh the venv
 # Run: uv add <pkg>     — add a new runtime dependency
