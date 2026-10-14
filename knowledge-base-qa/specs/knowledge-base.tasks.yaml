@@ -3,53 +3,66 @@ version: tuvl/v2
 metadata:
   name: knowledge-base
   spec: specs/knowledge-base.md
-  spec_hash: 83ac0a27b2de
+  spec_hash: 533550bf477d
 spec:
   tasks:
   - id: T1
-    title: Implement search agent for ask_kb
+    title: ingest (code)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 7938ba8c7d25
-    target:
-      workflow: ask_kb
-      agent: search
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
-  - id: T2
-    title: Implement answer agent for ask_kb
-    type: agent
-    spec_ref:
-      anchor: flows
-      hash: 7938ba8c7d25
-    target:
-      workflow: ask_kb
-      agent: answer
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
-    depends_on:
-    - T1
-  - id: T3
-    title: Implement ingest agent for ingest_doc
-    type: agent
-    spec_ref:
-      anchor: flows
-      hash: 7938ba8c7d25
+      anchor: flow-ingest-doc
+      hash: 1d09d4eb4644
     target:
       workflow: ingest_doc
       agent: ingest
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
+  - id: T2
+    title: search (code)
+    type: agent
+    spec_ref:
+      anchor: flow-ask-kb
+      hash: 2981e37f5618
+    target:
+      workflow: ask_kb
+      agent: search
+  - id: T3
+    title: answer (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-ask-kb
+      hash: 2981e37f5618
+    target:
+      workflow: ask_kb
+      agent: answer
+    depends_on:
+    - T2
+  - id: T4
+    title: 'Example: a question is answered from the retrieved passages'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 350196af4892
+    target:
+      workflow: ingest_doc
+      example: a question is answered from the retrieved passages
+    depends_on: &id001
+    - T1
+  - id: T5
+    title: 'Example: a retrieval failure returns 502'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 350196af4892
+    target:
+      workflow: ingest_doc
+      example: a retrieval failure returns 502
+    depends_on: *id001
+  - id: T6
+    title: 'Example: a document is ingested'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 350196af4892
+    target:
+      workflow: ingest_doc
+      example: a document is ingested
+    depends_on: *id001
