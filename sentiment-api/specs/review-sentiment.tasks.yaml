@@ -1,0 +1,50 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: review-sentiment
+  spec: specs/review-sentiment.md
+  spec_hash: 2c97f401a293
+spec:
+  tasks:
+  - id: T1
+    title: classify (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-analyze-sentiment
+      hash: 59b1f84da61c
+    target:
+      workflow: analyze_sentiment
+      agent: classify
+  - id: T2
+    title: persist (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-analyze-sentiment
+      hash: 59b1f84da61c
+    target:
+      workflow: analyze_sentiment
+      agent: persist
+    depends_on:
+    - T1
+  - id: T3
+    title: 'Example: a positive review is stored and returned'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: f052f0a0fe8d
+    target:
+      workflow: analyze_sentiment
+      example: a positive review is stored and returned
+    depends_on: &id001
+    - T1
+    - T2
+  - id: T4
+    title: 'Example: a model failure returns 502 and stores nothing'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: f052f0a0fe8d
+    target:
+      workflow: analyze_sentiment
+      example: a model failure returns 502 and stores nothing
+    depends_on: *id001

@@ -1,0 +1,123 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: content-moderation
+  spec: specs/content-moderation.md
+  spec_hash: 2bebece2b4ff
+spec:
+  tasks:
+  - id: T1
+    title: classify (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-moderate-content
+      hash: 059e07841750
+    target:
+      workflow: moderate_content
+      agent: classify
+  - id: T2
+    title: apply_policy (code)
+    type: agent
+    spec_ref:
+      anchor: flow-moderate-content
+      hash: 059e07841750
+    target:
+      workflow: moderate_content
+      agent: apply_policy
+    depends_on:
+    - T1
+  - id: T3
+    title: review (human group)
+    type: agent
+    spec_ref:
+      anchor: flow-moderate-content
+      hash: 059e07841750
+    target:
+      workflow: moderate_content
+      agent: review
+    depends_on:
+    - T2
+  - id: T4
+    title: record (code)
+    type: agent
+    spec_ref:
+      anchor: flow-moderate-content
+      hash: 059e07841750
+    target:
+      workflow: moderate_content
+      agent: record
+    depends_on:
+    - T3
+  - id: T5
+    title: notify (tool http POST moderation_webhook)
+    type: agent
+    spec_ref:
+      anchor: flow-moderate-content
+      hash: 059e07841750
+    target:
+      workflow: moderate_content
+      agent: notify
+    depends_on:
+    - T4
+  - id: T6
+    title: 'notify: credentials and access'
+    type: manual
+    target:
+      workflow: moderate_content
+      agent: notify
+    status: done
+  - id: T7
+    title: 'Example: safe content is approved automatically'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: safe content is approved automatically
+    depends_on: &id001
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
+  - id: T8
+    title: 'Example: a violation is removed and the channel is notified'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: a violation is removed and the channel is notified
+    depends_on: *id001
+  - id: T9
+    title: 'Example: borderline content in the EU is treated as a violation'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: borderline content in the EU is treated as a violation
+    depends_on: *id001
+  - id: T10
+    title: 'Example: borderline content elsewhere waits for a moderator'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: borderline content elsewhere waits for a moderator
+    depends_on: *id001
+  - id: T11
+    title: 'Example: a moderator approves borderline content'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: a moderator approves borderline content
+    depends_on: *id001

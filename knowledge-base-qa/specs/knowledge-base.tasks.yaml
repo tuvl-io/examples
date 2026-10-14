@@ -1,0 +1,68 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: knowledge-base
+  spec: specs/knowledge-base.md
+  spec_hash: 533550bf477d
+spec:
+  tasks:
+  - id: T1
+    title: ingest (code)
+    type: agent
+    spec_ref:
+      anchor: flow-ingest-doc
+      hash: 1d09d4eb4644
+    target:
+      workflow: ingest_doc
+      agent: ingest
+  - id: T2
+    title: search (code)
+    type: agent
+    spec_ref:
+      anchor: flow-ask-kb
+      hash: 2981e37f5618
+    target:
+      workflow: ask_kb
+      agent: search
+  - id: T3
+    title: answer (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-ask-kb
+      hash: 2981e37f5618
+    target:
+      workflow: ask_kb
+      agent: answer
+    depends_on:
+    - T2
+  - id: T4
+    title: 'Example: a question is answered from the retrieved passages'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 350196af4892
+    target:
+      workflow: ingest_doc
+      example: a question is answered from the retrieved passages
+    depends_on: &id001
+    - T1
+  - id: T5
+    title: 'Example: a retrieval failure returns 502'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 350196af4892
+    target:
+      workflow: ingest_doc
+      example: a retrieval failure returns 502
+    depends_on: *id001
+  - id: T6
+    title: 'Example: a document is ingested'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 350196af4892
+    target:
+      workflow: ingest_doc
+      example: a document is ingested
+    depends_on: *id001

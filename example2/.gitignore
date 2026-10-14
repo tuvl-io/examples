@@ -1,6 +1,0 @@
-# tuvl
-.env
-__pycache__/
-*.pyc
-.venv/
-.python-version
