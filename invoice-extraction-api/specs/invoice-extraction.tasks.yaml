@@ -3,99 +3,92 @@ version: tuvl/v2
 metadata:
   name: invoice-extraction
   spec: specs/invoice-extraction.md
-  spec_hash: 8947626eb423
+  spec_hash: f687b694638e
 spec:
   tasks:
   - id: T1
-    title: Define Invoice model
-    type: model
-    spec_ref:
-      anchor: data
-      hash: acab027fde25
-    target:
-      model: Invoice
-    effort:
-      size: XS
-      hours:
-      - 0.5
-      - 1.0
-      source: llm
-  - id: T2
-    title: Create extract_invoice workflow structure
-    type: workflow
-    spec_ref:
-      anchor: flows
-      hash: 0e0db2f0bdfa
-    target:
-      workflow: extract_invoice
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
-    depends_on:
-    - T1
-  - id: T3
-    title: Implement extraction agent
+    title: extract (llm default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 0e0db2f0bdfa
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
     target:
       workflow: extract_invoice
       agent: extract
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
-    depends_on:
-    - T2
-  - id: T4
-    title: Implement verification agent
+  - id: T2
+    title: verify_totals (code)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 0e0db2f0bdfa
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
     target:
       workflow: extract_invoice
       agent: verify_totals
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
-    - T2
-  - id: T5
-    title: Implement persistence agents
+    - T1
+  - id: T3
+    title: persist (tool db)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 0e0db2f0bdfa
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
     target:
       workflow: extract_invoice
       agent: persist
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
     - T2
+  - id: T4
+    title: persist_rejected (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-extract-invoice
+      hash: 77b70a082c9e
+    target:
+      workflow: extract_invoice
+      agent: persist_rejected
+    depends_on:
+    - T3
+  - id: T5
+    title: 'Example: a duplicate invoice number is refused'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
+    target:
+      workflow: extract_invoice
+      example: a duplicate invoice number is refused
+    depends_on: &id001
+    - T1
+    - T2
+    - T3
+    - T4
   - id: T6
-    title: 'Assert: The vendor tax id is PII: it is stored but never returned.'
+    title: 'Example: a valid invoice is extracted and stored'
     type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
     target:
       workflow: extract_invoice
-      assertion: not contains(output.body, 'vendor_tax_id')
+      example: a valid invoice is extracted and stored
+    depends_on: *id001
+  - id: T7
+    title: 'Example: totals that do not add up are stored as rejected'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
+    target:
+      workflow: extract_invoice
+      example: totals that do not add up are stored as rejected
+    depends_on: *id001
   - id: T8
-    title: 'Assert: Text that yields no usable invoice is refused with 422.'
+    title: 'Example: text with no invoice is refused'
     type: test
+    spec_ref:
+      anchor: acceptance
+      hash: e455b545c529
     target:
       workflow: extract_invoice
-      assertion: end == 'failed'
+      example: text with no invoice is refused
+    depends_on: *id001

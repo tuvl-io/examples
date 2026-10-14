@@ -13,17 +13,42 @@ Customers (via the help widget), a classification model, a routing decision mode
 agent, team leads.
 
 # Data
-SupportTicket (existing): id, subject, body, category, urgency, resolution, created_at.
-AccountCredit (existing): id, customer_id, amount, reason, created_at.
+- **SupportTicket** (existing) — `id` (uuid), `subject` (string), `body` (text), `category` (string),
+  `urgency` (string), `resolution` (text), `created_at` (timestamptz)
+- **AccountCredit** (existing) — `id` (uuid), `customer_id` (string; required), `amount` (numeric; required),
+  `reason` (text), `created_at` (timestamptz)
 
 # Flows
-1. The widget posts the customer id, subject and body.
-2. A model classifies the category (billing, technical, account) and urgency (low, medium, high).
-3. Routing: technical tickets are stored; high-urgency billing tickets are investigated; anything
-   else is decided by a decision model, and an uncertain decision is investigated.
-4. The investigation looks up the account and may issue a credit through the `issue_credit` workflow.
-5. Whatever the investigation's outcome — resolved, needs a human, or out of budget — the ticket is
-   stored with its resolution and returned with 201.
+
+## Flow: triage
+Trigger: POST /support/triage · signed-in
+Input: `customer_id` (str), `subject` (str), `body` (str)
+Ends: default 201 · failed 502
+   - failed: no example — only a model or database failure reaches it
+
+1. `classify` — llm default · in `subject`, `body` · out `category` (enum[billing, technical, account]), `urgency` (enum[low, medium, high]) · budget 300 tok, 60s, retry 2
+   - parse_error, timeout, budget_exceeded → END.failed
+2. `route` — decide rules + model triage-classifier ≥ 0.7 · in `category`, `urgency`, `subject`, `body` · out `route` (enum[investigate, store]) · budget 20s, retry 2
+   - `category == "technical"` → store
+   - `category == "billing" and urgency == "high"` → investigate
+   - investigate → `investigate`
+   - store → `persist`
+   - low_confidence → `investigate`
+3. `investigate` — loop default · in `customer_id`, `subject`, `body` · out `resolution` (str) · budget 6 iterations, 4 tool calls, 20000 tok, 3m · guardrails `no-secrets@1`
+   · tools: `lookup_account`, workflow `issue_credit` (approval team_leads when `args.amount > 50`; max 1 call)
+   - resolved, needs_human, max_iterations, budget_exceeded, timeout, aborted, guardrail_violation → `persist`
+T1. `lookup_account` — code · effect read · tool of `loop` · in `customer_id` · out `account` (json)
+4. `persist` — tool db create SupportTicket · in `subject`, `body`, `category`, `urgency`, `resolution`? · out `ticket` (SupportTicket)
+   - conflict → END.failed
+
+## Flow: issue_credit
+Trigger: tool
+Input: `customer_id` (str), `amount` (int), `reason` (str)
+Ends: default 201 · failed 502
+   - failed: no example — only a database failure reaches it
+
+1. `credit` — tool db create AccountCredit · in `customer_id`, `amount`, `reason` · out `credit` (AccountCredit)
+   - conflict → END.failed
 
 # Policies
 - Credits above 50 need a team lead's approval before they are issued.

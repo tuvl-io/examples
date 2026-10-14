@@ -3,54 +3,48 @@ version: tuvl/v2
 metadata:
   name: review-sentiment
   spec: specs/review-sentiment.md
-  spec_hash: e487e09e4e81
+  spec_hash: 2c97f401a293
 spec:
   tasks:
   - id: T1
-    title: Define and configure analyze_sentiment workflow structure
-    type: workflow
-    spec_ref:
-      anchor: flows
-      hash: 3b810ab8d80b
-    target:
-      workflow: analyze_sentiment
-    effort:
-      size: XS
-      hours:
-      - 0.5
-      - 1.0
-      source: llm
-  - id: T3
-    title: Implement LLM classification agent
+    title: classify (llm default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 3b810ab8d80b
+      anchor: flow-analyze-sentiment
+      hash: 59b1f84da61c
     target:
       workflow: analyze_sentiment
       agent: classify
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
-    depends_on:
-    - T1
-  - id: T4
-    title: Implement database persist tool agent
+  - id: T2
+    title: persist (tool db)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 3b810ab8d80b
+      anchor: flow-analyze-sentiment
+      hash: 59b1f84da61c
     target:
       workflow: analyze_sentiment
       agent: persist
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
     - T1
+  - id: T3
+    title: 'Example: a positive review is stored and returned'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: f052f0a0fe8d
+    target:
+      workflow: analyze_sentiment
+      example: a positive review is stored and returned
+    depends_on: &id001
+    - T1
+    - T2
+  - id: T4
+    title: 'Example: a model failure returns 502 and stores nothing'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: f052f0a0fe8d
+    target:
+      workflow: analyze_sentiment
+      example: a model failure returns 502 and stores nothing
+    depends_on: *id001

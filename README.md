@@ -9,8 +9,8 @@ presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
 > **tuvl 2.0.** Every project is a 2.0 agent graph (`version: tuvl/v2`) with typed contracts, a
-> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. The `main` branch tracks
-> tuvl 1.x until 2.0 is released.
+> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. They run on the tuvl 2.0 beta
+> (`2.0.0b2`).
 
 ## ▶ Try it live — no install
 
@@ -70,7 +70,7 @@ tuvl-examples/
 ## Running an example
 
 ```bash
-uv tool install "tuvl[standard]"           # Python 3.13; [standard] adds Insight
+uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b2"   # Python 3.13+; [standard] adds Insight
 git clone https://github.com/tuvl-io/examples.git tuvl-examples
 cd tuvl-examples/<project-name>
 cp .env.example .env                       # Postgres settings and a model key
@@ -83,10 +83,10 @@ Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md)
 ## Adding an example
 
 1. Create a top-level directory named after the use case (kebab-case) with `tuvl init`.
-2. Write the intent in `specs/<name>.md` with `tuvl-example` acceptance cases, plan it with
-   `tuvl spec analyse`, and implement the tasks (`tuvl spec status` shows what is left).
+2. Write the intent in `specs/<name>.md` with `tuvl-example` acceptance cases, check it with
+   `tuvl spec check`, have the coding agent write the task list, and implement the tasks (`tuvl spec status` shows what is left).
 3. It must pass the CI gate:
-   `tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test && tuvl spec status --strict`.
+   `tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test --strict && tuvl spec verify --strict && tuvl spec status --strict`.
 4. Add a README (what it demonstrates, prerequisites, run steps), a `.env.example` (never real
    secrets), and a row to the table above. Open a pull request.
 

@@ -154,4 +154,4 @@ class PersistRejectedOut(BaseModel):
 
 
 ExtractInvoiceEnd = Literal["default", "duplicate", "failed", "rejected"]
-VerifyTotalsResult = tuple[VerifyTotalsValidOut, Literal["valid"]] | tuple[VerifyTotalsMismatchOut, Literal["mismatch"]] | tuple[VerifyTotalsIncompleteOut, Literal["incomplete"]]
+VerifyTotalsResult = tuple[VerifyTotalsValidOut, Literal["valid"]] | tuple[VerifyTotalsMismatchOut, Literal["mismatch"]] | tuple[VerifyTotalsIncompleteOut, Literal["incomplete"]] | Literal["default"]
