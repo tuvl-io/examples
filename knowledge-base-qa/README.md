@@ -16,18 +16,17 @@ Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 
 ## Spec, tests and the CI gate
 
-The intent lives in [`specs/knowledge-base.md`](specs/knowledge-base.md). Its task plan (`*.tasks.yaml`) was derived by
-`tuvl spec analyse`, and its `tuvl-example` blocks are the tests in `tests/` (`tuvl codegen`). All
+The intent lives in [`specs/knowledge-base.md`](specs/knowledge-base.md). Its task plan (`*.tasks.yaml`) is written by the coding agent from the checked spec (`tuvl spec check`), and its `tuvl-example` blocks are the tests in `tests/` (`tuvl codegen`). All
 of it runs offline:
 
 ```bash
-tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test && tuvl spec status --strict
+tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test --strict && tuvl spec verify --strict && tuvl spec status --strict
 ```
 
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install "tuvl[standard]"`), PostgreSQL 15+ with a `tuvl_kb` database, and a model key
+(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b2"`), PostgreSQL 15+ with a `tuvl_kb` database, and a model key
 (`GEMINI_API_KEY` by default — any LiteLLM model works; edit `llms/*.yaml`).
 
 This project needs **pgvector**:

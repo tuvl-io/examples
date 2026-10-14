@@ -3,101 +3,94 @@ version: tuvl/v2
 metadata:
   name: research
   spec: specs/research.md
-  spec_hash: 098856952133
+  spec_hash: d9d7a4c25b61
 spec:
   tasks:
   - id: T1
-    title: Implement investigate agent
+    title: investigate (loop default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 79cf87537f28
+      anchor: flow-research
+      hash: 5a99997bc54c
     target:
       workflow: research
       agent: investigate
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
   - id: T2
-    title: Implement summarize_source agent
+    title: summarize_source (code)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 79cf87537f28
+      anchor: flow-research
+      hash: 5a99997bc54c
     target:
       workflow: research
       agent: summarize_source
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
+    depends_on:
+    - T1
   - id: T3
-    title: Implement compose agent
+    title: compose (llm default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 79cf87537f28
+      anchor: flow-research
+      hash: 5a99997bc54c
     target:
       workflow: research
       agent: compose
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
     depends_on:
     - T1
   - id: T4
-    title: Implement persist agent
+    title: persist (tool db)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 79cf87537f28
+      anchor: flow-research
+      hash: 5a99997bc54c
     target:
       workflow: research
       agent: persist
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
     - T3
   - id: T5
-    title: Implement persist_partial agent
+    title: persist_partial (tool db)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 79cf87537f28
+      anchor: flow-research
+      hash: 5a99997bc54c
     target:
       workflow: research
       agent: persist_partial
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
-    - T1
+    - T4
   - id: T6
-    title: Configure MCP fetch server integration
-    type: integration
+    title: 'Example: an answered question returns a cited brief'
+    type: test
     spec_ref:
-      anchor: policies
-      hash: b3815653d07a
+      anchor: acceptance
+      hash: 30afd349fac3
     target:
       workflow: research
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
+      example: an answered question returns a cited brief
+    depends_on: &id001
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
+  - id: T7
+    title: 'Example: running out of budget returns a partial brief'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 30afd349fac3
+    target:
+      workflow: research
+      example: running out of budget returns a partial brief
+    depends_on: *id001
+  - id: T8
+    title: 'Example: insufficient sources return a partial brief'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 30afd349fac3
+    target:
+      workflow: research
+      example: insufficient sources return a partial brief
+    depends_on: *id001

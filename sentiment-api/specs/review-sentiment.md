@@ -12,13 +12,21 @@ follow-up flows can use the classification.
 The storefront and support tools (callers), a sentiment model.
 
 # Data
-Review (existing): id, text, source, sentiment, confidence, created_at.
+- **Review** (existing) — `id` (uuid), `text` (text; required), `source` (string),
+  `sentiment` (enum: positive | neutral | negative; required), `confidence` (numeric; required),
+  `created_at` (timestamptz)
 
 # Flows
-1. A caller posts the review text and, optionally, where it came from.
-2. A model classifies the sentiment and gives a confidence between 0 and 1.
-3. The review is stored with its classification.
-4. The stored review's id, sentiment, confidence and source are returned.
+
+## Flow: analyze_sentiment
+Trigger: POST /api/reviews/analyze · signed-in
+Input: `text` (str), `source` (str?)
+Ends: default 200 · failed 502
+
+1. `classify` — llm default · in `text` · out `sentiment` (enum[positive, neutral, negative]), `confidence` (float) · budget 1000 tok, 60s, retry 2
+   - parse_error, timeout, budget_exceeded → END.failed
+2. `persist` — tool db create Review · in `text`, `source`, `sentiment`, `confidence` · out `review` (Review)
+   - conflict → END.failed
 
 # Policies
 - The classification is based on the review text only.

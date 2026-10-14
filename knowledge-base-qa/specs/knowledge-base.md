@@ -11,15 +11,31 @@ answer grounded in those documents, with the sources it used and whether it is c
 Support writers (ingest), askers (support agents, the help widget), an embedding model, an answer model.
 
 # Data
-The `kb_docs` vector collection: document text, title and tags as metadata.
+- **Document** (existing) — `id` (uuid), `title` (string; required), `tags` (jsonb),
+  `created_at` (timestamptz)
 
 # Flows
-1. Ingest (`ingest_doc`): a writer posts a title, markdown content and optional tags; the document is
-   embedded and stored, and its id is returned with 201.
-2. Ask (`ask_kb`): an asker posts a question; the five most similar passages are retrieved.
-3. A model answers from those passages only, listing the titles it used as sources and saying whether
-   it is confident.
-4. The answer, sources and confidence are returned.
+
+## Flow: ingest_doc
+Trigger: POST /api/kb/ingest · signed-in
+Input: `title` (str), `content` (str), `tags` (list[str]?)
+Ends: default 201 · failed 502
+   - failed: no example — only a vector-store write error reaches it
+
+1. `ingest` — code · in `title`, `content`, `tags`? · out `doc_id` (uuid)
+   - error → END.failed
+   - tests: waived — it embeds into the kb_docs vector store, which no offline test has
+
+## Flow: ask_kb
+Trigger: POST /api/kb/ask · signed-in
+Input: `question` (str)
+Ends: default 200 · failed 502
+
+1. `search` — code · effect read · in `question` · out `passages` (list[json])
+   - error → END.failed
+   - tests: waived — it queries the kb_docs vector store, which no offline test has
+2. `answer` — llm default · in `question`, `passages` · out `answer` (str), `sources` (list[str]), `confident` (bool) · budget 1000 tok, 30s, retry 2
+   - parse_error, timeout, budget_exceeded → END.failed
 
 # Policies
 - Answers use only the retrieved passages; with nothing relevant, the answer says so and is not confident.

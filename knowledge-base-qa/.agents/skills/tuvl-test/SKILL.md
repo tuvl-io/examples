@@ -10,10 +10,12 @@ version: tuvl/v2
 metadata: { name: large-refund-needs-a-manager }
 spec:
   workflow: refund_flow
+  given:                                        # rows that exist before the run
+    Order: [{ id: "…", total: 900, status: delivered }]
+  as: { user: u-customer }                      # the caller (ctx.principal)
   input: { order_id: "…", reason: damaged }
-  mocks:                                        # checked against the agent's contract
-    load_order: { outputs: { order: { id: "…", total: 900 } } }
-    triage: { signal: manual }                  # a mock can force a signal
+  mocks:                                        # model / external / human steps only
+    classify: { outputs: { category: damaged } }
   replay: tests/fixtures/refund_flow/large.journal.json   # or serve results from a pinned run
   expect:
     wait: human                                 # or end: <name>; not both
@@ -23,16 +25,20 @@ spec:
     assertions: ["output.status == 202"]        # TEL over output, end and the context
     judge: [{ judge: artifact://reply-quality@1, target: "{{ output.body.reply }}" }]
 ```
-- `tuvl test [--json] [--only name] [--live] [--allow-uncertain]`. Offline by default: unmocked
-  llm/loop/http/mcp/model-decide agents fail with a pointer; `pending` agents use typed stubs; `db`
-  tools use an in-memory database; unmocked human agents suspend.
+- `tuvl test [--json] [--only name] [--live] [--allow-uncertain] [--strict]`. Offline by default:
+  unmocked llm/loop/http/mcp/model-decide agents fail with a pointer; `db` tools and `code` agents
+  run for real against an in-memory database seeded by `given:`; unmocked human agents suspend.
+- Results are **PASS**, **STUBBED** or **FAIL**. STUBBED means the expectations held only because
+  the run went through unmocked `pending` placeholders — it is not a pass, task status ignores it
+  and `--strict` (the CI gate) fails it. Implement the pending agent; don't mock it away.
 - Tests generated from spec examples (`metadata.generated_from`) are owned by `tuvl codegen` —
   change the spec, not the file. Hand-written tests live beside them.
 - Pin a real run: `tuvl runs pin <run_id>` → `tests/fixtures/…`; check equivalence after an engine
   change with `tuvl runs replay <fixture>`.
-- Mock data reads: a `db` read/list agent is mocked like any other (`mocks: { load_order: { outputs:
-  { order: { id: "…", total: 40 } } } }`, or `signal: not_found`); `db` writes run for real against
-  the test's empty in-memory database, so a test never needs seed data.
+- **Mock policy:** mock only what is non-deterministic, external or human — `llm`, `loop`, `decide`
+  with a model, `tool http`/`mcp`, `human`. Business logic (`code`, `tool db`, `decide` rules) must run:
+  seed the rows it reads with `given:` (model name → list of rows) and the caller with `as:`. Mocking
+  it prints warning **T001**. To test a "not found" path, simply don't seed the row.
 
 ## Judges
 `artifacts/<name>.yaml` (structured artifact; reference it as `artifact://<name>@1`):

@@ -3,82 +3,114 @@ version: tuvl/v2
 metadata:
   name: support-triage
   spec: specs/support-triage.md
-  spec_hash: b33adf827cd5
+  spec_hash: 3c213313e96f
 spec:
   tasks:
   - id: T1
-    title: Implement issue_credit workflow and credit agent
-    type: workflow
-    spec_ref:
-      anchor: flows
-      hash: 3f85a77c243f
-    target:
-      workflow: issue_credit
-      agent: credit
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-  - id: T2
-    title: Implement triage workflow and classify agent
+    title: classify (llm default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 3f85a77c243f
+      anchor: flow-triage
+      hash: c440e13a1ee1
     target:
       workflow: triage
       agent: classify
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-  - id: T3
-    title: Implement route decide agent
+  - id: T2
+    title: route (decide rules)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 3f85a77c243f
+      anchor: flow-triage
+      hash: c440e13a1ee1
     target:
       workflow: triage
       agent: route
     depends_on:
-    - T2
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-  - id: T4
-    title: Implement investigate loop agent
+    - T1
+  - id: T3
+    title: investigate (loop default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 3f85a77c243f
+      anchor: flow-triage
+      hash: c440e13a1ee1
     target:
       workflow: triage
       agent: investigate
     depends_on:
-    - T3
-    effort:
-      size: L
-      hours:
-      - 4.0
-      - 8.0
-  - id: T5
-    title: Implement persist tool agent
+    - T2
+  - id: T4
+    title: lookup_account (code)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 3f85a77c243f
+      anchor: flow-triage
+      hash: c440e13a1ee1
+    target:
+      workflow: triage
+      agent: lookup_account
+    depends_on:
+    - T3
+  - id: T5
+    title: persist (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-triage
+      hash: c440e13a1ee1
     target:
       workflow: triage
       agent: persist
     depends_on:
+    - T3
+  - id: T6
+    title: credit (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-issue-credit
+      hash: 66148afe97c9
+    target:
+      workflow: issue_credit
+      agent: credit
+  - id: T7
+    title: 'Example: a technical ticket is stored without investigation'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: triage
+      example: a technical ticket is stored without investigation
+    depends_on: &id001
+    - T1
+    - T2
+    - T3
     - T4
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
+    - T5
+  - id: T8
+    title: 'Example: an urgent billing ticket is investigated and stored with its resolution'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: triage
+      example: an urgent billing ticket is investigated and stored with its resolution
+    depends_on: *id001
+  - id: T9
+    title: 'Example: an uncertain routing decision is investigated'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: triage
+      example: an uncertain routing decision is investigated
+    depends_on: *id001
+  - id: T10
+    title: 'Example: a credit is recorded'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 0937357f3da8
+    target:
+      workflow: issue_credit
+      example: a credit is recorded
+    depends_on:
+    - T6

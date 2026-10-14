@@ -73,6 +73,7 @@ spec:
         valid: persist
         mismatch: persist_rejected
         incomplete: END.failed
+        default: END.failed
         error: END.failed
 
     - id: persist
