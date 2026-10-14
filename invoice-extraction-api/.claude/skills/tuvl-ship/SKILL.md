@@ -8,7 +8,7 @@ description: "Prepare a tuvl project for production: lock, the CI gate, tuvl shi
    Commit `tuvl.lock`.
 2. The CI gate (all must pass):
    ```bash
-   tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test && tuvl spec status --strict
+   tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test --strict && tuvl spec verify --strict && tuvl spec status --strict
    ```
 3. `tuvl ship [--no-build] [--push]` validates, refuses a missing or stale lock (V024), writes
    `deploy/Dockerfile` (installs exactly the locked tuvl) and a Helm chart, then builds the image.

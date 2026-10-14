@@ -3,122 +3,121 @@ version: tuvl/v2
 metadata:
   name: content-moderation
   spec: specs/content-moderation.md
-  spec_hash: d34694e3b039
+  spec_hash: 2bebece2b4ff
 spec:
   tasks:
   - id: T1
-    title: Define ContentItem and ModerationAction models
-    type: model
-    spec_ref:
-      anchor: data
-      hash: 7c537c87c39b
-    target:
-      model: ContentItem
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
-  - id: T2
-    title: Build moderate_content workflow
-    type: workflow
-    spec_ref:
-      anchor: flows
-      hash: 9f95f146e51e
-    target:
-      workflow: moderate_content
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
-    depends_on:
-    - T1
-  - id: T3
-    title: Implement classify agent
+    title: classify (llm default)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 9f95f146e51e
+      anchor: flow-moderate-content
+      hash: 059e07841750
     target:
       workflow: moderate_content
       agent: classify
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
-    depends_on:
-    - T2
-  - id: T4
-    title: Implement apply_policy decide agent
+  - id: T2
+    title: apply_policy (code)
     type: agent
     spec_ref:
-      anchor: policies
-      hash: 1206aac4bf70
+      anchor: flow-moderate-content
+      hash: 059e07841750
     target:
       workflow: moderate_content
       agent: apply_policy
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
-    - T2
-  - id: T5
-    title: Setup human review agent
+    - T1
+  - id: T3
+    title: review (human group)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 9f95f146e51e
+      anchor: flow-moderate-content
+      hash: 059e07841750
     target:
       workflow: moderate_content
       agent: review
-    effort:
-      size: XS
-      hours:
-      - 0.5
-      - 1.0
-      source: llm
     depends_on:
     - T2
-  - id: T6
-    title: Implement record agent
+  - id: T4
+    title: record (code)
     type: agent
     spec_ref:
-      anchor: flows
-      hash: 9f95f146e51e
+      anchor: flow-moderate-content
+      hash: 059e07841750
     target:
       workflow: moderate_content
       agent: record
-    effort:
-      size: M
-      hours:
-      - 2.0
-      - 4.0
-      source: llm
     depends_on:
-    - T1
-    - T2
-  - id: T7
-    title: Implement notify tool integration
-    type: integration
+    - T3
+  - id: T5
+    title: notify (tool http POST moderation_webhook)
+    type: agent
     spec_ref:
-      anchor: flows
-      hash: 9f95f146e51e
+      anchor: flow-moderate-content
+      hash: 059e07841750
     target:
       workflow: moderate_content
       agent: notify
-    effort:
-      size: S
-      hours:
-      - 1.0
-      - 2.0
-      source: llm
     depends_on:
+    - T4
+  - id: T6
+    title: 'notify: credentials and access'
+    type: manual
+    target:
+      workflow: moderate_content
+      agent: notify
+    status: done
+  - id: T7
+    title: 'Example: safe content is approved automatically'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: safe content is approved automatically
+    depends_on: &id001
+    - T1
     - T2
+    - T3
+    - T4
+    - T5
+  - id: T8
+    title: 'Example: a violation is removed and the channel is notified'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: a violation is removed and the channel is notified
+    depends_on: *id001
+  - id: T9
+    title: 'Example: borderline content in the EU is treated as a violation'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: borderline content in the EU is treated as a violation
+    depends_on: *id001
+  - id: T10
+    title: 'Example: borderline content elsewhere waits for a moderator'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: borderline content elsewhere waits for a moderator
+    depends_on: *id001
+  - id: T11
+    title: 'Example: a moderator approves borderline content'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: ed7fac399588
+    target:
+      workflow: moderate_content
+      example: a moderator approves borderline content
+    depends_on: *id001

@@ -13,21 +13,53 @@ Applicants (via the onboarding form), a sanctions-screening service, an investig
 watchlist tool, a risk model, compliance officers, compliance policy authors.
 
 # Data
-Applicant (existing): id, full_name (secure), dob (secure), national_id (secure, unique), email,
-country (us, gb, de, in, sg), status, created_at.
-RiskAssessment (existing, pinned v1): id, applicant_id, score, band, rationale, decided_by, created_at.
-The `compliance_policies` vector collection holds the policy documents.
+- **Applicant** (existing) — `id` (uuid), `full_name` (string; required; secure), `dob` (date; required; secure),
+  `national_id` (string; required; unique; secure), `email` (string; required),
+  `country` (enum: us | gb | de | in | sg; required),
+  `status` (enum: received | investigating | pending_review | approved | rejected), `created_at` (timestamptz)
+- **RiskAssessment** (existing) — `id` (uuid), `applicant_id` (uuid; required), `score` (numeric),
+  `band` (enum: low | medium | high), `rationale` (text), `decided_by` (string), `created_at` (timestamptz)
 
 # Flows
-1. Policy authors ingest policy documents (`ingest_policy`).
-2. An applicant submits name, date of birth, national id, email and country; the applicant is stored.
-3. The applicant is screened by the sanctions service; a screening failure goes to review.
-4. The policies relevant to the applicant's country are retrieved.
-5. An agent investigates the applicant with the watchlist tool and concludes clear, elevated or
-   refer-to-human; anything but clear goes to review.
-6. A model scores the risk: low risk is approved automatically, medium and high go to review.
-7. A compliance officer approves or rejects with a risk band and a note.
-8. The assessment and the applicant's final status are recorded and returned.
+
+## Flow: ingest_policy
+Trigger: POST /api/kyc/policies · group iam:admin
+Input: `title` (str), `content` (str)
+Ends: default 201 · failed 502
+   - failed: no example — only a vector-store write error reaches it
+
+1. `ingest` — code · in `title`, `content` · out `doc_id` (uuid)
+   - tests: waived — it embeds into the compliance_policies vector store, which no offline test has
+
+## Flow: onboard_applicant
+Trigger: POST /api/kyc/apply · group kyc:submit
+Input: `full_name` (str), `dob` (date), `national_id` (str), `email` (str), `country` (enum[us, gb, de, in, sg])
+Ends: default 200 · duplicate 409 · failed 502
+   - duplicate: no example — the unique national id is enforced by the database
+
+1. `persist_applicant` — tool db create Applicant · in `full_name`, `dob`, `national_id`, `email`, `country` · out `applicant` (Applicant) · compensate `discard_applicant`
+   - conflict → END.duplicate
+2. `applicant_ref` — code · effect read · in `applicant` · out `applicant_id` (uuid)
+3. `sanctions_screen` — tool http POST sanctions_screen · effect read · in `full_name`, `dob`, `country` · out `screened_country` (str)
+   - error → `review`
+4. `policy_context` — code · effect read · in `country` · out `policies` (list[json])
+   - error → `review`
+   - tests: waived — it searches the compliance_policies vector store, which no offline test has
+5. `investigate` — loop default · in `applicant_id`, `country`, `policies` · out `investigation` (str) · budget 6 iterations, 4 tool calls, 30000 tok, 2m
+   · tools: `check_watchlist`
+   - clear → `assess`
+   - elevated, refer_human, max_iterations, budget_exceeded, timeout, aborted, error → `review`
+T1. `check_watchlist` — code · effect read · tool of `loop` · in `applicant_id` · out `hit` (bool), `checked` (bool), `source` (str?)
+6. `assess` — llm default · in `investigation`, `policies` · out `score` (int), `rationale` (str) · budget 600 tok, 30s, retry 2
+   - low → `finalize`
+   - medium, high, parse_error, timeout, budget_exceeded, error → `review`
+7. `review` — human group compliance · in `applicant`, `investigation`?, `score`?, `rationale`? · out `decision` (enum[approve, reject]), `band` (enum[low, medium, high]), `note` (str?)
+   - approve, reject → `finalize`
+8. `finalize` — code · in `applicant`, `score`?, `rationale`?, `decision`?, `band`?, `note`? · out `status` (enum[approved, rejected]), `final_band` (enum[low, medium, high])
+   - default → END
+T2. `discard_applicant` — tool db delete Applicant · in `applicant`
+   - default → END
+   - not_found → END
 
 # Policies
 - Name, date of birth and national id never reach a model and are redacted in the journal.
@@ -58,7 +90,7 @@ mocks:
   policy_context: { outputs: { policies: [] } }
   investigate: { signal: elevated, outputs: { investigation: "Watchlist hit on a similar name." } }
 expect:
-  wait: human
+  end_or_wait: human
   path_includes: [investigate]
 ```
 ```tuvl-example
@@ -70,4 +102,30 @@ mocks:
 expect:
   end: default
   output: { status: 201 }
+```
+```tuvl-example
+name: a compliance officer rejects an elevated applicant
+input: { full_name: Bob Example, dob: "1985-01-01", national_id: X3, email: bob@example.com, country: us }
+mocks:
+  sanctions_screen: { outputs: { screened_country: us } }
+  policy_context: { outputs: { policies: [] } }
+  investigate: { signal: elevated, outputs: { investigation: "Watchlist hit on a similar name." } }
+  review: { signal: reject, outputs: { decision: reject, band: high, note: "Confirmed watchlist match." } }
+expect:
+  end: default
+  path_includes: [investigate, review, finalize]
+  output: { status: 200, body: { status: rejected, band: high } }
+```
+```tuvl-example
+name: a processing failure rolls the applicant back
+input: { full_name: Cy Example, dob: "1979-05-05", national_id: X4, email: cy@example.com, country: us }
+mocks:
+  sanctions_screen: { outputs: { screened_country: us } }
+  policy_context: { outputs: { policies: [] } }
+  investigate: { signal: elevated, outputs: { investigation: "Needs a person." } }
+  review: { signal: error }
+expect:
+  end: failed
+  path_includes: [investigate, review]
+  output: { status: 502 }
 ```
