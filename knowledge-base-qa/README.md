@@ -26,7 +26,7 @@ tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock -
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b2"`), PostgreSQL 15+ with a `tuvl_kb` database, and a model key
+(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b3"`), PostgreSQL 15+ with a `tuvl_kb` database, and a model key
 (`GEMINI_API_KEY` by default — any LiteLLM model works; edit `llms/*.yaml`).
 
 This project needs **pgvector**:
