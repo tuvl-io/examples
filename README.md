@@ -100,4 +100,4 @@ Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md)
 
 ## License
 
-[MIT](./LICENSE) © tuvl
+[Apache-2.0](./LICENSE) © tuvl.io — see [NOTICE](./NOTICE). Earlier versions were published under the MIT License.
