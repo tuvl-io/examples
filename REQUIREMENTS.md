@@ -38,16 +38,16 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ## LLM
 
-All model access goes through LiteLLM, configured per project in `llms/*.yaml` (`kind: AgentModel`). The specs default to Google Gemini — one `GEMINI_API_KEY` covers everything:
+All model access goes through tuvl's own model client (no gateway, no LiteLLM), configured per project in `llms/*.yaml` (`kind: AgentModel`). The specs default to Google Gemini — one `GEMINI_API_KEY` covers everything:
 
 - **Chat model** (`llms/default.yaml`): `gemini/gemini-3.1-flash-lite` — used by every `llm` and `loop` agent.
-- **Decision model** (`support-triage` only, `llms/triage_classifier.yaml`): `type: decision`, `provider: litellm` on the same Gemini model.
+- **Decision model** (`support-triage` only, `llms/triage_classifier.yaml`): `type: decision`, `provider: llm` on the same Gemini model (Laya, `provider: laya`, is the self-hosted alternative).
 - **Judge model** (`kyc-onboarding` only, `llms/judge.yaml`): a second preset for the supervisor's judge artifact (`artifacts/supervisor-judge.yaml`). Can be the same model id; a separate preset keeps cost/temperature tunable independently.
 - **Embeddings** (`knowledge-base-qa`, `kyc-onboarding`): `gemini/gemini-embedding-001` declared in `models/embeddings.yaml` with `dimensions: 1536` — the engine passes the declared dimensions to the provider (Matryoshka truncation from the model's native 3072), and the collection's vector dimension must match.
 
 `tuvl init <name> --preset gemini` writes the same presets for a new project.
 
-Swapping providers: any LiteLLM model string works (`openai/gpt-…`, `anthropic/claude-…`, `ollama/llama3`, …) — edit the `llms/*.yaml` preset, no workflow changes. Caveat for fully-local runs: the embedding model must also be swapped to a local one and the collection dimension updated to match.
+Swapping providers: any `provider/model` string tuvl supports works (`openai/gpt-…`, `anthropic/claude-…`, `ollama/llama3`, …) — edit the `llms/*.yaml` preset, no workflow changes. Caveat for fully-local runs: the embedding model must also be swapped to a local one and the collection dimension updated to match.
 
 Estimated cost to run every acceptance test once with the Gemini defaults: well under $1; the `mcp-research-agent` is the most expensive (bounded by its loop budget (`max_tokens: 40000`)).
 
@@ -59,10 +59,10 @@ Estimated cost to run every acceptance test once with the Gemini defaults: well 
 
 ## Engine
 
-- `tuvl[standard]` 2.0 beta (`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b3"`), Python 3.13+.
-- Each project passes the CI gate (see the root README); `tuvl validate --strict` reports any missing
+- `tuvl[standard]` 2.0 beta (`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"`), Python 3.13+.
+- Each project passes the CI gate (see the root README); `tuvl lint project --strict` reports any missing
   configuration before first boot.
-- Production extras (a signing key via `tuvl keys generate`, IAM roles) matter only where a
+- Production extras (a signing key via `tuvl generate key`, IAM roles) matter only where a
   workflow gates on a group — the human reviews in `content-moderation-pipeline` and
   `kyc-onboarding`, and the credit approval in `support-triage`. In `tuvl dev` the session key covers
   them.
