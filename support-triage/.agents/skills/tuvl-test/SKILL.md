@@ -25,18 +25,18 @@ spec:
     assertions: ["output.status == 202"]        # TEL over output, end and the context
     judge: [{ judge: artifact://reply-quality@1, target: "{{ output.body.reply }}" }]
 ```
-- `tuvl test [--json] [--only name] [--live] [--allow-uncertain] [--strict]`. Offline by default:
-  unmocked llm/loop/http/mcp/model-decide agents fail with a pointer; `db` tools and `code` agents
+- `tuvl run tests [--json] [--only name] [--live] [--allow-uncertain] [--strict]`. Offline by default:
+  unmocked llm/loop/http/mcp/storage/model-decide agents fail with a pointer; `db` tools and `code` agents
   run for real against an in-memory database seeded by `given:`; unmocked human agents suspend.
 - Results are **PASS**, **STUBBED** or **FAIL**. STUBBED means the expectations held only because
   the run went through unmocked `pending` placeholders — it is not a pass, task status ignores it
   and `--strict` (the CI gate) fails it. Implement the pending agent; don't mock it away.
-- Tests generated from spec examples (`metadata.generated_from`) are owned by `tuvl codegen` —
+- Tests generated from spec examples (`metadata.generated_from`) are owned by `tuvl generate code` —
   change the spec, not the file. Hand-written tests live beside them.
-- Pin a real run: `tuvl runs pin <run_id>` → `tests/fixtures/…`; check equivalence after an engine
-  change with `tuvl runs replay <fixture>`.
+- Pin a real run: `tuvl pin run <run_id>` → `tests/fixtures/…`; check equivalence after an engine
+  change with `tuvl replay runs <fixture>`.
 - **Mock policy:** mock only what is non-deterministic, external or human — `llm`, `loop`, `decide`
-  with a model, `tool http`/`mcp`, `human`. Business logic (`code`, `tool db`, `decide` rules) must run:
+  with a model, `tool http`/`mcp`/`storage`, `human`. For a `map`, mock the child workflow's agents by id in the parent's test. Business logic (`code`, `tool db`, `decide` rules) must run:
   seed the rows it reads with `given:` (model name → list of rows) and the caller with `as:`. Mocking
   it prints warning **T001**. To test a "not found" path, simply don't seed the row.
 
@@ -58,7 +58,7 @@ spec:
   min_agreement: 0.9
 ```
 - A calibration fixture is a JSON file holding exactly what the judge will see (e.g. `"Refunded $40."`
-  or an object). `tuvl test` calibrates every judge it uses first; below `min_agreement` the judge is
+  or an object). `tuvl run tests` calibrates every judge it uses first; below `min_agreement` the judge is
   untrusted (V023, `--strict` fails). Verdicts are cached in `.tuvl/judge-cache/` (deterministic CI).
 - In a Test: `judge: [{ judge: artifact://reply-quality@1, target: "{{ output.body.reply }}" }]`.
 - As a guardrail on an llm/loop agent: `guardrails: { output: [artifact://reply-quality@1] }` — a fail

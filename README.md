@@ -1,25 +1,25 @@
 # tuvl examples
 
-Runnable sample projects built with **[tuvl](https://tuvl.io)** — the YAML-driven
-workflow orchestration engine. Clone a project, run it locally in minutes, and
-use it as a starting point or a reference for your own workflows.
+Runnable sample projects built with **[tuvl](https://tuvl.io)**: *Intelligent Workflows.
+Deterministic Execution.* Clone a project, run it locally in minutes, and use it as a
+starting point or a reference for your own workflows.
 
 Each example is a complete, self-contained tuvl project: models, datasources, LLM
 presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
 > **tuvl 2.0.** Every project is a 2.0 agent graph (`version: tuvl/v2`) with typed contracts, a
-> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. They run on the tuvl 2.0 beta
-> (`2.0.0b3`).
+> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. They are written for the tuvl 2.0
+> beta, **`2.0.0b8`**, and the commands in every README are the b8 ones (`tuvl <verb> <thing>`).
 
-## ▶ Try it live — no install
+## ▶ tuvl try: run them live, no install
 
 Don't want to clone anything? Run any of these examples in a **live, throwaway
 sandbox** right in your browser:
 
 ### **→ [try.tuvl.online](https://try.tuvl.online)**
 
-Enter your name + email, pick an example, and hit **Run in sandbox**. In a few
+**tuvl try** runs these same examples. Enter your name + email, pick an example, and hit **Run in sandbox**. In a few
 seconds you get a private URL to a real running instance with the **Tuvl Insight**
 editor — poke at the workflows, run them, read the code. Each sandbox is isolated,
 resets automatically, and self-destructs after ~20 minutes. The landing page shows
@@ -39,7 +39,7 @@ tuvl-examples/
 │   ├── README.md          # what it demonstrates + how to run it
 │   ├── specs/             # intent (<name>.md) + derived task plan (<name>.tasks.yaml)
 │   ├── workflows/         # kind: Workflow (version: tuvl/v2)
-│   ├── agents/            # code agents (@agent) + _generated/ schemas (tuvl codegen)
+│   ├── agents/            # code agents (@agent) + _generated/ schemas (tuvl generate code)
 │   ├── models/            # ModelDefinition / Embedding / Collection YAML
 │   ├── llms/              # AgentModel presets (llm and decision models)
 │   ├── artifacts/         # prompts, steering, MCP servers, judges
@@ -70,11 +70,11 @@ tuvl-examples/
 ## Running an example
 
 ```bash
-uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b3"   # Python 3.13+; [standard] adds Insight
+uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"   # Python 3.13+; [standard] adds Insight
 git clone https://github.com/tuvl-io/examples.git tuvl-examples
 cd tuvl-examples/<project-name>
 cp .env.example .env                       # Postgres settings and a model key
-tuvl validate --strict && tuvl test        # offline checks
+tuvl lint project --strict && tuvl run tests        # offline checks
 tuvl dev --auto-login                      # Insight at http://localhost:8885/insight
 ```
 
@@ -84,9 +84,9 @@ Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md)
 
 1. Create a top-level directory named after the use case (kebab-case) with `tuvl init`.
 2. Write the intent in `specs/<name>.md` with `tuvl-example` acceptance cases, check it with
-   `tuvl spec check`, have the coding agent write the task list, and implement the tasks (`tuvl spec status` shows what is left).
+   `tuvl lint spec`, have the coding agent write the task list, and implement the tasks (`tuvl list tasks` shows what is left).
 3. It must pass the CI gate:
-   `tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test --strict && tuvl spec verify --strict && tuvl spec status --strict`.
+   `tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict`.
 4. Add a README (what it demonstrates, prerequisites, run steps), a `.env.example` (never real
    secrets), and a row to the table above. Open a pull request.
 
@@ -94,6 +94,8 @@ Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md)
 
 - **Website:** [tuvl.io](https://tuvl.io)
 - **Docs:** [tuvl.dev](https://tuvl.dev)
+- **Try it:** [try.tuvl.online](https://try.tuvl.online)
+- **Nest, the catalogue of what is built with tuvl:** [nest.tuvl.io](https://nest.tuvl.io). List your own project with `tuvl register project`.
 - **Engine (PyPI):** [`tuvl`](https://pypi.org/project/tuvl/) · **TypeScript SDK (npm):** [`@tuvl/client`](https://www.npmjs.com/package/@tuvl/client)
 
 > *Pronounced "Thoo-val" (തൂവൽ) — Malayalam for a bird's feather.*

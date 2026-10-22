@@ -24,5 +24,5 @@ spec:
 - In contracts the model is a type: `Refund` (read), `Refund.create`, `Refund.update`, `list[Refund]`.
 - Workflows list the models their agents touch in `spec.models`; writes go through workflows
   (journaled, contract-checked), not CRUD.
-- After changing a model: `tuvl validate`, `tuvl codegen`, `tuvl lock`; migrations are managed by
-  `tuvl db` — never edit tables by hand.
+- After changing a model: `tuvl lint project`, `tuvl generate code`, `tuvl generate lock`; row-level security comes from
+  `tuvl generate rls` (check it with `tuvl verify rls`) — never edit tables by hand.
