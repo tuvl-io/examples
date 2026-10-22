@@ -1,6 +1,6 @@
 ---
 name: agent-tool
-description: "Implement a tool agent: db (model operations), http (external API) or mcp (one MCP tool), with effects, idempotency and compensation."
+description: "Implement a tool agent: db (model operations), http (external API), storage (blob put/get/list/presign) or mcp (one MCP tool), with effects, idempotency and compensation."
 ---
 # Tool agents (no Python)
 
@@ -23,7 +23,13 @@ description: "Implement a tool agent: db (model operations), http (external API)
 - http: `tool: { use: http, method: POST, url: "${ENV:default}", body: {...}, map: { out: response.body.x }, idempotency: auto }`.
   POST/PUT/PATCH/DELETE are writes unless you declare `effect: read` on the agent. Route `http_4xx`
   signals as needed; outages go to `error` — route them somewhere safe.
+- storage: `tool: { use: storage, store: invoices, op: put, key: "{{ id }}.pdf", body: "{{ pdf_b64 }}", encoding: base64 }`
+  on a store declared in `storage/*.yaml` (`kind: Storage`: `s3`, `azure`, `gcs` or `local`; secrets as
+  `${ENV}`, never literal). `op`: put, get, head, list, copy, delete, presign. The result is the single
+  output (typed `json`); `get`/`head`/`copy` emit `not_found`, `put`/`copy` emit `conflict` unless
+  `if_exists: overwrite`, so route them. `delete` is destructive; a `readonly` store refuses writes (V031);
+  keys must be relative with no `..` (V032). Object bytes are never journaled. A missing store is V030.
 - mcp: `tool: { use: mcp, server: artifact://fetch-web@1, name: fetch, args: { url: "{{ url }}" } }`;
-  the server is a `type: mcp` artifact. Pin it in `tuvl lock`.
-- Templates use TEL over the agent's inputs only. Run `tuvl validate` — it type-checks every flow.
-- Tests: `db` tools run offline against the test database; `http`/`mcp` must be mocked.
+  the server is a `type: mcp` artifact. Pin it in `tuvl generate lock`.
+- Templates use TEL over the agent's inputs only. Run `tuvl lint project` — it type-checks every flow.
+- Tests: `db` tools run offline against the test database; `http`/`mcp`/`storage` must be mocked.

@@ -1,12 +1,12 @@
 ---
 name: tuvl-spec
-description: "Write or change a tuvl spec (specs/<name>.md): the Data/Flows grammar, tuvl-example blocks, and tuvl spec check."
+description: "Write or change a tuvl spec (specs/<name>.md): the Data/Flows grammar, tuvl-example blocks, and tuvl lint spec."
 ---
 # Writing a spec
 
-Start from the template: `tuvl spec new <name> [--workflow <snake_name>]` → `specs/<name>.md`.
+Start from the template: `tuvl create spec <name> [--workflow <snake_name>]` → `specs/<name>.md`.
 Prose sections (`# Intent`, `# Policies`, …) are free text. `# Data`, `# Flows` and `tuvl-example`
-blocks follow a grammar and must pass **`tuvl spec check`** (MCP `spec_check`) before you build.
+blocks follow a grammar and must pass **`tuvl lint spec`** (MCP `spec_check`) before you build.
 
 ```markdown
 # Data
@@ -76,12 +76,12 @@ expect: { end: default, path_includes: [record_refund] }
   (`llm`, `loop`, `decide model`, `tool http`/`mcp`, `human`); mocking `code`, `tool db` or rules is T001.
 - `expect` keys: `end`, `path`, `path_includes`, `decision`/`decisions` (`{agent: {route, source}}`),
   `output` (partial match), `assertions` (TEL), `judge`, `end_or_wait: human|approval|<end>`.
-- `tuvl codegen` writes each example to `tests/<workflow>/<name>.yaml`; keep names unique.
+- `tuvl generate code` writes each example to `tests/<workflow>/<name>.yaml`; keep names unique.
 - Give every end an example (S011). Free-text acceptance bullets aren't checked (S014) — write
   examples instead.
 
 ## Rules
-- Run `tuvl spec check --json` after every edit; fix every blocking finding (each has a line).
+- Run `tuvl lint spec --json` after every edit; fix every blocking finding (each has a line).
 - State thresholds as numbers, approvals as a `human group`, model use with a budget.
 - Never send a `secure` field to a model step (S008).
-- Each `#`/`##` section is hashed: editing one marks its tasks **stale** (`tuvl spec diff`).
+- Each `#`/`##` section is hashed: editing one marks its tasks **stale** (`tuvl show drift`).

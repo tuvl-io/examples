@@ -192,7 +192,7 @@ app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.h
 const expiredPage = () => `<!doctype html><meta charset=utf-8><title>Sandbox expired</title>
 <style>body{font:16px/1.6 system-ui;max-width:34rem;margin:12vh auto;padding:0 1.5rem;color:#0f172a}a{color:#0d9488}</style>
 <h1>This sandbox has ended ⏳</h1><p>tuvl sandboxes are temporary and get cleaned up automatically.
-Head back and spin up a fresh one.</p><p><a href="${SANDBOX_SCHEME}://${PORTAL_HOST}/">← Back to the tuvl examples</a></p>`
+Head back and spin up a fresh one.</p><p><a href="${SANDBOX_SCHEME}://${PORTAL_HOST}/">← Back to tuvl try</a></p>`
 
 // ── unified server: sandbox proxy OR portal ───────────────────────────────────
 const proxy = httpProxy.createProxyServer({ xfwd: true })
