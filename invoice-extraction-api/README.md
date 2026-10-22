@@ -16,18 +16,18 @@ Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 
 ## Spec, tests and the CI gate
 
-The intent lives in [`specs/invoice-extraction.md`](specs/invoice-extraction.md). Its task plan (`*.tasks.yaml`) is written by the coding agent from the checked spec (`tuvl spec check`), and its `tuvl-example` blocks are the tests in `tests/` (`tuvl codegen`). All
+The intent lives in [`specs/invoice-extraction.md`](specs/invoice-extraction.md). Its task plan (`*.tasks.yaml`) is written by the coding agent from the checked spec (`tuvl lint spec`), and its `tuvl-example` blocks are the tests in `tests/` (`tuvl generate code`). All
 of it runs offline:
 
 ```bash
-tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test --strict && tuvl spec verify --strict && tuvl spec status --strict
+tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict
 ```
 
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b3"`), PostgreSQL 15+ with a `tuvl_invoices` database, and a model key
-(`GEMINI_API_KEY` by default — any LiteLLM model works; edit `llms/*.yaml`).
+(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"`), PostgreSQL 15+ with a `tuvl_invoices` database, and a model key
+(`GEMINI_API_KEY` by default — any `provider/model` that tuvl supports works; edit `llms/*.yaml`).
 
 ```bash
 cp .env.example .env          # Postgres settings and GEMINI_API_KEY

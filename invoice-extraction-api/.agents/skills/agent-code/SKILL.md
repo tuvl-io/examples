@@ -1,6 +1,6 @@
 ---
 name: agent-code
-description: "Implement a code agent: a Python function inside the stub tuvl codegen generates."
+description: "Implement a code agent: a Python function inside the stub tuvl generate code generates."
 ---
 # Code agents
 
@@ -14,7 +14,7 @@ description: "Implement a code agent: a Python function inside the stub tuvl cod
   routes: { high: review, low: END, error: END.failed }
 ```
 
-`tuvl codegen` writes/merges `agents/<run>.py`:
+`tuvl generate code` writes/merges `agents/<run>.py`:
 ```python
 from tuvl import Ctx, agent
 from agents._generated.schemas import ScoreIn, ScoreOut, ScoreSignal
@@ -27,8 +27,8 @@ async def score_order(inp: ScoreIn, ctx: Ctx) -> tuple[ScoreOut, ScoreSignal]:
 ```
 - Return the outputs, an `(outputs, signal)` pair, or a bare signal; every signal must be a route.
 - Never edit the decorator, signature, annotations, docstring or anything in `agents/_generated/`
-  — `tuvl codegen` owns them and rewrites them; your body and parameter names are preserved.
+  — `tuvl generate code` owns them and rewrites them; your body and parameter names are preserved.
 - `ctx.db.get/list/create/update/delete("Model", …)` — only models in the workflow's `spec.models`;
   writes commit atomically with the step. `ctx.http` for outbound calls with
-  `ctx.idempotency_key`. `ctx.artifact("artifact://name@1")` for prose. `ctx.log` for logs.
+  `ctx.idempotency_key`. `ctx.storage("invoices")` for a named blob store (`put`/`get`/`head`/`list`/`copy`/`delete`/`presign`; read-only inside `effect: read`). `ctx.artifact("artifact://name@1")` for prose. `ctx.log` for logs.
 - Built-ins (`code.run: tuvl.data_search`, `tuvl.data_ingest`) need no Python.

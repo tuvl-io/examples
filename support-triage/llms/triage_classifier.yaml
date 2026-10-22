@@ -1,9 +1,10 @@
 # A decision model for the `route` agent: answers one value from a closed set.
-# Runs through the built-in litellm adapter (enum-constrained output).
+# `provider: llm` asks a chat model for the closed-set answer as structured output, with a confidence.
+# Laya (`provider: laya`, the tuvl/laya-serve image) is the self-hosted alternative.
 kind: AgentModel
 metadata:
   name: triage-classifier
 spec:
   type: decision
-  provider: litellm
+  provider: llm
   model: gemini/gemini-3.1-flash-lite
