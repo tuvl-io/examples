@@ -16,18 +16,18 @@ Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 
 ## Spec, tests and the CI gate
 
-The intent lives in [`specs/review-sentiment.md`](specs/review-sentiment.md). Its task plan (`*.tasks.yaml`) is written by the coding agent from the checked spec (`tuvl spec check`), and its `tuvl-example` blocks are the tests in `tests/` (`tuvl codegen`). All
+The intent lives in [`specs/review-sentiment.md`](specs/review-sentiment.md). Its task plan (`*.tasks.yaml`) is written by the coding agent from the checked spec (`tuvl lint spec`), and its `tuvl-example` blocks are the tests in `tests/` (`tuvl generate code`). All
 of it runs offline:
 
 ```bash
-tuvl spec check && tuvl validate --strict && tuvl codegen --check && tuvl lock --check && tuvl test --strict && tuvl spec verify --strict && tuvl spec status --strict
+tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict
 ```
 
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b3"`), PostgreSQL 15+ with a `tuvl_reviews` database, and a model key
-(`GEMINI_API_KEY` by default — any LiteLLM model works; edit `llms/*.yaml`).
+(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"`), PostgreSQL 15+ with a `tuvl_reviews` database, and a model key
+(`GEMINI_API_KEY` by default — any `provider/model` that tuvl supports works; edit `llms/*.yaml`).
 
 ```bash
 cp .env.example .env          # Postgres settings and GEMINI_API_KEY
@@ -46,7 +46,7 @@ as a test fixture.
 ## Ship to production
 
 ```bash
-tuvl keys generate --write                      # persistent signing key in .env
+tuvl generate key --write                      # persistent signing key in .env
 tuvl ship --tag ghcr.io/acme/sentiment-api:0.1.0 --push
 kubectl create secret generic sentiment-api-env --from-env-file=.env
 helm install sentiment-api deploy/chart/sentiment-api --set image.repository=ghcr.io/acme/sentiment-api
@@ -54,4 +54,4 @@ helm install sentiment-api deploy/chart/sentiment-api --set image.repository=ghc
 ```
 
 `tuvl ship` refuses a project that fails validation, has `pending` agents, or has a stale
-`tuvl.lock`. The image runs `tuvl run` as a non-root user in production mode.
+`tuvl.lock`. The image runs `tuvl serve app` as a non-root user in production mode.
