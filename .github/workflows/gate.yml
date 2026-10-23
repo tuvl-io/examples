@@ -31,13 +31,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - name: Install tuvl
-        run: uv tool install --python 3.13 --prerelease=allow "tuvl[standard]>=2.0.0b3,<3"
+        run: uv tool install --python 3.13 --prerelease=allow "tuvl[standard]>=2.0.0b8,<3"
       - name: Gate
         run: |
-          tuvl spec check
-          tuvl validate --strict
-          tuvl codegen --check
-          tuvl lock --check --no-mcp
-          tuvl test --strict
-          tuvl spec verify --strict
-          tuvl spec status --strict
+          tuvl lint spec
+          tuvl lint project --strict
+          tuvl generate code --check
+          tuvl verify lock --no-mcp
+          tuvl run tests --strict
+          tuvl verify spec --strict
+          tuvl list tasks --strict
