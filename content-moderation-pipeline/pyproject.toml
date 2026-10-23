@@ -15,7 +15,7 @@ version = "0.1.0"
 description = "A tuvl project — see https://tuvl.io"
 readme = "README.md"
 requires-python = ">=3.13,<3.15"
-license = { text = "MIT" }
+license = "Apache-2.0"
 dependencies = [
     "tuvl>=2.0.0b8",
 ]
