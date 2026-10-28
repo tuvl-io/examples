@@ -31,6 +31,6 @@ description: "Implement a map agent: run a child workflow once per item of a lis
 - `tuvl lint project` prices it at the child's worst case times `max_items`. Bound `max_items` as tightly as the
   data allows.
 - It is one workflow over many items, not a fork/join of different branches. Do not use it to run two
-  different things in parallel.
+  different things in parallel (that is the `parallel` engine, skill `agent-parallel`).
 - Tests: the child's agents are mocked in the test of the parent workflow (`mocks:` by agent id), not in
   a separate test.

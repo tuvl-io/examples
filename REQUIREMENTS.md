@@ -59,7 +59,7 @@ Estimated cost to run every acceptance test once with the Gemini defaults: well 
 
 ## Engine
 
-- `tuvl[standard]` 2.0 beta (`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"`), Python 3.13+.
+- `tuvl[standard]` 2.0 beta (`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"`), Python 3.13+.
 - Each project passes the CI gate (see the root README); `tuvl lint project --strict` reports any missing
   configuration before first boot.
 - Production extras (a signing key via `tuvl generate key`, IAM roles) matter only where a

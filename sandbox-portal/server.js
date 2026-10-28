@@ -17,6 +17,7 @@ import {
   runSandbox,
   killSandbox,
   reapOrphans,
+  dropAllSandboxDbs,
   waitReady,
   upstreamHost,
 } from './lib/docker.js'
@@ -235,6 +236,8 @@ setInterval(() => {
 
 reapOrphans()
   .then((n) => n && console.log(`reaped ${n} orphan sandbox container(s)`))
+  .then(() => dropAllSandboxDbs((name) => [...sandboxes.values()].some((sb) => sb.dbName === name)))
+  .then((n) => n && console.log(`dropped ${n} orphan sandbox database(s)`))
   .catch(() => {})
 
 server.listen(PORT, () => {

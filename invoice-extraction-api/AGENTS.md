@@ -40,7 +40,8 @@ write your own notes only below the notes marker.
 | `tuvl-spec` | writing or changing `specs/<name>.md` |
 | `tuvl-plan` | writing and maintaining the task list from a checked spec |
 | `tuvl-task-loop` | **always** — the core loop for implementing tasks |
-| `agent-code` / `agent-tool` / `agent-llm` / `agent-loop` / `agent-decide` / `agent-human` / `agent-map` | implementing an agent with that engine |
+| `agent-code` / `agent-tool` / `agent-llm` / `agent-loop` / `agent-decide` / `agent-human` / `agent-map` / `agent-parallel` | implementing an agent with that engine |
+| `tuvl-workflow` | the workflow around the agents: triggers (http, schedule, mcp), file uploads, ends, policy, webhooks, per-signal outputs |
 | `tuvl-data` | models, fields, access, CRUD |
 | `tuvl-test` | tests, mocks, fixtures, judges |
 | `tuvl-review` | reviewing the Python of code agents (the C-rules, then judgement) |

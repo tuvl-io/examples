@@ -8,7 +8,7 @@ description: "Prepare a tuvl project for production: lock, the CI gate, tuvl shi
    Commit `tuvl.lock`.
 2. The CI gate (all must pass):
    ```bash
-   tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict
+   tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict && tuvl review code --strict
    ```
 3. `tuvl ship [--no-image] [--format image|archive|both] [--push] [--extra NAME] [--force] [--allow-incomplete] [--allow-dirty]` validates, refuses a missing or stale lock
    (V024), writes `deploy/Dockerfile` and a Helm chart, then builds the image.
@@ -39,7 +39,11 @@ and every model provider need no extra.
 - Production refuses dev keys and needs a real signing key (`TUVL_SIGNING_KEY`, from `tuvl generate key`); triggers require a token unless
   `trigger.http.public: true`.
 - No `pending` agents may remain (V010) — `tuvl list tasks` shows them as `todo`.
-- Local-disk storage stores get a volume in the chart; cloud stores need none.
+- Local-disk storage stores get a volume in the chart; cloud stores need none. A trigger with `upload` needs its store's credentials in the
+  deployment's environment like any other storage.
+- Webhooks (`spec.webhooks`) are off until the server runs with `TUVL_WEBHOOKS_ENABLED=true`: without it nothing is queued or sent, whatever the
+  workflows declare. Set each `${ENV}` url and secret in the deployment too; a delivery whose variable is unset is retried until you do.
+- A production server mounts only what it needs: no Insight or dev routes, and the OpenAPI pages and admin routes are off unless exposed.
 - A workflow naming a disabled or undefined model is refused with the reason (HTTP 409), not run.
 - `tuvl deploy` (managed hosting) is not available yet: it only prints a message and exits 1. Deploy the
   chart that ship writes with `helm`.

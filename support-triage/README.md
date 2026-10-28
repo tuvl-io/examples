@@ -27,7 +27,7 @@ tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tu
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"`), PostgreSQL 15+ with a `tuvl_support` database, and a model key
+(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"`), PostgreSQL 15+ with a `tuvl_support` database, and a model key
 (`GEMINI_API_KEY` by default — any `provider/model` that tuvl supports works; edit `llms/*.yaml`).
 
 ```bash

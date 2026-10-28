@@ -32,5 +32,11 @@ description: "Implement an llm agent: one model call with typed outputs, prompts
       - { check: regex_deny, patterns: ["(?i)internal[_-]?ref"] }
       - { check: max_chars, limit: 4000 }        # also: json_schema, pii_mask
   ```
+- To remember across runs, add `llm.memory: { collection: support_memory, key: principal, window: 5, recall_top_k: 3, max_tokens: 1000, write: [question, answer] }`:
+  the owner's earlier turns are put in the prompt as data and the `write` fields are stored afterwards. The owner is `principal`, `tenant` or
+  a template over inputs (refused on a public trigger, V043). `tuvl prune memory` erases it.
+- To let a UI show the answer while the model writes it, set `llm: { stream_tokens: true, stream_field: draft }`: the text of that one `str`
+  output goes to the run's event stream (`?drafts=true`, `@tuvl/client` `onToken`). The result, validation and retries are unchanged. Name
+  `stream_field` when there are several `str` outputs; it is refused with `guardrails.output` (V039).
 - Never pass `secure: true` fields to a model (V020) — project them out with a code agent.
 - Tests mock llm agents: `mocks: { classify: { outputs: {...} } }`; or replay a pinned run.

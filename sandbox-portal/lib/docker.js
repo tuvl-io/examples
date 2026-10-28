@@ -38,8 +38,20 @@ async function psql(sql) {
   return out
 }
 
+// A database left behind by a sandbox that was reaped (a portal restart removes the containers but
+// not their databases) would make every launch on that slot fail with "already exists": drop it first.
 export async function createDb(dbName) {
+  await dropDb(dbName)
   await psql(`CREATE DATABASE "${dbName}"`)
+}
+
+// Drop the sandbox databases that no live sandbox owns (`isLive(name)`), at boot.
+export async function dropAllSandboxDbs(isLive = () => false) {
+  const out = await psql("SELECT datname FROM pg_database WHERE datname LIKE 'sb\\_%'")
+  const names = out.split('\n').map((l) => l.trim()).filter((l) => /^sb_[A-Za-z0-9]+$/.test(l))
+  const stale = names.filter((n) => !isLive(n))
+  await Promise.all(stale.map((n) => dropDb(n)))
+  return stale.length
 }
 
 export async function dropDb(dbName) {

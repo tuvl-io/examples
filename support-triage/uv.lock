@@ -1414,10 +1414,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "tuvl", specifier = ">=2.0.0b8" }]
+requires-dist = [{ name = "tuvl", specifier = ">=2.0.0b10" }]
 
 [package.metadata.requires-dev]
-dev = [{ name = "tuvl", extras = ["standard"], specifier = ">=2.0.0b8" }]
+dev = [{ name = "tuvl", extras = ["standard"], specifier = ">=2.0.0b10" }]
 
 [[package]]
 name = "textual"
@@ -1438,7 +1438,7 @@ wheels = [
 
 [[package]]
 name = "tuvl"
-version = "2.0.0b8"
+version = "2.0.0b10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asyncpg" },
@@ -1466,9 +1466,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/66/2a/3a6b22b785ba29ae3c778c90bc3829d17bb0eff7f06c5b31202abd57a9b6/tuvl-2.0.0b8.tar.gz", hash = "sha256:f438f8a91c699c0bfdb81183b1179619a34cd4491560f9f687c3609a95c9aa81", size = 1391849 }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/d8/c80c1559844833a83ee5ef34d811ebd91d2817658dedefe4ea1771b10ad1/tuvl-2.0.0b10.tar.gz", hash = "sha256:d64ff33302247165a53aa2530c55bdb921201bf16a8dbf0978638195ef47987a", size = 1420895 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5e/2f/be40c27c02263744019f2b0b35574308bf39909d7fe1e2c5e8f1171d9fa0/tuvl-2.0.0b8-py3-none-any.whl", hash = "sha256:1fe07b6fed4d0766d463575907e0195aa161829cc718a96be1a7a9545528ab9a", size = 697428 },
+    { url = "https://files.pythonhosted.org/packages/76/59/25a15417f0393d5413512062d766c712d8d6399911c153eba3221de32589/tuvl-2.0.0b10-py3-none-any.whl", hash = "sha256:f9218c82ce24b7ef4d3b9e46cbb9fb860c2c4e971c06abc100c131ca218d11d0", size = 729481 },
 ]
 
 [package.optional-dependencies]
@@ -1487,14 +1487,14 @@ standard = [
 
 [[package]]
 name = "tuvl-insight"
-version = "2.0.0b8"
+version = "2.0.0b10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "tuvl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/54/89308cebfa335b955521c9be8b34938b770048b8a7e7e100c03bf1807692/tuvl_insight-2.0.0b8.tar.gz", hash = "sha256:b9e5267e24115500c7cbb3a99fb8ce0ffe5e495786a87df66998d9f0348556f9", size = 841222 }
+sdist = { url = "https://files.pythonhosted.org/packages/49/3f/d9291625880225aa33fe4f7e1cdf11cd399bc02bb3d44b1a2ac753023960/tuvl_insight-2.0.0b10.tar.gz", hash = "sha256:d5b966243f115199f435788d59560d4c9179bec5221c80cf658de11e76bd0910", size = 851888 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/3b/60aebd90fcec8a2786f5fec25b949307ed9271265edda31894234f201a3d/tuvl_insight-2.0.0b8-py3-none-any.whl", hash = "sha256:7047441135fd304705890697372003c966509c9306173beed9d67fc6945296a9", size = 864831 },
+    { url = "https://files.pythonhosted.org/packages/a2/29/691fe3d3f0aefc5ce7fec41a143f0da7622cb61c106f38be649e6fb12545/tuvl_insight-2.0.0b10-py3-none-any.whl", hash = "sha256:72283fabca681b045b33146493600b1c2fe343b10cd1b01f01c67b264649deec", size = 877903 },
 ]
 
 [[package]]

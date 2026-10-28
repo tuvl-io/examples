@@ -31,4 +31,10 @@ async def score_order(inp: ScoreIn, ctx: Ctx) -> tuple[ScoreOut, ScoreSignal]:
 - `ctx.db.get/list/create/update/delete("Model", …)` — only models in the workflow's `spec.models`;
   writes commit atomically with the step. `ctx.http` for outbound calls with
   `ctx.idempotency_key`. `ctx.storage("invoices")` for a named blob store (`put`/`get`/`head`/`list`/`copy`/`delete`/`presign`; read-only inside `effect: read`). `ctx.artifact("artifact://name@1")` for prose. `ctx.log` for logs.
-- Built-ins (`code.run: tuvl.data_search`, `tuvl.data_ingest`) need no Python.
+- A `file` input (an upload, skill `tuvl-workflow`) arrives as a reference `{ store, key, name, size, content_type, sha256 }`; read its
+  bytes with `await ctx.read_file(inp.invoice)` (optionally `max_bytes`). Never expect the bytes in the input.
+- Built-ins need no Python:
+  - `code: { run: tuvl.data_search, with: { collection: kb, query: "{{ q }}", top_k: 5, filter: {...}, scope: global } }` with `effect: read` and
+    exactly one list output (`passages: "list[json]"`, each `{ content, metadata, score }`).
+  - `code: { run: tuvl.data_ingest, with: { collection: kb, document: "{{ text }}", metadata: {...}, scope: global } }` with at most one output
+    (the new document's `uuid`). Both need pgvector and a configured collection.

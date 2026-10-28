@@ -10,7 +10,7 @@ presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 
 > **tuvl 2.0.** Every project is a 2.0 agent graph (`version: tuvl/v2`) with typed contracts, a
 > spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. They are written for the tuvl 2.0
-> beta, **`2.0.0b8`**, and the commands in every README are the b8 ones (`tuvl <verb> <thing>`).
+> beta, **`2.0.0b10`**, and the commands in every README are the b10 ones (`tuvl <verb> <thing>`).
 
 ## ▶ tuvl try: run them live, no install
 
@@ -70,7 +70,7 @@ tuvl-examples/
 ## Running an example
 
 ```bash
-uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b8"   # Python 3.13+; [standard] adds Insight
+uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"   # Python 3.13+; [standard] adds Insight
 git clone https://github.com/tuvl-io/examples.git tuvl-examples
 cd tuvl-examples/<project-name>
 cp .env.example .env                       # Postgres settings and a model key

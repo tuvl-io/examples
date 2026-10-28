@@ -29,6 +29,8 @@ description: "Implement a tool agent: db (model operations), http (external API)
   output (typed `json`); `get`/`head`/`copy` emit `not_found`, `put`/`copy` emit `conflict` unless
   `if_exists: overwrite`, so route them. `delete` is destructive; a `readonly` store refuses writes (V031);
   keys must be relative with no `..` (V032). Object bytes are never journaled. A missing store is V030.
+  To read an uploaded file (a `file` input, skill `tuvl-workflow`), name the upload's store and pass its key:
+  `tool: { use: storage, store: inbox, op: get, key: "{{ invoice.key }}", as: base64 }` (`as`: text | json | base64).
 - mcp: `tool: { use: mcp, server: artifact://fetch-web@1, name: fetch, args: { url: "{{ url }}" } }`;
   the server is a `type: mcp` artifact. Pin it in `tuvl generate lock`.
 - Templates use TEL over the agent's inputs only. Run `tuvl lint project` — it type-checks every flow.
