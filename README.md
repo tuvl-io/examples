@@ -80,6 +80,11 @@ tuvl dev --auto-login                      # Insight at http://localhost:8885/in
 
 Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md).
 
+## Branches
+
+All work happens on `develop`: branch from it and open the pull request against it. `main` is the default branch and only takes
+a pull request from `develop`, merged with a **merge commit** (not a squash); CI refuses any other head branch.
+
 ## Adding an example
 
 1. Create a top-level directory named after the use case (kebab-case) with `tuvl init`.
@@ -88,7 +93,7 @@ Infrastructure and model needs per project: [REQUIREMENTS.md](./REQUIREMENTS.md)
 3. It must pass the CI gate:
    `tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict`.
 4. Add a README (what it demonstrates, prerequisites, run steps), a `.env.example` (never real
-   secrets), and a row to the table above. Open a pull request.
+   secrets), and a row to the table above. Open a pull request against `develop`.
 
 ## About tuvl
 
