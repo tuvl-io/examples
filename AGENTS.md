@@ -5,6 +5,8 @@ its own `AGENTS.md` and `.agents/skills/` (from `tuvl update skills`) — follow
 
 ## Ground rules
 
+0. **Work on `develop`.** Branch from it and open pull requests against it; `main` only takes a pull request from `develop`.
+
 1. **Each project's spec is the contract.** Intent lives in `<project>/specs/*.md`; the task plan
    (`*.tasks.yaml`) is written by the coding agent from the checked spec, and task status is derived by `tuvl list tasks` — never
    set it by hand.
