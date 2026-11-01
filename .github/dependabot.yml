@@ -1,0 +1,53 @@
+# Dependency updates go to develop, like every other change; main only takes develop.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /content-moderation-pipeline
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /invoice-extraction-api
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /knowledge-base-qa
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /kyc-onboarding
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /mcp-research-agent
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /sentiment-api
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: uv
+    directory: /support-triage
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /sandbox-portal
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /sandbox-portal
+    target-branch: develop
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
