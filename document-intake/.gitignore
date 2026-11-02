@@ -1,0 +1,9 @@
+# tuvl
+.env
+__pycache__/
+*.pyc
+.venv/
+.python-version
+
+# Uploaded files (storage/inbox.yaml)
+data/

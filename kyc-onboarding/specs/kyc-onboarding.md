@@ -53,8 +53,9 @@ T1. `check_watchlist` — code · effect read · tool of `loop` · in `applicant
 6. `assess` — llm default · in `investigation`, `policies` · out `score` (int), `rationale` (str) · budget 600 tok, 30s, retry 2
    - low → `finalize`
    - medium, high, parse_error, timeout, budget_exceeded, error → `review`
-7. `review` — human group compliance · in `applicant`, `investigation`?, `score`?, `rationale`? · out `decision` (enum[approve, reject]), `band` (enum[low, medium, high]), `note` (str?)
+7. `review` — human group compliance · in `applicant`, `investigation`?, `score`?, `rationale`? · out `decision` (enum[approve, reject]), `band` (enum[low, medium, high]), `note` (str?) · expires 72h
    - approve, reject → `finalize`
+   - expired → END.failed
 8. `finalize` — code · in `applicant`, `score`?, `rationale`?, `decision`?, `band`?, `note`? · out `status` (enum[approved, rejected]), `final_band` (enum[low, medium, high])
    - default → END
 T2. `discard_applicant` — tool db delete Applicant · in `applicant`
@@ -67,6 +68,7 @@ T2. `discard_applicant` — tool db delete Applicant · in `applicant`
 - The investigation is supervised: a calibrated judge stops a trajectory that skips the watchlist or
   repeats itself.
 - A duplicate national id is refused with 409; a processing failure rolls back the stored applicant.
+- A review nobody decides within 72 hours expires and rolls the application back.
 
 # Acceptance
 ```tuvl-example

@@ -1,0 +1,10 @@
+kind: Storage
+version: v1
+metadata:
+  name: inbox
+  description: Uploaded documents. A directory on the engine host; swap provider for s3, azure or gcs.
+spec:
+  provider: local
+  root: ./data/storage
+  prefix: in/
+  max_object_bytes: 262144

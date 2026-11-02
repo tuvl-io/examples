@@ -1,0 +1,18 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Document
+  schema_version: v1
+  description: An uploaded document with what the model extracted from it.
+spec:
+  tablename: documents
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: filename, type: string, required: true }
+    - { name: file_key, type: string, required: true, unique: true }
+    - { name: content_type, type: string }
+    - { name: size, type: integer }
+    - { name: doc_type, type: enum, enum_values: [invoice, contract, report, letter, other], required: true }
+    - { name: title, type: string, required: true }
+    - { name: summary, type: text, required: true }
+    - { name: created_at, type: timestamptz, input: false }

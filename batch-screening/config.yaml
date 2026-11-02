@@ -1,0 +1,12 @@
+kind: ProjectConfig
+metadata:
+  name: batch-screening
+  description: >-
+    Score a list of candidates against a role, one child run per candidate, and
+    store a ranked shortlist. The example for the `map` engine.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  agents: agents

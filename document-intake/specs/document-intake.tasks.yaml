@@ -1,0 +1,136 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: document-intake
+  spec: specs/document-intake.md
+  spec_hash: b8220b8aeff9
+spec:
+  tasks:
+  - id: T1
+    title: Document model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: 91fcb0b83ca7
+    target:
+      model: Document
+  - id: T2
+    title: Digest model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: 91fcb0b83ca7
+    target:
+      model: Digest
+  - id: T3
+    title: read (code)
+    type: agent
+    spec_ref:
+      anchor: flow-intake-document
+      hash: 36b785d16388
+    target:
+      workflow: intake_document
+      agent: read
+    depends_on:
+    - T1
+    - T2
+  - id: T4
+    title: extract (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-intake-document
+      hash: 36b785d16388
+    target:
+      workflow: intake_document
+      agent: extract
+    depends_on:
+    - T1
+    - T2
+  - id: T5
+    title: store (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-intake-document
+      hash: 36b785d16388
+    target:
+      workflow: intake_document
+      agent: store
+    depends_on:
+    - T1
+    - T2
+  - id: T6
+    title: recent (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-daily-digest
+      hash: c009220540bd
+    target:
+      workflow: daily_digest
+      agent: recent
+    depends_on:
+    - T1
+    - T2
+  - id: T7
+    title: digest (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-daily-digest
+      hash: c009220540bd
+    target:
+      workflow: daily_digest
+      agent: digest
+    depends_on:
+    - T1
+    - T2
+  - id: T8
+    title: save_digest (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-daily-digest
+      hash: c009220540bd
+    target:
+      workflow: daily_digest
+      agent: save_digest
+    depends_on:
+    - T1
+    - T2
+  - id: T9
+    title: 'Example: an uploaded invoice is read, classified and stored'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: dcb8089b73f6
+    target:
+      workflow: intake_document
+      example: an uploaded invoice is read, classified and stored
+    depends_on:
+    - T3
+    - T4
+    - T5
+  - id: T10
+    title: 'Example: an unreadable answer from the model ends the run'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: dcb8089b73f6
+    target:
+      workflow: intake_document
+      example: an unreadable answer from the model ends the run
+    depends_on:
+    - T3
+    - T4
+    - T5
+  - id: T11
+    title: 'Example: the digest summarises the latest documents'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: dcb8089b73f6
+    target:
+      workflow: daily_digest
+      example: the digest summarises the latest documents
+    depends_on:
+    - T6
+    - T7
+    - T8
+

@@ -1,0 +1,8 @@
+.venv/
+.git/
+.tuvl/.dev-session
+.pytest_cache/
+__pycache__/
+*.pyc
+.env
+client/node_modules/
