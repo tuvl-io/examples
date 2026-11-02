@@ -5,6 +5,10 @@ Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, a p
 Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 [try.tuvl.online](https://try.tuvl.online).
 
+> **Known limitation (tuvl 2.0.1):** the `loop` agent fails on its second turn with Gemini 3 models (for example the default
+> `gemini-3.1-flash-lite`): the model's tool-call "thought signature" is not sent back and Gemini answers 400. Offline tests and
+> the CI gate are unaffected. Use a provider whose tool calls don't need it (edit `llms/default.yaml`) until the engine fix lands.
+
 ## What it demonstrates
 
 - PII-safe intake: `national_id` and `dob` are `secure: true` — redacted in the journal and never
