@@ -28,6 +28,8 @@ spec:
 - `tuvl run tests [--json] [--only name] [--live] [--allow-uncertain] [--strict]`. Offline by default:
   unmocked llm/loop/http/mcp/storage/model-decide agents fail with a pointer; `db` tools and `code` agents
   run for real against an in-memory database seeded by `given:`; unmocked human agents suspend.
+  That database autocommits, so it keeps writes Postgres would roll back (an agent's `error` outcome, a retried
+  attempt, a `transaction: per_run` rollback): a test cannot prove a rollback, check it against Postgres.
 - Results are **PASS**, **STUBBED** or **FAIL**. STUBBED means the expectations held only because
   the run went through unmocked `pending` placeholders — it is not a pass, task status ignores it
   and `--strict` (the CI gate) fails it. Implement the pending agent; don't mock it away.

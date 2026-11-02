@@ -99,4 +99,4 @@ webhooks:
 
 ## Check it
 `tuvl lint project` (contracts, data flow, routes, policy, uploads V037, webhooks V038, schedule input V019), `tuvl generate code` after any contract change, and
-`tuvl run tests` with a `Test` for each end. `tuvl generate ui-spec` documents the trigger (including the multipart body) for UI builders.
+`tuvl run tests` with a `Test` for each end. `tuvl generate ui-spec` documents the trigger (including the multipart body) for UI builders (skill `tuvl-ui`).

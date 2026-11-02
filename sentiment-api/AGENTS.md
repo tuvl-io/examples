@@ -11,10 +11,11 @@ Work spec-first and let tuvl tell you the state of the project.
   `lint spec` / `validate` / `verify spec`. If it says what is wrong, fix exactly that.
 
 ## Building a UI on this backend
-Read `ui/specs/README.md` first, then the file of the workflow or model you are building a screen for. Use
+Start with skill `tuvl-ui`. Read `ui/specs/README.md` first, then the file of the workflow or model you are building a screen for. Use
 `@tuvl/client` (not hand-written `fetch`) for runs, events, approvals, CRUD and sign-in, call only endpoints that
 are documented there, and handle every status listed. Regenerate with `tuvl generate ui-spec` after the backend changes;
-write your own notes only below the notes marker.
+write your own notes only below the notes marker. A browser app on another origin works only if the backend lists its origin in
+`spec.api.cors_origins` (or you share one origin through a proxy); `ui/specs/README.md` says which applies.
 
 ## Non-negotiable
 1. **Never infer project state — ask tuvl.** Use `tuvl lint spec|verify|status --json`,
@@ -47,3 +48,5 @@ write your own notes only below the notes marker.
 | `tuvl-review` | reviewing the Python of code agents (the C-rules, then judgement) |
 | `tuvl-harden` | changing a working workflow safely |
 | `tuvl-ship` | lock, CI gate, shipping (`tuvl ship` installs only the tuvl extras the project uses) |
+| `tuvl-ui` | **always for a UI task** — building the user interface with `@tuvl/client`: specs, setup, same-origin proxy, one screen per workflow |
+| `ui-run` / `ui-approve` / `ui-auth` / `ui-data` | UI screens that start and follow runs, answer people and approvals, sign in, and show model data, uploads and webhooks |
