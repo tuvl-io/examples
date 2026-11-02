@@ -7,7 +7,7 @@
   "scripts": { "start": "node server.js" },
   "dependencies": {
     "dockerode": "^4.0.2",
-    "express": "^4.21.2",
+    "express": "^5.3.0",
     "http-proxy": "^1.18.1"
   },
   "engines": { "node": ">=20" }
