@@ -10,7 +10,7 @@ Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 - An `llm` classifier whose failures go to a person instead of publishing.
 - Regional policy as a `code` agent (`apply_policy`) whose **signal is the category**, so routing
   stays visible in the workflow (the EU treats borderline as a violation).
-- A `human` agent (`review`): the run waits, durably, until a moderator decides.
+- A `human` agent (`review`): the run waits, durably, until a moderator decides — or the request expires after 48 hours and the run ends as failed.
 - A `code` agent writing two rows through `ctx.db` in one step, and an `http` tool that notifies
   `MODERATION_WEBHOOK_URL` (default `https://httpbin.org/post`) on automatic removals.
 
@@ -26,7 +26,7 @@ tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tu
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"`), PostgreSQL 15+ with a `tuvl_moderation` database, and a model key
+(`uv tool install "tuvl[standard]>=2.0.1"`), PostgreSQL 15+ with a `tuvl_moderation` database, and a model key
 (`GEMINI_API_KEY` by default — any `provider/model` that tuvl supports works; edit `llms/*.yaml`).
 
 ```bash

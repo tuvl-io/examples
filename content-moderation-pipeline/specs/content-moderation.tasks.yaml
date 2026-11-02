@@ -3,7 +3,7 @@ version: tuvl/v2
 metadata:
   name: content-moderation
   spec: specs/content-moderation.md
-  spec_hash: 2bebece2b4ff
+  spec_hash: 31755b699278
 spec:
   tasks:
   - id: T1
@@ -11,7 +11,7 @@ spec:
     type: agent
     spec_ref:
       anchor: flow-moderate-content
-      hash: 059e07841750
+      hash: ad75ae5c12b9
     target:
       workflow: moderate_content
       agent: classify
@@ -20,40 +20,40 @@ spec:
     type: agent
     spec_ref:
       anchor: flow-moderate-content
-      hash: 059e07841750
+      hash: ad75ae5c12b9
     target:
       workflow: moderate_content
       agent: apply_policy
-    depends_on:
-    - T1
   - id: T3
     title: review (human group)
     type: agent
     spec_ref:
       anchor: flow-moderate-content
-      hash: 059e07841750
+      hash: ad75ae5c12b9
     target:
       workflow: moderate_content
       agent: review
     depends_on:
+    - T1
     - T2
   - id: T4
     title: record (code)
     type: agent
     spec_ref:
       anchor: flow-moderate-content
-      hash: 059e07841750
+      hash: ad75ae5c12b9
     target:
       workflow: moderate_content
       agent: record
     depends_on:
+    - T2
     - T3
   - id: T5
     title: notify (tool http POST moderation_webhook)
     type: agent
     spec_ref:
       anchor: flow-moderate-content
-      hash: 059e07841750
+      hash: ad75ae5c12b9
     target:
       workflow: moderate_content
       agent: notify
@@ -62,6 +62,9 @@ spec:
   - id: T6
     title: 'notify: credentials and access'
     type: manual
+    spec_ref:
+      anchor: flow-moderate-content
+      hash: ad75ae5c12b9
     target:
       workflow: moderate_content
       agent: notify
@@ -75,7 +78,7 @@ spec:
     target:
       workflow: moderate_content
       example: safe content is approved automatically
-    depends_on: &id001
+    depends_on:
     - T1
     - T2
     - T3
@@ -90,7 +93,12 @@ spec:
     target:
       workflow: moderate_content
       example: a violation is removed and the channel is notified
-    depends_on: *id001
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
   - id: T9
     title: 'Example: borderline content in the EU is treated as a violation'
     type: test
@@ -100,7 +108,12 @@ spec:
     target:
       workflow: moderate_content
       example: borderline content in the EU is treated as a violation
-    depends_on: *id001
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
   - id: T10
     title: 'Example: borderline content elsewhere waits for a moderator'
     type: test
@@ -110,7 +123,12 @@ spec:
     target:
       workflow: moderate_content
       example: borderline content elsewhere waits for a moderator
-    depends_on: *id001
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
   - id: T11
     title: 'Example: a moderator approves borderline content'
     type: test
@@ -120,4 +138,10 @@ spec:
     target:
       workflow: moderate_content
       example: a moderator approves borderline content
-    depends_on: *id001
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+    - T5
+

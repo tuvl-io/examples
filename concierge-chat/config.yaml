@@ -1,0 +1,12 @@
+kind: ProjectConfig
+metadata:
+  name: concierge-chat
+  description: >-
+    A travel concierge that remembers each traveller across sessions (llm.memory),
+    streams its replies token by token, and compacts old memories on a schedule.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  agents: agents

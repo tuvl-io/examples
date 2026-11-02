@@ -1,0 +1,125 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: candidate-screening
+  spec: specs/candidate-screening.md
+  spec_hash: c0f3b65f2202
+spec:
+  tasks:
+  - id: T1
+    title: Screening model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: 19973a90ec95
+    target:
+      model: Screening
+  - id: T2
+    title: score_each (map score_candidate)
+    type: agent
+    spec_ref:
+      anchor: flow-screen-candidates
+      hash: 06ede5da64ba
+    target:
+      workflow: screen_candidates
+      agent: score_each
+    depends_on:
+    - T1
+  - id: T3
+    title: rank (code)
+    type: agent
+    spec_ref:
+      anchor: flow-screen-candidates
+      hash: 06ede5da64ba
+    target:
+      workflow: screen_candidates
+      agent: rank
+    depends_on:
+    - T2
+  - id: T4
+    title: store (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-screen-candidates
+      hash: 06ede5da64ba
+    target:
+      workflow: screen_candidates
+      agent: store
+    depends_on:
+    - T1
+  - id: T5
+    title: score (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-score-candidate
+      hash: dea3ed26bcb5
+    target:
+      workflow: score_candidate
+      agent: score
+    depends_on:
+    - T1
+  - id: T6
+    title: 'Example: the best three are shortlisted in score order'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 26dffab2218c
+    target:
+      workflow: screen_candidates
+      example: the best three are shortlisted in score order
+    depends_on:
+    - T2
+    - T3
+    - T4
+  - id: T7
+    title: 'Example: every candidate is scored by its own child run'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 10472e68b291
+    target:
+      workflow: screen_candidates
+      example: every candidate is scored by its own child run
+    depends_on:
+    - T2
+    - T3
+    - T4
+    obsolete: true
+  - id: T8
+    title: 'Example: a candidate that fails to score is counted, not fatal'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 26dffab2218c
+    target:
+      workflow: screen_candidates
+      example: a candidate that fails to score is counted, not fatal
+    depends_on:
+    - T2
+    - T3
+    - T4
+  - id: T9
+    title: 'Example: a candidate is scored by the model'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 26dffab2218c
+    target:
+      workflow: score_candidate
+      example: a candidate is scored by the model
+    depends_on:
+    - T5
+  - id: T10
+    title: 'Example: candidates below 50 never make the shortlist'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 26dffab2218c
+    target:
+      workflow: screen_candidates
+      example: candidates below 50 never make the shortlist
+    depends_on:
+    - T2
+    - T3
+    - T4
+

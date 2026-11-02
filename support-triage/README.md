@@ -5,6 +5,10 @@ Post a support ticket and get back a triaged, persisted ticket. Rules decide wha
 Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 [try.tuvl.online](https://try.tuvl.online).
 
+> **Known limitation (tuvl 2.0.1):** the `loop` agent fails on its second turn with Gemini 3 models (for example the default
+> `gemini-3.1-flash-lite`): the model's tool-call "thought signature" is not sent back and Gemini answers 400. Offline tests and
+> the CI gate are unaffected. Use a provider whose tool calls don't need it (edit `llms/default.yaml`) until the engine fix lands.
+
 ## What it demonstrates
 
 - **`decide`** (`route`): rules first (technical → store, high-urgency billing → investigate), then
@@ -27,7 +31,7 @@ tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tu
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"`), PostgreSQL 15+ with a `tuvl_support` database, and a model key
+(`uv tool install "tuvl[standard]>=2.0.1"`), PostgreSQL 15+ with a `tuvl_support` database, and a model key
 (`GEMINI_API_KEY` by default — any `provider/model` that tuvl supports works; edit `llms/*.yaml`).
 
 ```bash

@@ -1,0 +1,10 @@
+INVOICE 1042
+From: Northwind Traders, 12 Quay Street, Dublin
+To: Acme Facilities Ltd
+Date: 2 November 2026
+Due: 30 November 2026
+
+2 x Standing desk frame       @ 350.00 EUR   700.00 EUR
+1 x Cable management kit       @  80.00 EUR    80.00 EUR
+Delivery                                        420.00 EUR
+TOTAL DUE                                     1,200.00 EUR

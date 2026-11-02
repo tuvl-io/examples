@@ -5,6 +5,10 @@ Compliance-grade applicant onboarding: PII-safe intake, sanctions screening, a p
 Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
 [try.tuvl.online](https://try.tuvl.online).
 
+> **Known limitation (tuvl 2.0.1):** the `loop` agent fails on its second turn with Gemini 3 models (for example the default
+> `gemini-3.1-flash-lite`): the model's tool-call "thought signature" is not sent back and Gemini answers 400. Offline tests and
+> the CI gate are unaffected. Use a provider whose tool calls don't need it (edit `llms/default.yaml`) until the engine fix lands.
+
 ## What it demonstrates
 
 - PII-safe intake: `national_id` and `dob` are `secure: true` — redacted in the journal and never
@@ -13,7 +17,7 @@ Built with [tuvl](https://tuvl.io) 2.0 — try it without installing at
   `tuvl.data_search`, and an investigation `loop` whose supervisor uses a **calibrated judge**
   (`artifacts/supervisor-judge.yaml`, labelled subjects in `fixtures/judge/`).
 - An `llm` risk assessment: low risk goes straight to `finalize`, everything else to a **human**
-  compliance decision gated by an IAM group (no self-approval).
+  compliance decision gated by an IAM group (no self-approval); a review nobody decides in 72 hours expires and rolls the application back.
 - A pinned model version (`RiskAssessment@v1`).
 
 ## Spec, tests and the CI gate
@@ -28,7 +32,7 @@ tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tu
 ## Run it
 
 Prerequisites: [tuvl](https://tuvl.dev/getting-started/installation/) 2.0
-(`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"`), PostgreSQL 15+ with a `tuvl_kyc` database, and a model key
+(`uv tool install "tuvl[standard]>=2.0.1"`), PostgreSQL 15+ with a `tuvl_kyc` database, and a model key
 (`GEMINI_API_KEY` by default — any `provider/model` that tuvl supports works; edit `llms/*.yaml`).
 
 This project needs **pgvector**:

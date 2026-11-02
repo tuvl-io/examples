@@ -1,0 +1,21 @@
+# Hand-written: runs the `map` step for real, with only the child's model call mocked.
+kind: Test
+version: tuvl/v2
+metadata:
+  name: each-candidate-runs-as-a-child
+spec:
+  workflow: screen_candidates
+  input:
+    role: Backend engineer
+    requirements: Python
+    candidates:
+      - { name: Ada, summary: "Python for 6 years." }
+      - { name: Bo, summary: "Python for 1 year." }
+      - { name: Cy, summary: "Python for 3 years." }
+  mocks:
+    score:
+      outputs: { score: 80, verdict: strong, reason: "Meets the requirements." }
+  expect:
+    end: default
+    path: [score_each, rank, store]
+    output: { status: 201, body: { candidates: 3, scored: 3, failed: 0 } }
