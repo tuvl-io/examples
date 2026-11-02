@@ -176,10 +176,12 @@ spec:
         instruction: "Review and decide onboarding for applicant {{ applicant.id }}."
         show: [investigation, score, rationale]     # PII stays off the review payload
         required_group: compliance
+        expires: 72h
         route_on: decision
       routes:
         approve: finalize
         reject: finalize
+        expired: END.failed
         error: END.failed
 
     - id: finalize

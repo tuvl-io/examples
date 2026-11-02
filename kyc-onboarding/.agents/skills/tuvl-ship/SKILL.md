@@ -43,6 +43,8 @@ and every model provider need no extra.
   deployment's environment like any other storage.
 - Webhooks (`spec.webhooks`) are off until the server runs with `TUVL_WEBHOOKS_ENABLED=true`: without it nothing is queued or sent, whatever the
   workflows declare. Set each `${ENV}` url and secret in the deployment too; a delivery whose variable is unset is retried until you do.
+- A browser app on another origin is blocked unless `spec.api.cors_origins` lists its origin. `.tuvl/system.yaml` goes into the image, so origins written there ship with it;
+  `TUVL_CORS_ORIGINS` in the chart's `env:` overrides them per environment. Nothing is allowed by default.
 - A production server mounts only what it needs: no Insight or dev routes, and the OpenAPI pages and admin routes are off unless exposed.
 - A workflow naming a disabled or undefined model is refused with the reason (HTTP 409), not run.
 - `tuvl deploy` (managed hosting) is not available yet: it only prints a message and exits 1. Deploy the

@@ -1,0 +1,10 @@
+kind: CollectionRegistry
+metadata:
+  name: default
+  description: The concierge's long-term memory, one owner per traveller.
+enabled: true
+spec:
+  collections:
+    - name: concierge_memory
+      description: What the concierge remembers about each traveller.
+      embedding: default

@@ -1,0 +1,85 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: travel-concierge
+  spec: specs/travel-concierge.md
+  spec_hash: 2e40ea4de6ed
+spec:
+  tasks:
+  - id: T1
+    title: Turn model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: c07f0b100695
+    target:
+      model: Turn
+  - id: T2
+    title: reply (llm default)
+    type: agent
+    spec_ref:
+      anchor: flow-chat
+      hash: 1710a677bb28
+    target:
+      workflow: chat
+      agent: reply
+    depends_on:
+    - T1
+  - id: T3
+    title: log_turn (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-chat
+      hash: 1710a677bb28
+    target:
+      workflow: chat
+      agent: log_turn
+    depends_on:
+    - T1
+  - id: T4
+    title: compact (code)
+    type: agent
+    spec_ref:
+      anchor: flow-compact-memory
+      hash: fcd2a1965b2a
+    target:
+      workflow: compact_memory
+      agent: compact
+    depends_on:
+    - T1
+  - id: T5
+    title: 'Example: a message is answered and logged'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 25372eea32e6
+    target:
+      workflow: chat
+      example: a message is answered and logged
+    depends_on:
+    - T2
+    - T3
+  - id: T6
+    title: 'Example: an unreadable model answer ends the run and logs nothing'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 25372eea32e6
+    target:
+      workflow: chat
+      example: an unreadable model answer ends the run and logs nothing
+    depends_on:
+    - T2
+    - T3
+  - id: T7
+    title: 'Example: the nightly compaction reports the travellers it folded'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 25372eea32e6
+    target:
+      workflow: compact_memory
+      example: the nightly compaction reports the travellers it folded
+    depends_on:
+    - T4
+

@@ -1,0 +1,16 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Screening
+  schema_version: v1
+  description: One screening run for a role, with the ranked shortlist it produced.
+spec:
+  tablename: screenings
+  fields:
+    - { name: id, type: uuid, primary_key: true, default: uuid4, input: false }
+    - { name: role, type: string, required: true, index: true }
+    - { name: candidate_count, type: integer, required: true }
+    - { name: scored_count, type: integer, required: true }
+    - { name: failed_count, type: integer, required: true }
+    - { name: shortlist, type: jsonb, required: true }
+    - { name: created_at, type: timestamptz, input: false }

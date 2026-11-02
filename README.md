@@ -9,8 +9,8 @@ presets, and YAML workflows that you can run with `tuvl dev` and explore in the
 **Tuvl Insight** browser editor.
 
 > **tuvl 2.0.** Every project is a 2.0 agent graph (`version: tuvl/v2`) with typed contracts, a
-> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. They are written for the tuvl 2.0
-> beta, **`2.0.0b10`**, and the commands in every README are the b10 ones (`tuvl <verb> <thing>`).
+> spec in `specs/`, offline tests and a `tuvl.lock`, and passes the CI gate. They target the stable
+> release, **`tuvl>=2.0.1`**, and the commands in every README are the 2.0 ones (`tuvl <verb> <thing>`).
 
 ## ▶ tuvl try: run them live, no install
 
@@ -52,25 +52,27 @@ tuvl-examples/
 
 ## Projects
 
-> Seven complete projects — clone one and run it. Contributors and coding agents
-> start at
-> [AGENTS.md](./AGENTS.md); infrastructure and LLM needs per project:
+> Ten complete projects in five tiers of complexity — start at the top and work down. Clone one and run it.
+> Contributors and coding agents start at [AGENTS.md](./AGENTS.md); infrastructure and LLM needs per project:
 > [REQUIREMENTS.md](./REQUIREMENTS.md).
 
-| Project | Difficulty | What it shows | Engines |
-|---------|------------|---------------|---------|
-| [`sentiment-api`](./sentiment-api) | Easy | Classify a review and persist it — the reference for `tuvl ship` | llm · tool |
-| [`invoice-extraction-api`](./invoice-extraction-api) | Easy | Raw invoice text → a verified, persisted record; per-signal outputs; a secure field | llm · code · tool |
-| [`knowledge-base-qa`](./knowledge-base-qa) | Easy–Medium | Ingest markdown, ask questions, get cited answers on the built-in vector rails | code (`tuvl.data_*`) · llm |
-| [`content-moderation-pipeline`](./content-moderation-pipeline) | Medium | Classify → regional policy in code → moderator review → audit + notification | llm · code · human · tool |
-| [`support-triage`](./support-triage) | Medium | Rules-first `decide` with a decision model; an investigating `loop` whose credit tool needs approval | decide · loop · llm · tool · code |
-| [`mcp-research-agent`](./mcp-research-agent) | Medium–Complex | A bounded loop over an allow-listed MCP server to a cited brief | loop · llm · tool · code |
-| [`kyc-onboarding`](./kyc-onboarding) | Complex | PII-safe intake, sanctions screening, a judge-supervised investigation, a compliance decision | loop · human · llm · tool · code |
+| Tier | Project | What it shows | Engines |
+|------|---------|---------------|---------|
+| 1 · Starter | [`sentiment-api`](./sentiment-api) | Classify a review and persist it — the reference for `tuvl ship` | llm · tool |
+| 1 · Starter | [`invoice-extraction-api`](./invoice-extraction-api) | Raw invoice text → a verified, persisted record; per-signal outputs; a secure field | llm · code · tool |
+| 2 · Core | [`concierge-chat`](./concierge-chat) | A concierge that remembers each traveller across sessions, streams its replies, and compacts memory every night | llm (memory, streaming) · tool · code (schedule) |
+| 2 · Core | [`knowledge-base-qa`](./knowledge-base-qa) | Ingest markdown, ask questions, get cited answers on the built-in vector rails | code (`tuvl.data_*`) · llm |
+| 3 · Intermediate | [`batch-screening`](./batch-screening) | Score a list of candidates, one child run each, a few at a time; a failed item never sinks the batch | map · llm · code · tool |
+| 3 · Intermediate | [`document-intake`](./document-intake) | Upload a file to a blob store, extract its type and summary, and write a scheduled daily digest | code · llm · tool (uploads, schedule) |
+| 4 · Advanced | [`content-moderation-pipeline`](./content-moderation-pipeline) | Classify → regional policy in code → moderator review → audit + notification | llm · code · human · tool |
+| 4 · Advanced | [`support-triage`](./support-triage) | Rules-first `decide` with a decision model; an investigating `loop` whose credit tool needs approval | decide · loop · llm · tool · code |
+| 5 · Complex | [`mcp-research-agent`](./mcp-research-agent) | A bounded loop over an allow-listed MCP server to a cited brief | loop · llm · tool · code |
+| 5 · Complex | [`kyc-onboarding`](./kyc-onboarding) | PII-safe intake, sanctions screening, a judge-supervised investigation, a compliance decision | loop · human · llm · tool · code |
 
 ## Running an example
 
 ```bash
-uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"   # Python 3.13+; [standard] adds Insight
+uv tool install "tuvl[standard]>=2.0.1"   # Python 3.13+; [standard] adds Insight
 git clone https://github.com/tuvl-io/examples.git tuvl-examples
 cd tuvl-examples/<project-name>
 cp .env.example .env                       # Postgres settings and a model key
@@ -91,7 +93,7 @@ a pull request from `develop`, merged with a **merge commit** (not a squash); CI
 2. Write the intent in `specs/<name>.md` with `tuvl-example` acceptance cases, check it with
    `tuvl lint spec`, have the coding agent write the task list, and implement the tasks (`tuvl list tasks` shows what is left).
 3. It must pass the CI gate:
-   `tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict`.
+   `tuvl lint spec && tuvl lint project --strict && tuvl generate code --check && tuvl verify lock && tuvl run tests --strict && tuvl verify spec --strict && tuvl list tasks --strict && tuvl review code --strict`.
 4. Add a README (what it demonstrates, prerequisites, run steps), a `.env.example` (never real
    secrets), and a row to the table above. Open a pull request against `develop`.
 

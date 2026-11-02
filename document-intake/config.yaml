@@ -1,0 +1,12 @@
+kind: ProjectConfig
+metadata:
+  name: document-intake
+  description: >-
+    Upload a text document, store the file in a named blob store, extract its type,
+    title and summary, and let a scheduled workflow write a daily digest.
+dirs:
+  models: models
+  workflows: workflows
+  datasources: datasources
+  llms: llms
+  agents: agents

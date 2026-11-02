@@ -32,8 +32,9 @@ Ends: default 201 · failed 502
 2. `apply_policy` — code · effect read · in `region`, `verdict`, `rationale` · out `category` (enum[safe, borderline, violation]), `reason` (str)
    - safe, violation → `record`
    - borderline → `review`
-3. `review` — human group moderators · in `author_id`, `region`, `content` · out `decision` (enum[approve, remove]), `note` (str?)
+3. `review` — human group moderators · in `author_id`, `region`, `content` · out `decision` (enum[approve, remove]), `note` (str?) · expires 48h
    - approve, remove → `record`
+   - expired → END.failed
 4. `record` — code · in `author_id`, `region`, `content`, `category`?, `reason`?, `decision`?, `note`? · out `item_id` (uuid), `status` (enum[approved, removed]), `recorded_category` (enum[safe, borderline, violation]), `action` (str)
    - notify → `notify`
    - recorded → END

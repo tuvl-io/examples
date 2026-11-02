@@ -1,0 +1,37 @@
+# tuvl 2.0 — nightly upkeep: fold old memories into summaries so recall stays sharp and small.
+kind: Workflow
+version: tuvl/v2
+metadata:
+  name: compact_memory
+  description: Fold older concierge memories into one summary per traveller.
+  tags: [concierge]
+spec:
+  trigger:
+    schedule: "0 3 * * *"
+    input: {}
+
+  agents:
+    - id: compact
+      description: Fold all but the latest memories of each busy traveller into a summary
+      engine: code
+      inputs: {}
+      outputs:
+        owners: int
+      code:
+        run: tuvl.memory_compact
+        with: { collection: concierge_memory, model: default, keep: 5, min_rows: 20 }
+      budget: { timeout: 120s, max_tokens: 4000 }
+      routes:
+        default: END
+        error: END.failed
+
+  policy:
+    max_tokens_per_run: 4000
+
+  outputs:
+    default:
+      status: 200
+      body: { compacted: "{{ owners }}" }
+    failed:
+      status: 502
+      body: { error: the memory could not be compacted }

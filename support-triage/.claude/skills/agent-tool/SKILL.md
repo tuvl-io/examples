@@ -32,6 +32,8 @@ description: "Implement a tool agent: db (model operations), http (external API)
   To read an uploaded file (a `file` input, skill `tuvl-workflow`), name the upload's store and pass its key:
   `tool: { use: storage, store: inbox, op: get, key: "{{ invoice.key }}", as: base64 }` (`as`: text | json | base64).
 - mcp: `tool: { use: mcp, server: artifact://fetch-web@1, name: fetch, args: { url: "{{ url }}" } }`;
-  the server is a `type: mcp` artifact. Pin it in `tuvl generate lock`.
+  the server is a `type: mcp` artifact. Pin it in `tuvl generate lock`. A worker keeps one session per tenant and server, so a
+  stdio server is started once, not per call: do not keep per-call state in the server, and expect an artifact or environment change
+  to open a new session (idle ones close after `TUVL_MCP_IDLE_SECONDS`, default 300).
 - Templates use TEL over the agent's inputs only. Run `tuvl lint project` — it type-checks every flow.
 - Tests: `db` tools run offline against the test database; `http`/`mcp`/`storage` must be mocked.

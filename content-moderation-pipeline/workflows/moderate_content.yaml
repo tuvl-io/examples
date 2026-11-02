@@ -77,10 +77,12 @@ spec:
           decision: { label: Decision, widget: select }
           note: { label: Note, widget: textarea }
         required_group: moderators
+        expires: 48h
         route_on: decision
       routes:
         approve: record
         remove: record
+        expired: END.failed
         error: END.failed
 
     - id: record

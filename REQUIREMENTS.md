@@ -13,11 +13,14 @@ What each example needs before `tuvl dev` boots. All examples target **tuvl 2.0*
 | `mcp-research-agent` | Medium–Complex | `tuvl_research` | — | — | 1 chat model | — | `uvx` + `mcp-server-fetch`, outbound network |
 | `kyc-onboarding` | Complex | `tuvl_kyc` | **required** | — | 1 chat model + 1 judge model | **required** | — (screening API is stubbed) |
 | `sentiment-api` | Easy | `tuvl_reviews` | — | — | 1 chat model | — | Docker + Helm (for `tuvl ship`) |
+| `concierge-chat` | Core | `tuvl_concierge` | **required** | — | 1 chat model (+ 1 for nightly compaction) | **required** (memory) | — |
+| `batch-screening` | Intermediate | `tuvl_screening` | — | — | 1 chat call per candidate (up to 25 per batch) | — | — |
+| `document-intake` | Intermediate | `tuvl_documents` | — | — | 1 chat call per upload + 1 per digest | — | a writable `./data/storage` directory for uploads |
 
 ## Database
 
 - **PostgreSQL 15+**, one database per project (names above; override in the project's `datasources/postgres.yaml` / `.env`). The engine creates all tables at boot (`SQLModel.metadata.create_all`) — no migrations to run.
-- **pgvector** extension must be installed and creatable (`CREATE EXTENSION vector`) for the two RAG projects (`knowledge-base-qa`, `kyc-onboarding`). The other projects run on plain Postgres.
+- **pgvector** extension must be installed and creatable (`CREATE EXTENSION vector`) for the projects that use vectors (`knowledge-base-qa`, `kyc-onboarding`, and `concierge-chat` for its memory). The other projects run on plain Postgres.
 - **Redis is not required** for any example. It only adds cross-worker agent control (pause/steer/abort fan-out across multiple workers); single-worker `tuvl dev` is fully functional without it.
 
 Quick start for the databases:
@@ -30,9 +33,14 @@ CREATE DATABASE tuvl_research;
 CREATE DATABASE tuvl_kyc;
 CREATE DATABASE tuvl_support;
 CREATE DATABASE tuvl_reviews;
+CREATE DATABASE tuvl_concierge;
+CREATE DATABASE tuvl_screening;
+CREATE DATABASE tuvl_documents;
 \c tuvl_kb
 CREATE EXTENSION IF NOT EXISTS vector;
 \c tuvl_kyc
+CREATE EXTENSION IF NOT EXISTS vector;
+\c tuvl_concierge
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
@@ -59,7 +67,7 @@ Estimated cost to run every acceptance test once with the Gemini defaults: well 
 
 ## Engine
 
-- `tuvl[standard]` 2.0 beta (`uv tool install --prerelease=allow "tuvl[standard]>=2.0.0b10"`), Python 3.13+.
+- `tuvl[standard]` 2.0 (`uv tool install "tuvl[standard]>=2.0.1"`), Python 3.13+.
 - Each project passes the CI gate (see the root README); `tuvl lint project --strict` reports any missing
   configuration before first boot.
 - Production extras (a signing key via `tuvl generate key`, IAM roles) matter only where a
