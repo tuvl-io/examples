@@ -6,7 +6,7 @@
   "description": "Lead-captured landing + on-demand ephemeral sandboxes for the tuvl examples",
   "scripts": { "start": "node server.js" },
   "dependencies": {
-    "dockerode": "^4.0.2",
+    "dockerode": "^5.0.1",
     "express": "^4.21.2",
     "http-proxy": "^1.18.1"
   },
