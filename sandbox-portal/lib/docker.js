@@ -15,6 +15,7 @@ const GOOGLE_CLOUD_PROJECT = process.env.GOOGLE_CLOUD_PROJECT || ''
 
 export const containerName = (id) => `sb-${id}`
 export const upstreamHost = (id) => `${containerName(id)}:8000`
+export const uiUpstreamHost = (id) => `${containerName(id)}:8001`
 
 // Run a psql command inside the shared Postgres container; resolves with stdout,
 // rejects on non-empty stderr containing ERROR.

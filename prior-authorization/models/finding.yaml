@@ -1,0 +1,43 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Finding
+  schema_version: v1
+  description: 'Finding, from the spec''s # Data. One rule checked against the evidence.'
+spec:
+  tablename: findings
+  api:
+    crud: [list, read]
+  fields:
+  - name: id
+    type: uuid
+    primary_key: true
+    default: uuid4
+    input: false
+  - name: evaluation_id
+    type: uuid
+    required: true
+    index: true
+  - name: rule_id
+    type: string
+    required: true
+  - name: outcome
+    type: enum
+    enum_values:
+    - met
+    - not_met
+    - missing_evidence
+    required: true
+  - name: severity
+    type: enum
+    enum_values:
+    - block
+    - warn
+    required: true
+  - name: evidence_id
+    type: uuid
+  - name: detail
+    type: string
+  - name: created_at
+    type: timestamptz
+    input: false

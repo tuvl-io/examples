@@ -68,6 +68,7 @@ tuvl-examples/
 | 4 · Advanced | [`support-triage`](./support-triage) | Rules-first `decide` with a decision model; an investigating `loop` whose credit tool needs approval | decide · loop · llm · tool · code |
 | 5 · Complex | [`mcp-research-agent`](./mcp-research-agent) | A bounded loop over an allow-listed MCP server to a cited brief | loop · llm · tool · code |
 | 5 · Complex | [`kyc-onboarding`](./kyc-onboarding) | PII-safe intake, sanctions screening, a judge-supervised investigation, a compliance decision | loop · human · llm · tool · code |
+| 5 · Complex | [`prior-authorization`](./prior-authorization) | Evidence checked against a coverage policy: Pass, Warn or Block with a report, a clinician for every block, and screens for each role | decide · human · tool · code |
 
 ## Running an example
 

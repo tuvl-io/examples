@@ -1,0 +1,410 @@
+kind: TaskPlan
+version: tuvl/v2
+metadata:
+  name: prior-authorization-check
+  spec: specs/prior-authorization-check.md
+  spec_hash: b449c2b5917d
+spec:
+  tasks:
+  - id: T1
+    title: PolicyVersion model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: a5d7c2e1b4e3
+    target:
+      model: PolicyVersion
+  - id: T2
+    title: Evidence model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: a5d7c2e1b4e3
+    target:
+      model: Evidence
+  - id: T3
+    title: Evaluation model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: a5d7c2e1b4e3
+    target:
+      model: Evaluation
+  - id: T4
+    title: Finding model
+    type: model
+    spec_ref:
+      anchor: data
+      hash: a5d7c2e1b4e3
+    target:
+      model: Finding
+  - id: T5
+    title: load_policy (code)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: load_policy
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T6
+    title: fetch_evidence (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: fetch_evidence
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T7
+    title: evaluate_rules (code)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: evaluate_rules
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T8
+    title: classify (decide rules)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: classify
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T9
+    title: record_pass (code)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: record_pass
+    depends_on:
+    - T8
+  - id: T10
+    title: record_warn (code)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: record_warn
+    depends_on:
+    - T8
+  - id: T11
+    title: record_block (code)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: record_block
+    depends_on:
+    - T8
+  - id: T12
+    title: clinical_review (human group)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: clinical_review
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T13
+    title: settle_review (code)
+    type: agent
+    spec_ref:
+      anchor: flow-evaluate-request
+      hash: 2e07f15179a2
+    target:
+      workflow: evaluate_request
+      agent: settle_review
+    depends_on:
+    - T12
+  - id: T14
+    title: check_criteria (code)
+    type: agent
+    spec_ref:
+      anchor: flow-publish-policy
+      hash: 6dfa6caad27f
+    target:
+      workflow: publish_policy
+      agent: check_criteria
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T15
+    title: activate_policy (code)
+    type: agent
+    spec_ref:
+      anchor: flow-publish-policy
+      hash: 6dfa6caad27f
+    target:
+      workflow: publish_policy
+      agent: activate_policy
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T16
+    title: find_evaluation (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-get-evaluation
+      hash: 12426a457363
+    target:
+      workflow: get_evaluation
+      agent: find_evaluation
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T17
+    title: list_findings (tool db)
+    type: agent
+    spec_ref:
+      anchor: flow-get-evaluation
+      hash: 12426a457363
+    target:
+      workflow: get_evaluation
+      agent: list_findings
+    depends_on:
+    - T1
+    - T2
+    - T3
+    - T4
+  - id: T18
+    title: 'Example: a request that meets every rule passes'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: a request that meets every rule passes
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T19
+    title: 'Example: a missing clinical note is a warning'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: a missing clinical note is a warning
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T20
+    title: 'Example: missing therapy evidence is a warning, not a denial'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: missing therapy evidence is a warning, not a denial
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T21
+    title: 'Example: too little therapy goes to a clinical reviewer'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: too little therapy goes to a clinical reviewer
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T22
+    title: 'Example: an uncovered diagnosis goes to a clinical reviewer'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: an uncovered diagnosis goes to a clinical reviewer
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T23
+    title: 'Example: a reviewer who upholds the block ends it as a block'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: a reviewer who upholds the block ends it as a block
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T24
+    title: 'Example: a reviewer who overrides the block ends it as overridden'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: a reviewer who overrides the block ends it as overridden
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T25
+    title: 'Example: a procedure with no active policy is not found'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: evaluate_request
+      example: a procedure with no active policy is not found
+    depends_on:
+    - T5
+    - T6
+    - T7
+    - T8
+    - T9
+    - T10
+    - T11
+    - T12
+    - T13
+  - id: T26
+    title: 'Example: a valid policy is published'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: publish_policy
+      example: a valid policy is published
+    depends_on:
+    - T14
+    - T15
+  - id: T27
+    title: 'Example: a policy with an unknown rule kind is refused'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: publish_policy
+      example: a policy with an unknown rule kind is refused
+    depends_on:
+    - T14
+    - T15
+  - id: T28
+    title: 'Example: a stored evaluation is returned with its findings'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: get_evaluation
+      example: a stored evaluation is returned with its findings
+    depends_on:
+    - T16
+    - T17
+  - id: T29
+    title: 'Example: an unknown evaluation is not found'
+    type: test
+    spec_ref:
+      anchor: acceptance
+      hash: 5d7ca6dd1bb2
+    target:
+      workflow: get_evaluation
+      example: an unknown evaluation is not found
+    depends_on:
+    - T16
+    - T17

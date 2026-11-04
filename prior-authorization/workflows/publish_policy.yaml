@@ -1,0 +1,67 @@
+# Publish a coverage policy as data. The rules are checked first; a policy that fails the check is refused
+# and the last good version stays active.
+kind: Workflow
+version: tuvl/v2
+metadata:
+  name: publish_policy
+  description: publish_policy, from specs/prior-authorization-check.md.
+  required_scope: policy_admins
+spec:
+  models:
+  - PolicyVersion
+  trigger:
+    http:
+      path: /policies
+      method: POST
+    input:
+      procedure_code: str
+      version: str
+      source_ref: str
+      criteria: json
+  agents:
+  - id: check_criteria
+    description: Check the rule list before it can become a policy
+    engine: code
+    effect: read
+    code:
+      run: check_criteria
+    inputs:
+      criteria: json
+    outputs:
+      rule_count: int
+    routes:
+      invalid: END.invalid
+      error: END.failed
+      default: activate_policy
+  - id: activate_policy
+    description: Retire the active version and activate the new one
+    engine: code
+    effect: write
+    code:
+      run: activate_policy
+    inputs:
+      procedure_code: str
+      version: str
+      source_ref: str
+      criteria: json
+    outputs:
+      policy: PolicyVersion
+    routes:
+      error: END.failed
+      default: END
+  outputs:
+    default:
+      status: 201
+      body:
+        id: '{{ policy.id }}'
+        procedure_code: '{{ policy.procedure_code }}'
+        version: '{{ policy.version }}'
+        rules: '{{ rule_count }}'
+    invalid:
+      status: 422
+      body:
+        error: the rule list is not valid
+    failed:
+      status: 500
+      body:
+        error: publishing failed
