@@ -1,0 +1,49 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Evaluation
+  schema_version: v1
+  description: 'Evaluation, from the spec''s # Data. One verdict with its report.'
+spec:
+  tablename: evaluations
+  api:
+    crud: [list, read]
+  fields:
+  - name: id
+    type: uuid
+    primary_key: true
+    default: uuid4
+    input: false
+  - name: member_ref
+    type: string
+    required: true
+    secure: true
+  - name: procedure_code
+    type: string
+    required: true
+  - name: policy_version_id
+    type: uuid
+    required: true
+    index: true
+  - name: verdict
+    type: enum
+    enum_values:
+    - pass
+    - warn
+    - block
+    required: true
+  - name: status
+    type: enum
+    enum_values:
+    - final
+    - in_review
+    - upheld
+    - overridden
+    required: true
+    default: final
+  - name: report
+    type: jsonb
+    required: true
+  - name: created_at
+    type: timestamptz
+    input: false

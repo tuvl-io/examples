@@ -1,0 +1,223 @@
+# Prior-authorization check: load the active policy, read the evidence, check every rule, and answer
+# Pass, Warn or Block. A Block always goes to a clinical reviewer; there is no automatic denial.
+# The verdict is a pure function of (policy version, evidence, request): no model, no clock.
+kind: Workflow
+version: tuvl/v2
+metadata:
+  name: evaluate_request
+  description: evaluate_request, from specs/prior-authorization-check.md.
+  required_scope: reviewers
+spec:
+  models:
+  - PolicyVersion
+  - Evidence
+  - Evaluation
+  - Finding
+  trigger:
+    http:
+      path: /prior-auth/evaluate
+      method: POST
+    input:
+      member_ref: str
+      procedure_code: str
+      diagnosis_code: str
+  agents:
+  - id: load_policy
+    description: The active policy version for the procedure
+    engine: code
+    effect: read
+    code:
+      run: load_policy
+    inputs:
+      procedure_code: str
+    outputs:
+      policy: PolicyVersion?
+    routes:
+      no_policy: END.no_policy
+      error: END.failed
+      default: fetch_evidence
+  - id: fetch_evidence
+    description: The evidence on file for the member
+    engine: tool
+    effect: read
+    tool:
+      use: db
+      model: Evidence
+      op: list
+      where:
+        member_ref: '{{ member_ref }}'
+    inputs:
+      member_ref: str
+    outputs:
+      evidence: list[Evidence]
+    routes:
+      error: END.failed
+      default: evaluate_rules
+  - id: evaluate_rules
+    description: Check every policy rule against the evidence, in the policy's order
+    engine: code
+    effect: read
+    code:
+      run: evaluate_rules
+    inputs:
+      policy: PolicyVersion?
+      evidence: list[Evidence]
+      diagnosis_code: str
+    outputs:
+      findings: list[json]
+      blocking: int
+      warnings: int
+    routes:
+      error: END.failed
+      default: classify
+  - id: classify
+    description: Findings to a verdict, by two counts
+    engine: decide
+    decide:
+      rules:
+      - when: blocking > 0
+        then: block
+      - when: warnings > 0
+        then: warn
+      - when: 'true'
+        then: pass
+    inputs:
+      blocking: int
+      warnings: int
+    outputs:
+      lane: enum[pass, warn, block]
+    routes:
+      pass: record_pass
+      warn: record_warn
+      block: record_block
+      error: END.failed
+  - id: record_pass
+    description: Store a Pass with its report and findings
+    engine: code
+    effect: write
+    code:
+      run: record_evaluation
+      with:
+        verdict: pass
+    inputs:
+      member_ref: str
+      procedure_code: str
+      policy: PolicyVersion?
+      findings: list[json]
+    outputs:
+      evaluation: Evaluation
+    routes:
+      error: END.failed
+      default: END
+  - id: record_warn
+    description: Store a Warn with its report and findings
+    engine: code
+    effect: write
+    code:
+      run: record_evaluation
+      with:
+        verdict: warn
+    inputs:
+      member_ref: str
+      procedure_code: str
+      policy: PolicyVersion?
+      findings: list[json]
+    outputs:
+      evaluation: Evaluation
+    routes:
+      error: END.failed
+      default: END.warn
+  - id: record_block
+    description: Store a Block, held for a clinical reviewer
+    engine: code
+    effect: write
+    code:
+      run: record_evaluation
+      with:
+        verdict: block
+    inputs:
+      member_ref: str
+      procedure_code: str
+      policy: PolicyVersion?
+      findings: list[json]
+    outputs:
+      evaluation: Evaluation
+    routes:
+      error: END.failed
+      default: clinical_review
+  - id: clinical_review
+    description: A clinical reviewer upholds or overrides the block
+    engine: human
+    inputs:
+      evaluation: Evaluation
+      findings: list[json]
+    outputs:
+      upheld: bool
+    human:
+      title: Clinical review of a blocked request
+      instruction: "The criteria are not met. Review the findings and uphold the block, or override it."
+      show: [findings]
+      required_group: clinical_reviewers
+      route_on: upheld
+      expires: 48h
+    routes:
+      'true': settle_review
+      'false': settle_review
+      expired: END.expired
+      error: END.failed
+  - id: settle_review
+    description: Store the reviewer's decision on the evaluation
+    engine: code
+    effect: write
+    code:
+      run: settle_review
+    inputs:
+      evaluation: Evaluation
+      upheld: bool
+    outputs:
+      settled: Evaluation
+    routes:
+      upheld: END.block
+      overridden: END.overridden
+      error: END.failed
+  outputs:
+    default:
+      status: 200
+      body:
+        verdict: pass
+        evaluation_id: '{{ evaluation.id }}'
+        findings: '{{ findings }}'
+    warn:
+      status: 200
+      body:
+        verdict: warn
+        evaluation_id: '{{ evaluation.id }}'
+        findings: '{{ findings }}'
+    block:
+      status: 200
+      body:
+        verdict: block
+        review: upheld
+        evaluation_id: '{{ settled.id }}'
+        findings: '{{ findings }}'
+    overridden:
+      status: 200
+      body:
+        verdict: block
+        review: overridden
+        evaluation_id: '{{ settled.id }}'
+        findings: '{{ findings }}'
+    expired:
+      status: 202
+      body:
+        verdict: block
+        review: expired
+        evaluation_id: '{{ evaluation.id }}'
+    no_policy:
+      status: 404
+      body:
+        error: no active policy for this procedure
+    failed:
+      status: 500
+      body:
+        error: evaluation failed

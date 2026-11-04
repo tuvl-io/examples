@@ -184,10 +184,11 @@ function renderSlot(ex){
     const left = Date.parse(sb.expiresAt)-Date.now()
     slot.innerHTML = `<div class="run-state">
         <a class="open" href="${sb.url}" target="_blank" rel="noopener">Open sandbox ↗</a>
+        ${sb.insightUrl ? `<a class="open" href="${sb.insightUrl}" target="_blank" rel="noopener">Insight ↗</a>` : ''}
         <span>expires in <span class="count" data-exp="${sb.expiresAt}">${fmtLeft(left)}</span></span>
         <button class="btn-ghost stop" data-stop="${sb.id}" data-ex="${ex}">Stop</button>
       </div>
-      <div class="note">Opens the Insight editor. This link is private and dies when the timer runs out.</div>`
+      <div class="note">${sb.insightUrl ? 'Opens the example\'s own screens; Insight is one click away.' : 'Opens the Insight editor.'} This link is private and dies when the timer runs out.</div>`
   } else {
     slot.innerHTML = `<div class="run-state">Something went wrong. <button class="btn-ghost run" data-run="${ex}">Retry</button></div>`
   }

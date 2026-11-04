@@ -30,4 +30,6 @@ EXPOSE 8000
 #  --auto-login           : bypass the Insight security screen so public visitors
 #     can explore freely — safe here because this is an ephemeral, hourly-reset
 #     sandbox (see the deploy README / reset cron).
-CMD ["tuvl", "dev", "--project-dir", ".", "--port", "8000", "--no-browser", "--allow-host", "0.0.0.0/0", "--auto-login"]
+# A project that ships its own screens or demo data adds an executable sandbox-start.sh (it must end by exec-ing
+# `tuvl dev` with the flags below); every other project just runs `tuvl dev`.
+CMD ["sh", "-c", "if [ -x ./sandbox-start.sh ]; then exec ./sandbox-start.sh; fi; exec tuvl dev --project-dir . --port 8000 --no-browser --allow-host 0.0.0.0/0 --auto-login"]

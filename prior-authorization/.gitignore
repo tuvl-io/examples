@@ -1,0 +1,12 @@
+# tuvl
+.env
+__pycache__/
+*.pyc
+.venv/
+.python-version
+.tuvl/agent.yaml
+.tuvl/.dev-session
+.tuvl/audit/
+.tuvl/trace/
+.tuvl/live/
+.tuvl/worktrees/

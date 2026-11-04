@@ -1,0 +1,72 @@
+# Read a stored evaluation with one finding per rule.
+kind: Workflow
+version: tuvl/v2
+metadata:
+  name: get_evaluation
+  description: get_evaluation, from specs/prior-authorization-check.md.
+  required_scope: reviewers
+spec:
+  models:
+  - Evaluation
+  - Finding
+  trigger:
+    http:
+      path: /prior-auth/evaluation
+      method: GET
+    input:
+      evaluation_id: uuid
+  agents:
+  - id: find_evaluation
+    description: Load the evaluation
+    engine: tool
+    effect: read
+    tool:
+      use: db
+      model: Evaluation
+      op: read
+      where:
+        id: '{{ evaluation_id }}'
+    inputs:
+      evaluation_id: uuid
+    outputs:
+      evaluation: Evaluation
+    routes:
+      not_found: END.not_found
+      error: END.failed
+      default: list_findings
+  - id: list_findings
+    description: The findings of the evaluation, in rule order
+    engine: tool
+    effect: read
+    tool:
+      use: db
+      model: Finding
+      op: list
+      where:
+        evaluation_id: '{{ evaluation_id }}'
+      order_by: [created_at]
+    inputs:
+      evaluation_id: uuid
+    outputs:
+      findings: list[Finding]
+    routes:
+      error: END.failed
+      default: END
+  outputs:
+    default:
+      status: 200
+      body:
+        id: '{{ evaluation.id }}'
+        procedure_code: '{{ evaluation.procedure_code }}'
+        verdict: '{{ evaluation.verdict }}'
+        status: '{{ evaluation.status }}'
+        report: '{{ evaluation.report }}'
+        findings: '{{ findings }}'
+    not_found:
+      status: 404
+      body:
+        error: unknown evaluation
+    failed:
+      status: 500
+      body:
+        error: lookup failed

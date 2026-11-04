@@ -1,0 +1,39 @@
+kind: ModelDefinition
+enabled: true
+metadata:
+  name: Evidence
+  schema_version: v1
+  description: 'Evidence, from the spec''s # Data. Synthetic clinical records standing in for the record system.'
+spec:
+  tablename: evidence
+  api:
+    crud: [list, read, create, delete]
+  fields:
+  - name: id
+    type: uuid
+    primary_key: true
+    default: uuid4
+    input: false
+  - name: member_ref
+    type: string
+    required: true
+    secure: true
+    index: true
+  - name: kind
+    type: enum
+    enum_values:
+    - clinical_note
+    - lab_result
+    - imaging
+    - therapy_record
+    required: true
+  - name: recorded_on
+    type: date
+    required: true
+  - name: summary
+    type: string
+  - name: attributes
+    type: jsonb
+  - name: created_at
+    type: timestamptz
+    input: false
