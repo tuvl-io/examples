@@ -31,6 +31,7 @@ jobs:
           - support-triage
           - mcp-research-agent
           - kyc-onboarding
+          - prior-authorization
     defaults:
       run:
         working-directory: ${{ matrix.example }}

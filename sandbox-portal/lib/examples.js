@@ -3,8 +3,10 @@
 // `tier` is the complexity tier; `engines` are the tuvl 2.0 engines the workflow uses; `spec` is the file in that project's specs/.
 export const SOURCE = 'https://github.com/tuvl-io/examples/tree/main'
 
-const ex = (id, dir, title, tier, blurb, engines, spec) => ({
-  id, dir, title, difficulty: tier, blurb, engines,
+// `ui` is set when the project ships its own screens: the container serves them on :8001 under /ui/, and the
+// sandbox link opens them first (Insight stays at /insight/).
+const ex = (id, dir, title, tier, blurb, engines, spec, ui = false) => ({
+  id, dir, title, difficulty: tier, blurb, engines, ui,
   source: `${SOURCE}/${dir}`,
   spec: `${SOURCE}/${dir}/specs/${spec}.md`,
 })
@@ -40,6 +42,9 @@ export const EXAMPLES = [
   ex('kyc-onboarding', 'kyc-onboarding', 'KYC Onboarding', '5 · Complex',
     'PII-safe intake, sanctions screening, a judge-supervised investigation and a compliance decision.',
     ['loop', 'human', 'llm', 'tool', 'code'], 'kyc-onboarding'),
+  ex('prior-authorization', 'prior-authorization', 'Prior Authorization', '5 · Complex',
+    'Evidence checked against a coverage policy: Pass, Warn or Block with a report, a clinician for every block, and a screen for each role.',
+    ['decide', 'human', 'tool', 'code'], 'prior-authorization-check', true),
 ]
 
 export const EXAMPLE_BY_ID = Object.fromEntries(EXAMPLES.map((e) => [e.id, e]))

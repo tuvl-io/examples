@@ -1,0 +1,9 @@
+kind: AgentModel
+version: v1
+enabled: true
+metadata:
+  name: default
+spec:
+  model: gemini/gemini-3.1-flash-lite
+  api_key: ${GEMINI_API_KEY}
+  temperature: 0.7

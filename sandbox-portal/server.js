@@ -20,6 +20,7 @@ import {
   dropAllSandboxDbs,
   waitReady,
   upstreamHost,
+  uiUpstreamHost,
 } from './lib/docker.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -68,7 +69,8 @@ function publicView(sb) {
     id: sb.id,
     exampleId: sb.exampleId,
     title: EXAMPLE_BY_ID[sb.exampleId]?.title,
-    url: sandboxUrl(sb.id),
+    url: sandboxUrl(sb.id) + (EXAMPLE_BY_ID[sb.exampleId]?.ui ? '/ui/' : ''),
+    insightUrl: EXAMPLE_BY_ID[sb.exampleId]?.ui ? sandboxUrl(sb.id) + '/insight/' : undefined,
     status: sb.status,
     createdAt: sb.createdAt,
     expiresAt: sb.expiresAt,
@@ -209,7 +211,17 @@ const server = http.createServer((req, res) => {
   const id = sandboxIdFromHost(host)
   if (id) {
     const sb = sandboxes.get(id)
-    if (sb) return proxy.web(req, res, { target: `http://${upstreamHost(id)}` })
+    if (sb) {
+      if (EXAMPLE_BY_ID[sb.exampleId]?.ui && (req.url === '/ui' || req.url.startsWith('/ui/') || req.url.startsWith('/ui?'))) {
+        if (req.url === '/ui') {
+          res.writeHead(302, { Location: '/ui/' })
+          return res.end()
+        }
+        req.url = req.url.slice(3) || '/'
+        return proxy.web(req, res, { target: `http://${uiUpstreamHost(id)}` })
+      }
+      return proxy.web(req, res, { target: `http://${upstreamHost(id)}` })
+    }
     res.writeHead(410, { 'content-type': 'text/html' })
     return res.end(expiredPage())
   }

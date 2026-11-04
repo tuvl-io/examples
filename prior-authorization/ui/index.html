@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prior authorization · a tuvl example</title>
+<link rel="icon" href="feather.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#fff;--surface:#fafafa;--surface-2:#f4f4f5;--border:#e4e4e7;--border-strong:#d4d4d8;--text:#09090b;--text-2:#3f3f46;--muted:#71717a;
+--accent:#0e7490;--accent-soft:#cffafe;--ok:#047857;--ok-bg:#d1fae5;--warn:#b45309;--warn-bg:#fef3c7;--bad:#be123c;--bad-bg:#ffe4e6;
+--sans:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:'Geist Mono',ui-monospace,Menlo,monospace;--r:12px}
+[data-theme=dark]{--bg:#09090b;--surface:#111113;--surface-2:#18181b;--border:#27272a;--border-strong:#3f3f46;--text:#fafafa;--text-2:#d4d4d8;--muted:#a1a1aa;
+--accent:#22d3ee;--accent-soft:rgba(34,211,238,.14);--ok:#34d399;--ok-bg:rgba(52,211,153,.14);--warn:#fbbf24;--warn-bg:rgba(251,191,36,.14);--bad:#fb7185;--bad-bg:rgba(251,113,133,.14)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}code,.mono{font-family:var(--mono);font-size:.9em}
+header{border-bottom:1px solid var(--border);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);z-index:5}
+.bar{max-width:1100px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.03em;font-size:20px}.brand img{width:34px;height:36px}
+.brand small{font:500 12px var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+nav{display:flex;gap:4px;margin-left:12px}
+nav button{background:none;border:0;padding:8px 12px;border-radius:8px;font:500 15px var(--sans);color:var(--text-2);cursor:pointer}
+nav button:hover{background:var(--surface-2)}nav button[aria-current=page]{background:var(--surface-2);color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+nav button[disabled]{opacity:.4;cursor:not-allowed}
+.who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--border-strong);background:transparent;color:var(--text);font:600 15px var(--sans);cursor:pointer}
+.btn:hover{border-color:var(--text)}.btn.solid{background:var(--text);color:var(--bg);border-color:var(--text)}.btn.solid:hover{opacity:.9}
+.btn.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}.btn.bad{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}.btn.sm{min-height:32px;padding:0 12px;font-size:14px}
+.btn[disabled]{opacity:.5;cursor:wait}
+main{max-width:1100px;margin:0 auto;padding:28px 20px 64px}
+h1{font:800 clamp(30px,4vw,44px)/1.05 var(--sans);letter-spacing:-.045em;margin:0 0 8px}h2{font:700 22px/1.2 var(--sans);letter-spacing:-.03em;margin:0 0 10px}
+.lead{color:var(--text-2);max-width:46em;margin:0 0 20px}.eyebrow{font:500 12px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin:0 0 4px}
+input,select,textarea{width:100%;font:400 15px var(--sans);color:var(--text);background:var(--bg);border:1px solid var(--border-strong);border-radius:10px;padding:9px 12px}
+textarea{font-family:var(--mono);font-size:13px;min-height:190px}
+input:focus,select:focus,textarea:focus,.btn:focus-visible,nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}.chip{border:1px solid var(--border-strong);background:var(--bg);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--text-2)}.chip:hover{border-color:var(--accent);color:var(--text)}
+.badge{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:4px 14px;font:600 14px var(--mono);letter-spacing:.06em;text-transform:uppercase;border:1px solid}
+.badge.pass,.badge.met{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}.badge.warn,.badge.missing_evidence{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.badge.block,.badge.not_met{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}.badge.wait{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.verdict{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}.verdict .big{font:800 30px var(--sans);letter-spacing:-.04em}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border)}
+td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top}tr:last-child td{border-bottom:0}
+.muted{color:var(--muted)}.err{color:var(--bad);background:var(--bad-bg);border:1px solid var(--bad);border-radius:10px;padding:10px 14px;margin:10px 0}
+.note{color:var(--text-2);background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px}
+pre{background:#0f0f11;color:#e8e8ec;border-radius:10px;padding:14px;overflow:auto;font:13px/1.5 var(--mono);margin:8px 0 0}
+details summary{cursor:pointer;color:var(--text-2);font-weight:500;margin-top:8px}
+.tl{list-style:none;margin:0;padding:0;border-left:2px solid var(--border);margin-left:6px}.tl li{padding:4px 0 4px 16px;position:relative;font-size:14px}
+.tl li:before{content:"";position:absolute;left:-6px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.tl .t{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.login{max-width:760px;margin:6vh auto}.person{text-align:left;width:100%;display:block;padding:14px 16px;border-radius:var(--r);border:1px solid var(--border-strong);background:var(--bg);cursor:pointer;color:var(--text)}
+.person:hover{border-color:var(--accent)}.person b{display:block;font-size:16px}.person span{color:var(--muted);font-size:13px}
+.hidden{display:none!important}
+@media (max-width:640px){nav{margin-left:0;width:100%;overflow:auto}.who{margin-left:0}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand"><img src="feather.svg" alt=""><span>Prior authorization</span><small>tuvl example</small></div>
+  <nav id="nav" class="hidden" aria-label="Sections">
+    <button data-tab="evaluate">Evaluate</button><button data-tab="reviews">Clinical review</button>
+    <button data-tab="audit">Audit trail</button><button data-tab="policy">Policy</button>
+  </nav>
+  <div class="who"><span id="who"></span><button class="btn sm hidden" id="out">Sign out</button><button class="btn sm" id="theme" aria-label="Toggle theme">◐</button></div>
+</div></header>
+<main id="app"></main>
+
+<script>
+const API = (new URLSearchParams(location.search).get('api') || '').replace(/\/$/, '');
+const PROCEDURE = 'MRI-LUMBAR';
+const PEOPLE = [
+  {email:'intake@demo.test', name:'Ines Intake', role:'Intake reviewer', blurb:'Submits requests and reads the audit trail.'},
+  {email:'dr.chen@demo.test', name:'Dr. Mei Chen', role:'Clinical reviewer', blurb:'Decides blocked requests. Cannot decide a run she started.'},
+  {email:'policy@demo.test', name:'Priya Policy', role:'Policy administrator', blurb:'Publishes coverage policies.'},
+];
+const CASES = [
+  {label:'Meets every rule', member:'SYN-1001', dx:'M54.5'},
+  {label:'No clinical note', member:'SYN-1002', dx:'M54.5'},
+  {label:'No therapy record', member:'SYN-1004', dx:'M54.5'},
+  {label:'Too little therapy', member:'SYN-1003', dx:'M54.5'},
+  {label:'Uncovered diagnosis', member:'SYN-1001', dx:'J45.909'},
+];
+const S = {token:null, user:null, groups:[], tab:'evaluate', last:null};
+const $ = (s, el=document) => el.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const short = id => id ? String(id).slice(0, 8) : '';
+const when = ts => ts ? new Date(ts).toLocaleString() : '';
+
+async function call(method, path, body, form) {
+  const h = {};
+  let data;
+  if (form) { data = new URLSearchParams(form); }
+  else if (body !== undefined) { data = JSON.stringify(body); h['Content-Type'] = 'application/json'; }
+  if (S.token) h.Authorization = 'Bearer ' + S.token;
+  try {
+    const res = await fetch(API + path, {method, headers: h, body: data});
+    const text = await res.text();
+    let json = null; try { json = text ? JSON.parse(text) : null; } catch { json = text; }
+    if (res.status === 401 && S.token) { signOut('Your session ended. Sign in again.'); }
+    return {status: res.status, data: json, text};
+  } catch (e) { return {status: 0, data: null, text: String(e)}; }
+}
+const problem = r => r.status === 0 ? 'Cannot reach the server. Is it running?'
+  : r.status === 403 ? 'Your role is not allowed to do this.'
+  : r.status === 422 ? 'The input was rejected: ' + esc(JSON.stringify(r.data?.detail ?? r.data))
+  : r.status === 409 ? 'Temporarily unavailable. Try again in a moment.'
+  : r.status >= 500 ? 'It did not complete. Try again.' : 'Request failed (' + r.status + ').';
+
+function jwt(token) { try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch { return {}; } }
+async function signIn(email, password) {
+  const r = await call('POST', '/auth/token', undefined, {username: email, password});
+  if (r.status !== 200) return r.status === 401 ? 'Wrong email or password.' : problem(r);
+  S.token = r.data.access_token;
+  const c = jwt(S.token); S.user = email; S.groups = c.groups || [];
+  S.tab = S.groups.includes('clinical_reviewers') ? 'reviews' : S.groups.includes('policy_admins') ? 'policy' : 'evaluate';
+  chrome(); render(); return null;
+}
+function signOut(msg) { S.token = null; S.user = null; S.groups = []; chrome(); render(msg); }
+function chrome() {
+  const on = !!S.token;
+  $('#nav').classList.toggle('hidden', !on); $('#out').classList.toggle('hidden', !on);
+  $('#who').textContent = on ? (PEOPLE.find(p => p.email === S.user)?.name || S.user) + ' · ' + (S.groups.join(', ') || 'no role') : '';
+  const allow = {evaluate: true, audit: true, reviews: S.groups.includes('clinical_reviewers'), policy: S.groups.includes('policy_admins')};
+  document.querySelectorAll('nav button').forEach(b => {
+    b.disabled = !allow[b.dataset.tab]; b.title = b.disabled ? 'Needs another role' : '';
+    b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false');
+  });
+}
+
+/* ---------- views ---------- */
+function render(msg) {
+  const app = $('#app');
+  if (!S.token) return loginView(app, msg);
+  ({evaluate: evaluateView, reviews: reviewsView, audit: auditView, policy: policyView})[S.tab](app);
+}
+function loginView(app, msg) {
+  app.innerHTML = `<div class="login"><span class="eyebrow">A tuvl example</span><h1>Evidence in, a defensible verdict out.</h1>
+  <p class="lead">A prior-authorization check for a lumbar MRI. The coverage policy and the verdict logic are plain data and plain rules: the same
+  evidence always gives the same Pass, Warn or Block, and a blocked request is never denied without a clinician.
+  Everything here is <b>synthetic</b>. Pick a person to sign in as:</p>
+  ${msg ? `<div class="err">${esc(msg)}</div>` : ''}
+  <div class="grid g3">${PEOPLE.map(p => `<button class="person" data-e="${p.email}"><b>${esc(p.name)}</b><span class="mono">${esc(p.role)}</span><br><span>${esc(p.blurb)}</span></button>`).join('')}</div>
+  <details><summary>Sign in with another account</summary><form id="f" class="row" style="margin-top:10px"><input name="e" placeholder="email" autocomplete="username" style="max-width:240px"><input name="p" type="password" placeholder="password" autocomplete="current-password" style="max-width:200px"><button class="btn solid">Sign in</button></form></details>
+  <p class="muted" style="margin-top:18px">Demo password for the three people: <code>demo-pass-1</code>. Seeded by <code>scripts/seed_demo.py</code>.</p></div>`;
+  app.querySelectorAll('.person').forEach(b => b.onclick = async () => { const e = await signIn(b.dataset.e, 'demo-pass-1'); if (e) loginView(app, e); });
+  $('#f', app).onsubmit = async ev => { ev.preventDefault(); const f = new FormData(ev.target); const e = await signIn(f.get('e'), f.get('p')); if (e) loginView(app, e); };
+}
+
+const findingsTable = rows => `<table><thead><tr><th>Rule</th><th>Outcome</th><th>Counts as</th><th>Why</th><th>Evidence</th></tr></thead><tbody>${rows.map(f =>
+  `<tr><td class="mono">${esc(f.rule_id)}</td><td><span class="badge ${esc(f.outcome)}">${esc(String(f.outcome).replace('_',' '))}</span></td><td>${esc(f.severity)}</td><td>${esc(f.detail)}</td><td class="mono muted">${short(f.evidence_id) || '–'}</td></tr>`).join('')}</tbody></table>`;
+
+function evaluateView(app) {
+  app.innerHTML = `<span class="eyebrow">Evaluate</span><h1>Does the evidence meet the policy?</h1>
+  <p class="lead">Pick a scenario or type your own. The service loads the active policy, reads the member's evidence, checks every rule and answers.</p>
+  <div class="card"><div class="chips" id="cases">${CASES.map((c,i) => `<button class="chip" data-i="${i}">${esc(c.label)}</button>`).join('')}</div>
+  <form id="f" class="grid g3"><div><label for="m">Member reference</label><input id="m" name="member_ref" required value="${CASES[0].member}"></div>
+  <div><label for="pc">Procedure</label><input id="pc" name="procedure_code" required value="${PROCEDURE}"></div>
+  <div><label for="dx">Diagnosis code</label><input id="dx" name="diagnosis_code" required value="${CASES[0].dx}"></div>
+  <div><button class="btn solid" id="go">Evaluate</button></div></form></div><div id="res"></div>`;
+  app.querySelectorAll('.chip').forEach(b => b.onclick = () => { const c = CASES[b.dataset.i]; $('#m').value = c.member; $('#dx').value = c.dx; $('#pc').value = PROCEDURE; });
+  $('#f').onsubmit = async ev => {
+    ev.preventDefault(); const f = Object.fromEntries(new FormData(ev.target)); const go = $('#go'); go.disabled = true;
+    $('#res').innerHTML = `<div class="card muted">Evaluating…</div>`;
+    const r = await call('POST', '/prior-auth/evaluate', f); go.disabled = false;
+    await showResult(r);
+  };
+}
+async function showResult(r) {
+  const el = $('#res');
+  if (r.status === 404) { el.innerHTML = `<div class="card"><div class="verdict"><span class="badge wait">no policy</span></div><p>${esc(r.data?.error || 'No active policy for this procedure.')} Nothing was approved: the request fails closed.</p></div>`; return; }
+  if (r.status === 202) {
+    const run = r.data?.run_id;
+    el.innerHTML = `<div class="card"><div class="verdict"><span class="badge block">block</span><span class="big">Held for clinical review</span></div>
+    <p>The criteria are not met, so a clinician must confirm it. No denial happens automatically.</p>
+    <div class="note">Sign out and sign in as <b>Dr. Mei Chen</b> to decide it. A person cannot decide a run they started: try it as yourself and the server refuses.</div>
+    <p class="muted mono">run ${short(run)} · <span id="st">${esc(r.data?.status)}</span></p><div id="late"></div></div>`;
+    watch(run); return;
+  }
+  if (r.status !== 200) { el.innerHTML = `<div class="err">${problem(r)}</div>`; return; }
+  const b = r.data;
+  el.innerHTML = verdictCard(b);
+  wireReport(b.evaluation_id);
+}
+function verdictCard(b) {
+  const label = b.verdict === 'block' && b.review ? `block · ${b.review} by a clinician` : b.verdict;
+  return `<div class="card"><div class="verdict"><span class="badge ${esc(b.verdict)}">${esc(b.verdict)}</span><span class="big">${esc(label)}</span></div>
+  ${findingsTable(b.findings || [])}<div id="rep" class="muted" style="margin-top:10px">${b.evaluation_id ? `Evaluation <code>${short(b.evaluation_id)}</code>` : ''}</div></div>`;
+}
+async function wireReport(id) {
+  if (!id) return; const r = await call('GET', '/prior-auth/evaluation?evaluation_id=' + id);
+  if (r.status !== 200) return;
+  $('#rep').innerHTML = `Evaluation <code>${short(id)}</code> · policy ${esc(r.data.report?.policy?.procedure_code)} v${esc(r.data.report?.policy?.version)} (${esc(r.data.report?.policy?.source_ref)}) · status ${esc(r.data.status)}
+  <details><summary>Stored report</summary><pre>${esc(JSON.stringify(r.data.report, null, 2))}</pre></details>`;
+}
+async function watch(run) {
+  for (let i = 0; i < 200; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    if (!$('#st')) return;
+    const r = await call('GET', '/api/runs/' + run);
+    if (r.status !== 200) return;
+    $('#st').textContent = r.data.status;
+    if (r.data.end || ['completed','failed','aborted'].includes(r.data.status)) {
+      const o = r.data.output; $('#late').innerHTML = o?.findings ? verdictCard(o) : `<p>Finished: ${esc(r.data.end)}.</p>`;
+      if (o?.evaluation_id) wireReport(o.evaluation_id); return;
+    }
+  }
+}
+
+async function reviewsView(app) {
+  app.innerHTML = `<span class="eyebrow">Clinical review</span><h1>Blocked requests waiting for a clinician</h1>
+  <p class="lead">A Block is never final on its own. Uphold it if the criteria really are not met, or override it. Your decision is recorded on the evaluation.</p><div id="q"><div class="card muted">Loading…</div></div>`;
+  const load = async () => {
+    const r = await call('GET', '/api/approvals'); const q = $('#q');
+    if (r.status !== 200) { q.innerHTML = `<div class="err">${problem(r)}</div>`; return; }
+    if (!r.data.length) { q.innerHTML = `<div class="card"><b>Nothing waiting.</b><p class="muted">Submit a "Too little therapy" request as the intake reviewer, then come back.</p><button class="btn sm" id="rf">Refresh</button></div>`; $('#rf').onclick = load; return; }
+    q.innerHTML = r.data.map(a => `<div class="card" data-id="${a.approval_id}"><div class="verdict"><span class="badge block">block</span><span class="big">${esc(a.title)}</span></div>
+      <p class="muted">${esc(a.instruction)} · requested ${when(a.created_at)} · expires ${when(a.expires_at)}</p>${findingsTable(a.show?.findings || [])}
+      <div class="row" style="margin-top:14px"><button class="btn bad" data-u="true">Uphold the block</button><button class="btn ok" data-u="false">Override: criteria are met</button></div><div class="msg"></div></div>`).join('');
+    q.querySelectorAll('.card').forEach(card => card.querySelectorAll('[data-u]').forEach(b => b.onclick = async () => {
+      card.querySelectorAll('button').forEach(x => x.disabled = true);
+      const d = await call('POST', '/api/approvals/' + card.dataset.id, {values: {upheld: b.dataset.u === 'true'}});
+      if (d.status === 200) { card.innerHTML = `<div class="note">Decided: ${b.dataset.u === 'true' ? 'block upheld' : 'block overridden'}. The run continues and stores your decision.</div>`; }
+      else { card.querySelectorAll('button').forEach(x => x.disabled = false); $('.msg', card).innerHTML = `<div class="err">${d.status === 403 ? 'You cannot decide this one: a person may not decide a run they started.' : problem(d)}</div>`; }
+    }));
+  };
+  load();
+}
+
+async function auditView(app) {
+  app.innerHTML = `<span class="eyebrow">Audit trail</span><h1>What was decided, and why</h1>
+  <p class="lead">Every verdict keeps the policy version it used, one finding per rule and the run that produced it. The run journal records each step, its engine and how long it took.</p>
+  <div class="grid g2"><div class="card"><h2>Evaluations</h2><div id="runs" class="muted">Loading…</div></div><div class="card"><h2>Detail</h2><div id="j" class="muted">Pick an evaluation.</div></div></div>`;
+  const r = await call('GET', '/models/evaluation/?limit=40'); const el = $('#runs');
+  if (r.status !== 200) { el.innerHTML = `<div class="err">${problem(r)}</div>`; return; }
+  const rows = r.data.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  if (!rows.length) { el.textContent = 'No evaluations yet. Evaluate a request first.'; return; }
+  el.innerHTML = `<table><thead><tr><th>Verdict</th><th>Status</th><th>When</th></tr></thead><tbody>${rows.map(x => `<tr data-e="${x.id}" style="cursor:pointer"><td><span class="badge ${esc(x.verdict)}">${esc(x.verdict)}</span></td><td>${esc(x.status)}</td><td class="muted">${when(x.created_at)}</td></tr>`).join('')}</tbody></table>`;
+  el.querySelectorAll('tr[data-e]').forEach(tr => tr.onclick = () => detail(tr.dataset.e));
+}
+async function detail(id) {
+  const j = $('#j'); j.innerHTML = 'Loading…';
+  const r = await call('GET', '/prior-auth/evaluation?evaluation_id=' + id);
+  if (r.status !== 200) { j.innerHTML = `<div class="err">${problem(r)}</div>`; return; }
+  const e = r.data, rep = e.report || {};
+  j.innerHTML = `<div class="verdict"><span class="badge ${esc(e.verdict)}">${esc(e.verdict)}</span><span class="muted">status <b>${esc(e.status)}</b> · evaluation <code>${short(e.id)}</code></span></div>
+  <p class="muted">Policy ${esc(rep.policy?.procedure_code)} v${esc(rep.policy?.version)} · source <code>${esc(rep.policy?.source_ref)}</code> · requested by <code>${short(rep.requested_by)}</code></p>
+  ${findingsTable(e.findings || [])}<h2 style="margin-top:18px">Run journal</h2><div id="jr" class="muted">Loading…</div>
+  <details><summary>Stored report</summary><pre>${esc(JSON.stringify(rep, null, 2))}</pre></details>`;
+  if (rep.run_id) journal(rep.run_id); else $('#jr').textContent = 'No run recorded.';
+}
+async function journal(id) {
+  const j = $('#jr');
+  const [run, ev] = await Promise.all([call('GET', '/api/runs/' + id), call('GET', `/api/runs/${id}/events?follow=false`)]);
+  if (ev.status === 404 || ev.status === 403) { j.innerHTML = 'The journal is visible to the person who started the run and to administrators.'; return; }
+  if (ev.status !== 200) { j.innerHTML = `<div class="err">${problem(ev)}</div>`; return; }
+  const events = ev.text.split('\n\n').map(b => { const d = b.split('\n').find(l => l.startsWith('data: ')); try { return d && JSON.parse(d.slice(6)); } catch { return null; } }).filter(Boolean)
+    .filter(e => ['agent_completed','approval_requested','approval_decided','run_completed','run_failed','run_queued'].includes(e.type));
+  const line = e => {
+    const what = e.type === 'agent_completed' ? `${esc(e.agent_id)} <span class="muted">(${esc(e.engine)}) → ${esc(e.payload?.signal)}</span>` : esc(e.type.replace(/_/g, ' ')) + (e.agent_id ? ` · ${esc(e.agent_id)}` : '');
+    return `<li><span class="t">${new Date(e.ts).toLocaleTimeString()} #${e.seq}${e.latency_ms != null ? ' · ' + e.latency_ms + ' ms' : ''}${e.tokens ? ' · ' + e.tokens + ' tok' : ''}</span><br>${what}</li>`;
+  };
+  j.innerHTML = `<p class="mono muted">run ${short(id)} · ${esc(run.data?.status)}${run.data?.end ? ' · ' + esc(run.data.end) : ''} · ${run.data?.tokens_used ?? 0} tokens</p><ul class="tl">${events.map(line).join('')}</ul>`;
+}
+
+async function policyView(app) {
+  app.innerHTML = `<span class="eyebrow">Policy</span><h1>Coverage policy as data</h1>
+  <p class="lead">A policy is a list of rules. Publishing checks them first: a policy that fails the check is refused and the last good version stays active.</p>
+  <div class="card"><h2>Active policy</h2><div id="cur" class="muted">Loading…</div></div>
+  <div class="card"><h2>Publish a version</h2><div class="row" style="margin-bottom:10px"><button class="chip" id="cur2">Start from the active version</button><button class="chip" id="bad">Load an invalid policy</button></div>
+  <form id="f" class="grid"><div class="grid g3"><div><label for="v">Version</label><input id="v" name="version" value="2" required></div><div><label for="sr">Source reference</label><input id="sr" name="source_ref" value="demo-edit" required></div><div><label>Procedure</label><input name="procedure_code" value="${PROCEDURE}" required></div></div>
+  <div><label for="cr">Rules (JSON)</label><textarea id="cr" name="criteria" spellcheck="false"></textarea></div><div><button class="btn solid">Publish</button></div></form><div id="pout"></div></div>`;
+  let active = null;
+  const r = await call('GET', `/models/policyversion/?filter[procedure_code]=${PROCEDURE}&filter[status]=active`);
+  if (r.status === 200 && r.data.length) {
+    active = r.data[0];
+    $('#cur').innerHTML = `<p><b>${esc(active.procedure_code)}</b> · version ${esc(active.version)} · source <code>${esc(active.source_ref)}</code></p><table><thead><tr><th>Rule</th><th>Kind</th><th>Needs</th><th>If unmet</th></tr></thead><tbody>${active.criteria.map(c =>
+      `<tr><td class="mono">${esc(c.id)}</td><td>${esc(c.kind)}</td><td>${esc(c.kind === 'diagnosis_in' ? 'one of ' + c.value.join(', ') : c.kind === 'attr_min' ? `${c.evidence_kind}.${c.attr} ≥ ${c.value}` : c.evidence_kind + ' on file')}</td><td>${esc(c.severity)}</td></tr>`).join('')}</tbody></table>`;
+    $('#cr').value = JSON.stringify(active.criteria, null, 2);
+  } else $('#cur').innerHTML = r.status === 200 ? 'No active policy.' : `<div class="err">${problem(r)}</div>`;
+  $('#cur2').onclick = () => { if (active) $('#cr').value = JSON.stringify(active.criteria, null, 2); };
+  $('#bad').onclick = () => { $('#cr').value = JSON.stringify([{id: 'R1', kind: 'guess', severity: 'block'}], null, 2); };
+  $('#f').onsubmit = async ev => {
+    ev.preventDefault(); const f = Object.fromEntries(new FormData(ev.target)); let criteria;
+    try { criteria = JSON.parse(f.criteria); } catch { $('#pout').innerHTML = `<div class="err">The rules are not valid JSON.</div>`; return; }
+    const p = await call('POST', '/policies', {procedure_code: f.procedure_code, version: f.version, source_ref: f.source_ref, criteria});
+    $('#pout').innerHTML = p.status === 201 ? `<div class="note">Published version ${esc(p.data.version)} with ${esc(p.data.rules)} rules. It is active now.</div>`
+      : p.status === 422 ? `<div class="err">Refused: the rule list is not valid. The previous version stays active.</div>` : `<div class="err">${problem(p)}</div>`;
+    if (p.status === 201) policyView(app);
+  };
+}
+
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (!b.disabled) { S.tab = b.dataset.tab; chrome(); render(); } });
+$('#out').onclick = () => signOut();
+const root = document.documentElement;
+root.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+$('#theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; };
+chrome(); render();
+</script>
+</body>
+</html>

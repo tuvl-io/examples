@@ -12,6 +12,7 @@ What each example needs before `tuvl dev` boots. All examples target **tuvl 2.0*
 | `content-moderation-pipeline` | Medium | `tuvl_moderation` | — | — | 1 chat model | — | optional webhook URL |
 | `mcp-research-agent` | Medium–Complex | `tuvl_research` | — | — | 1 chat model | — | `uvx` + `mcp-server-fetch`, outbound network |
 | `kyc-onboarding` | Complex | `tuvl_kyc` | **required** | — | 1 chat model + 1 judge model | **required** | — (screening API is stubbed) |
+| `prior-authorization` | Complex | `tuvl_prior_auth` | — | — | none (the verdict is rules and code) | — | — (evidence is seeded synthetic data) |
 | `sentiment-api` | Easy | `tuvl_reviews` | — | — | 1 chat model | — | Docker + Helm (for `tuvl ship`) |
 | `concierge-chat` | Core | `tuvl_concierge` | **required** | — | 1 chat model (+ 1 for nightly compaction) | **required** (memory) | — |
 | `batch-screening` | Intermediate | `tuvl_screening` | — | — | 1 chat call per candidate (up to 25 per batch) | — | — |
