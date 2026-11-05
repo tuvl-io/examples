@@ -3,7 +3,7 @@ name: prior-authorization-check
 owner: unassigned
 workflow: evaluate_request
 status: approved
-approved_by: Sooraj Rajagopalan <sooraj@tuvl.io>
+approved_by: tuvl-io <developer@tuvl.io>
 approved_at: '2026-11-04T15:56:50Z'
 approved_hash: 9c737740d074
 ---
