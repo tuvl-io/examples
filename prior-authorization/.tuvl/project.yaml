@@ -4,8 +4,8 @@ metadata:
   name: prior-authorization
 spec:
   id: prj_01a1a732-5beb-721d-8f3c-99e5ad48b3c2-3v
-  author: Sooraj Rajagopalan
-  email: sooraj@tuvl.io
+  author: tuvl-io
+  email: developer@tuvl.io
   organization: ''
   organization_url: ''
   type: dev
