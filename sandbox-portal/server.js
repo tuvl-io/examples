@@ -34,6 +34,7 @@ const BASE_DOMAIN = process.env.BASE_DOMAIN || 'tuvl.online'
 const SANDBOX_SCHEME = process.env.SANDBOX_SCHEME || 'https'
 const TTL_MS = Number(process.env.TTL_MINUTES || 20) * 60 * 1000
 const MAX_PER_SESSION = Number(process.env.MAX_PER_SESSION || 2)
+const MAX_PER_IP = Number(process.env.MAX_PER_IP || 6)
 // Fixed slot pool: sandboxes are handed out on subdomains s1..sN, each covered by
 // a pre-issued TLS cert (Option B — HTTP-01 pool, no wildcard cert needed). Pool
 // size IS the concurrency cap.
@@ -87,7 +88,7 @@ async function teardown(id, reason = 'expired') {
   await killSandbox(id)
   await dropDb(sb.dbName)
   recordLaunch({
-    event: 'teardown', id, runId: sb.runId, exampleId: sb.exampleId, email: sb.email, reason,
+    event: 'teardown', id, runId: sb.runId, exampleId: sb.exampleId, vid: sb.vid, email: sb.email, reason,
     wallSec: Math.round((Date.now() - Date.parse(sb.createdAt)) / 1000),
     activeSec: sb.activeBuckets * 30, requests: sb.requests, opened: !!sb.firstHit,
     openedAfterSec: sb.firstHit ? Math.round((sb.firstHit - Date.parse(sb.createdAt)) / 1000) : null,
@@ -137,31 +138,40 @@ app.get('/api/capacity', (_req, res) => {
   res.json({ used, total: SLOT_COUNT, available: Math.max(0, SLOT_COUNT - used) })
 })
 
+// anonymous visit + time-on-page, tied to a random visitor id (no personal data)
+const ensureVid = (req, res) => {
+  let vid = parseCookies(req).sbv
+  if (!/^[\w-]{10,40}$/.test(vid || '')) {
+    vid = crypto.randomBytes(12).toString('base64url')
+    res.append('Set-Cookie', `sbv=${vid}; HttpOnly; Path=/; Max-Age=31536000; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`)
+  }
+  return vid
+}
+const visitorLabel = (vid) => String(vid || '').slice(0, 8)
+
 app.get('/api/me', (req, res) => {
   if (!req.session) return res.status(401).json({ error: 'not_signed_in' })
-  const { name, email } = req.session
-  res.json({ name, email })
+  const { name, email, vid } = req.session
+  res.json({ name, email, visitorId: visitorLabel(vid) })
 })
 
 app.post('/api/signup', (req, res) => {
   if (limited(req, res, 10)) return
   const name = clip(req.body?.name, 100).trim()
   const email = clip(req.body?.email, 254).trim()
-  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ error: 'name and a valid email are required' })
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'That email does not look right. Fix it, or leave it empty.' })
   }
-  const s = createSession({ name, email, vid: parseCookies(req).sbv })
-  res.setHeader(
-    'Set-Cookie',
-    `sbsess=${s.sid}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax`,
-  )
-  res.json({ name, email })
+  const vid = ensureVid(req, res)
+  const s = createSession({ name, email, vid })
+  res.append('Set-Cookie', `sbsess=${s.sid}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`)
+  res.json({ name, email, visitorId: visitorLabel(vid) })
 })
 
 app.get('/api/mine', (req, res) => {
   if (!req.session) return res.status(401).json({ error: 'not_signed_in' })
   const mine = [...sandboxes.values()]
-    .filter((sb) => sb.sid === req.session.sid)
+    .filter((sb) => sb.sid === req.session.sid || (req.session.vid && sb.vid === req.session.vid))
     .map(publicView)
   res.json({ sandboxes: mine })
 })
@@ -177,7 +187,11 @@ app.post('/api/launch', async (req, res) => {
   const ex = EXAMPLE_BY_ID[String(req.body?.exampleId || '')]
   if (!ex) return res.status(400).json({ error: 'unknown_example' })
 
-  const mine = [...sandboxes.values()].filter((sb) => sb.sid === req.session.sid)
+  const ip = clientIp(req)
+  const mine = [...sandboxes.values()].filter((sb) => sb.sid === req.session.sid || (req.session.vid && sb.vid === req.session.vid))
+  if ([...sandboxes.values()].filter((sb) => sb.ip === ip).length >= MAX_PER_IP) {
+    return res.status(429).json({ error: 'per_ip_limit', message: 'Several sandboxes are already running from your network. Stop one first.' })
+  }
   if (mine.length >= MAX_PER_SESSION) {
     return res.status(429).json({ error: 'per_user_limit', message: `You can run ${MAX_PER_SESSION} sandboxes at a time. Stop one first.` })
   }
@@ -194,6 +208,8 @@ app.post('/api/launch', async (req, res) => {
     sid: req.session.sid,
     name: req.session.name,
     email: req.session.email,
+    vid: req.session.vid,
+    ip,
     createdAt: new Date(now).toISOString(),
     expiresAt: new Date(now + TTL_MS).toISOString(),
     status: 'starting',
@@ -204,7 +220,7 @@ app.post('/api/launch', async (req, res) => {
     firstHit: 0,
   }
   sandboxes.set(id, sb)
-  recordLaunch({ event: 'launch', id, runId: sb.runId, exampleId: ex.id, name: sb.name, email: sb.email })
+  recordLaunch({ event: 'launch', id, runId: sb.runId, exampleId: ex.id, vid: sb.vid, name: sb.name, email: sb.email })
 
   try {
     await createDb(dbName)
@@ -229,15 +245,6 @@ app.post('/api/stop', async (req, res) => {
   res.json({ ok: true })
 })
 
-// anonymous visit + time-on-page, tied to a random visitor id (no personal data)
-const ensureVid = (req, res) => {
-  let vid = parseCookies(req).sbv
-  if (!/^[\w-]{10,40}$/.test(vid || '')) {
-    vid = crypto.randomBytes(12).toString('base64url')
-    res.append('Set-Cookie', `sbv=${vid}; HttpOnly; Path=/; Max-Age=31536000; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`)
-  }
-  return vid
-}
 app.post('/api/hit', (req, res) => {
   if (limited(req, res, 20)) return
   const vid = ensureVid(req, res)

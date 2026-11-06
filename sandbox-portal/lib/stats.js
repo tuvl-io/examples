@@ -19,7 +19,7 @@ export function buildDashboard({ live, examples }) {
   const lastBySlot = new Map()
   for (const ev of launchLog) {
     if (ev.event === 'launch') {
-      const r = { runId: ev.runId, slot: ev.id, exampleId: ev.exampleId, name: ev.name, email: norm(ev.email), startedAt: ev.at, state: 'lost' }
+      const r = { runId: ev.runId, slot: ev.id, exampleId: ev.exampleId, vid: ev.vid, name: ev.name, email: norm(ev.email), startedAt: ev.at, state: 'lost' }
       byRun.set(ev.runId || `${ev.id}@${ev.at}`, r)
       lastBySlot.set(ev.id, r)
     } else if (ev.event === 'teardown') {
@@ -35,40 +35,43 @@ export function buildDashboard({ live, examples }) {
   const runs = [...byRun.values()].sort((a, b) => b.startedAt.localeCompare(a.startedAt))
   const title = Object.fromEntries(examples.map((e) => [e.id, e.title]))
 
-  // people
+  // people: one row per visitor id (legacy rows without one fall back to the email)
   const people = new Map()
-  const person = (email, name) => {
-    if (!people.has(email)) people.set(email, { email, name, firstSeen: null, lastSeen: null, vids: new Set(), launches: 0, opened: 0, projects: new Set(), sandboxActiveSec: 0, sandboxWallSec: 0 })
-    return people.get(email)
+  const keyOf = (vid, email) => vid || (email ? `email:${email}` : 'unknown')
+  const person = (key, vid) => {
+    if (!people.has(key)) people.set(key, { key, vid: vid || '', name: '', email: '', firstSeen: null, lastSeen: null, launches: 0, opened: 0, projects: new Set(), sandboxActiveSec: 0, sandboxWallSec: 0 })
+    return people.get(key)
+  }
+  const seen = (p, at) => {
+    if (!at) return
+    if (!p.firstSeen || at < p.firstSeen) p.firstSeen = at
+    if (!p.lastSeen || at > p.lastSeen) p.lastSeen = at
   }
   for (const s of signups) {
-    const p = person(norm(s.email), s.name)
-    p.name = s.name
-    if (!p.firstSeen || s.createdAt < p.firstSeen) p.firstSeen = s.createdAt
-    if (!p.lastSeen || s.createdAt > p.lastSeen) p.lastSeen = s.createdAt
-    if (s.vid) p.vids.add(s.vid)
+    const p = person(keyOf(s.vid, norm(s.email)), s.vid)
+    if (s.name) p.name = s.name
+    if (s.email) p.email = norm(s.email)
+    seen(p, s.createdAt)
   }
   for (const r of runs) {
-    const p = person(r.email, r.name)
+    const p = person(keyOf(r.vid, r.email), r.vid)
+    if (!p.name && r.name) p.name = r.name
+    if (!p.email && r.email) p.email = r.email
     p.launches++
     if (r.opened) p.opened++
     p.projects.add(r.exampleId)
     p.sandboxActiveSec += r.activeSec || 0
     p.sandboxWallSec += r.wallSec || 0
-    if (!p.lastSeen || r.startedAt > p.lastSeen) p.lastSeen = r.startedAt
+    seen(p, r.startedAt)
   }
   const peopleOut = [...people.values()].map((p) => {
-    let siteSec = 0
-    for (const v of p.vids) {
-      const snap = presence.get(v)
-      if (snap) {
-        siteSec += snap.activeSec
-        if (snap.lastSeen > (p.lastSeen || '')) p.lastSeen = snap.lastSeen
-      }
-    }
-    return { email: p.email, name: p.name, firstSeen: p.firstSeen, lastSeen: p.lastSeen, launches: p.launches, opened: p.opened,
-      projects: [...p.projects].map((id) => title[id] || id), siteSec, sandboxActiveSec: p.sandboxActiveSec, sandboxWallSec: p.sandboxWallSec }
+    const snap = p.vid ? presence.get(p.vid) : null
+    if (snap) seen(p, snap.lastSeen)
+    return { visitorId: p.vid ? p.vid.slice(0, 8) : '', name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
+      firstSeen: p.firstSeen, lastSeen: p.lastSeen, launches: p.launches, opened: p.opened,
+      projects: [...p.projects].map((id) => title[id] || id), siteSec: snap ? snap.activeSec : 0, sandboxActiveSec: p.sandboxActiveSec, sandboxWallSec: p.sandboxWallSec }
   }).sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)))
+  const withEmail = peopleOut.filter((p) => p.email)
 
   // projects
   const projects = examples.map((e) => {
@@ -77,7 +80,7 @@ export function buildDashboard({ live, examples }) {
     return {
       id: e.id, title: e.title, tier: e.difficulty,
       launches: mine.length,
-      people: new Set(mine.map((r) => r.email)).size,
+      people: new Set(mine.map((r) => r.vid || r.email)).size,
       opened: mine.filter((r) => r.opened).length,
       failed: mine.filter((r) => r.state === 'launch_failed').length,
       avgActiveSec: done.length ? Math.round(done.reduce((n, r) => n + (r.activeSec || 0), 0) / done.length) : 0,
@@ -90,7 +93,7 @@ export function buildDashboard({ live, examples }) {
   const series = days.map((d) => ({
     day: d,
     visitors: new Set(visits.filter((v) => day(v.at) === d).map((v) => v.vid)).size,
-    signups: signups.filter((s) => day(s.createdAt) === d).length,
+    started: signups.filter((s) => day(s.createdAt) === d).length,
     launches: runs.filter((r) => day(r.startedAt) === d).length,
   }))
 
@@ -107,7 +110,11 @@ export function buildDashboard({ live, examples }) {
     totals: {
       visitors: new Set(visits.map((v) => v.vid)).size,
       pageViews: visits.length,
-      signups: people.size,
+      started: peopleOut.length,
+      launchers: peopleOut.filter((p) => p.launches).length,
+      openers: peopleOut.filter((p) => p.opened).length,
+      withEmail: withEmail.length,
+      suspectEmails: withEmail.filter((p) => p.emailCheck).length,
       launches: runs.length,
       opened: runs.filter((r) => r.opened).length,
       liveNow: live.length,
@@ -126,13 +133,24 @@ function safeHost(u) {
   try { return new URL(u).hostname } catch { return 'other' }
 }
 
+const DISPOSABLE = new Set(['mailinator.com', 'guerrillamail.com', 'yopmail.com', '10minutemail.com', 'tempmail.com', 'temp-mail.org', 'trashmail.com', 'sharklasers.com', 'getnada.com', 'dispostable.com', 'maildrop.cc', 'example.com', 'example.org', 'test.com', 'abc.com', 'xyz.com', 'asd.com', 'email.com', 'domain.com'])
+const JUNK_LOCAL = new Set(['test', 'tester', 'testing', 'asdf', 'asd', 'qwerty', 'abc', 'abcd', 'aaa', 'xxx', 'xyz', 'demo', 'fake', 'none', 'na', 'no', 'nil', 'a', 'x', 'user', 'admin', 'name', 'email', 'mail', 'hello', 'hi', '123'])
+// Cheap look-over of a typed address; the reason is shown on the dashboard so you can judge it.
+export function emailCheck(email) {
+  const [local = '', domain = ''] = String(email).toLowerCase().split('@')
+  if (DISPOSABLE.has(domain)) return 'throwaway or placeholder domain'
+  if (JUNK_LOCAL.has(local) || /^(.)\1+$/.test(local) || /^\d+$/.test(local)) return 'placeholder name before the @'
+  if (domain.split('.')[0].length < 2) return 'domain looks too short'
+  return ''
+}
+
 const csvCell = (v) => {
   let s = Array.isArray(v) ? v.join('; ') : String(v ?? '')
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
 }
 export function peopleCsv(d) {
-  const head = ['email', 'name', 'first_seen', 'last_seen', 'sandboxes', 'opened', 'projects', 'time_on_site_sec', 'sandbox_active_sec', 'sandbox_wall_sec']
-  const rows = d.people.map((p) => [p.email, p.name, p.firstSeen, p.lastSeen, p.launches, p.opened, p.projects, p.siteSec, p.sandboxActiveSec, p.sandboxWallSec])
+  const head = ['visitor_id', 'email', 'email_check', 'name', 'first_seen', 'last_seen', 'sandboxes', 'opened', 'projects', 'time_on_site_sec', 'sandbox_active_sec', 'sandbox_wall_sec']
+  const rows = d.people.map((p) => [p.visitorId, p.email, p.emailCheck, p.name, p.firstSeen, p.lastSeen, p.launches, p.opened, p.projects, p.siteSec, p.sandboxActiveSec, p.sandboxWallSec])
   return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n'
 }

@@ -7,8 +7,8 @@ Insight** editor. No install, no signup friction, no lingering state.
 
 ## What it does
 
-1. **Landing + capture** — visitors enter a name + work email (tracked to
-   `data/signups.jsonl`); the landing page shows live slot availability.
+1. **Landing + capture** — visitors may enter a name and email (both optional; recorded in
+   `data/signups.jsonl`) and always get a random visitor ID shown on screen; the landing page shows live slot availability.
 2. **Gallery** — all the example projects, each with a **Run in sandbox** button.
 3. **Launch** — one click provisions a per-sandbox database on a shared Postgres,
    `docker run`s that example's image, and returns a **private `https://sN.tuvl.online`
@@ -22,13 +22,13 @@ The portal records, as JSONL under `DATA_DIR` (`./data`, a volume in the compose
 
 | File | Holds |
 |---|---|
-| `signups.jsonl` | name, email, visitor id, time of every sign-up |
+| `signups.jsonl` | optional name and email, visitor id, time of every start |
 | `visits.jsonl` | one row per landing-page load: random visitor id, referrer, `utm_*` |
 | `presence.jsonl` | seconds a visitor kept the page open and visible (30 s pings, snapshots) |
 | `launches.jsonl` | every sandbox: project, who, when it ended and why, lifetime, active time, requests, whether it was opened |
 
 A sandbox's *active time* is the number of 30-second windows in which the visitor's browser sent it traffic;
-*lifetime* is launch to teardown.
+*lifetime* is launch to teardown. People are counted by visitor id; an email is only a label, and the dashboard flags addresses that look fake.
 
 `/admin` on the portal host shows people, projects tried, time spent, sources, a 30-day chart and a CSV export. It signs in with
 Google and lets in `ADMIN_EMAIL` only (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_SESSION_SECRET`; see `.env.example`). Without
@@ -61,7 +61,8 @@ built from [`../Dockerfile.dev`](../Dockerfile.dev) and runs `tuvl dev`.
 | `SLOT_COUNT` | 12 | Hard concurrency cap (= the slot/cert pool) |
 | `SANDBOX_MEM_MB` | 512 | Per-sandbox memory limit |
 | `TTL_MINUTES` | 20 | Auto-teardown; frees the slot |
-| `MAX_PER_SESSION` | 2 | One visitor can't hog the pool |
+| `MAX_PER_SESSION` | 2 | One visitor (session or visitor id) can't hog the pool |
+| `MAX_PER_IP` | 6 | Cap per network address |
 
 The landing page surfaces `GET /api/capacity` (`{used,total,available}`) live, and
 disables **Run** with a banner when the pool is full.

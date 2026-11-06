@@ -91,6 +91,8 @@
   button:disabled{opacity:.55;cursor:default}
   .toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);background:var(--fg);color:#fff;padding:.65rem 1.1rem;border-radius:10px;font-size:.88rem;box-shadow:0 8px 24px rgba(0,0,0,.18)}
   @media (max-width:560px){.brand{font-size:1.6rem}.feather{width:36px;height:36px}.nav .hide-sm{display:none}}
+  .visitor{font-size:.85rem;color:var(--muted);margin:.6rem 0 0}.visitor code{font-family:ui-monospace,Menlo,monospace;color:var(--fg);background:var(--soft);border:1px solid var(--border);border-radius:6px;padding:1px 7px}
+  .opt{color:var(--muted);font-weight:400}
   .privacy{font-size:.78rem;color:var(--muted);margin:1rem 0 0;line-height:1.5}
 </style>
 </head>
@@ -113,17 +115,17 @@
 <section id="login" class="wrap hidden">
   <div class="card login">
     <h2>tuvl try</h2>
-    <p>Run a real tuvl 2.0 project in a throwaway sandbox, with no install. Tell us who you are and pick a project.</p>
+    <p>Run a real tuvl 2.0 project in a throwaway sandbox, with no install. Your name and email are optional: share them if you like, or just continue.</p>
     <div class="cap" id="loginCap"></div>
     <form id="loginForm">
-      <label for="name">Name</label>
-      <input id="name" name="name" autocomplete="name" placeholder="Ada Lovelace" required />
-      <label for="email">Work email</label>
-      <input id="email" name="email" type="email" autocomplete="email" placeholder="ada@company.com" required />
+      <label for="name">Name <span class="opt">(optional)</span></label>
+      <input id="name" name="name" autocomplete="name" placeholder="Ada Lovelace" />
+      <label for="email">Email <span class="opt">(optional)</span></label>
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="ada@company.com" />
       <div class="err" id="loginErr"></div>
-      <button class="btn-primary" type="submit" style="width:100%;margin-top:1rem">Enter the sandbox →</button>
+      <button class="btn-primary" type="submit" style="width:100%;margin-top:1rem">Continue →</button>
     </form>
-    <p class="privacy">We keep your name and email, which project you run and how long you use it, to understand how tuvl try is used and to follow up about tuvl. Write to <a href="mailto:developer@tuvl.io">developer@tuvl.io</a> to have them deleted.</p>
+    <p class="privacy">Each visitor gets a random ID. We keep that ID, which project you run and how long you use it, plus your name and email if you give them, to understand how tuvl try is used. Write to <a href="mailto:developer@tuvl.io">developer@tuvl.io</a> to have them deleted.</p>
   </div>
 </section>
 
@@ -133,6 +135,7 @@
     <h1>Pick a project. Run it in a <span class="mark">live sandbox.</span></h1>
     <p>Each one is a real tuvl project, checked and tested before it runs, started with the <strong>Insight</strong> editor. Follow a run's journal, read the code, change a workflow. Sandboxes are private to you and self-destruct after a short while.</p>
     <div class="ver">Runs on <strong>tuvl 2.0.1</strong> &middot; <em>Intelligent Workflows. Deterministic Execution.</em></div>
+    <div class="visitor">Your visitor ID: <code id="visitorId"></code> <span>(a random ID for this browser; quote it if you write to us)</span></div>
     <div class="cap" id="cap"></div>
     <div class="banner hidden" id="fullBanner">All sandboxes are in use right now — they free up automatically as timers expire. Try again in a minute or two.</div>
   </div>
@@ -264,7 +267,8 @@ $('#loginForm').addEventListener('submit',async e=>{
 
 async function showGallery(me){
   $('#login').classList.add('hidden'); $('#gallery').classList.remove('hidden')
-  $('#who').textContent = `${me.name} · ${me.email}`
+  $('#who').textContent = [me.name, me.email].filter(Boolean).join(' · ')
+  $('#visitorId').textContent = me.visitorId
   const {examples} = await api('/api/examples'); EXAMPLES=examples
   $('#grid').innerHTML = examples.map(cardHTML).join('')
   // restore any running sandboxes for this session
