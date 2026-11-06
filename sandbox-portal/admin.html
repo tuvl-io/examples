@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>tuvl try · admin</title>
+<style>
+:root{--bg:#fff;--soft:#fafafa;--border:#e4e4e7;--fg:#09090b;--muted:#71717a;--teal:#0891b2;--accent:#22d3ee;--sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 var(--sans);color:var(--fg);background:var(--soft)}
+header{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px}
+header h1{font-size:18px;margin:0}header .sp{flex:1}header a,header button{font:inherit;color:var(--teal);background:none;border:0;cursor:pointer;text-decoration:none}
+main{max-width:1280px;margin:0 auto;padding:24px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.k{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px}.k b{display:block;font-size:26px;letter-spacing:-.5px}.k span{color:var(--muted);font-size:12px}
+section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:20px;overflow:auto}
+h2{font-size:15px;margin:0 0 12px}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer}td.n,th.n{text-align:right}tr:last-child td{border-bottom:0}
+.bar{display:inline-block;height:8px;background:var(--accent);border-radius:4px;vertical-align:middle}
+.chart{display:flex;align-items:flex-end;gap:3px;height:110px}.chart div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;min-width:4px}
+.chart i{display:block;background:var(--accent)}.chart i.s{background:#0e7490}.chart i.l{background:#a5f3fc}
+.legend{font-size:12px;color:var(--muted);margin-top:8px}.legend em{font-style:normal;display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 12px;vertical-align:middle}
+.tag{padding:1px 8px;border-radius:99px;background:#ecfeff;color:#0e7490;font-size:12px}.bad{background:#fef2f2;color:#b91c1c}
+input{font:inherit;padding:6px 10px;border:1px solid var(--border);border-radius:8px;width:260px;margin-bottom:10px}
+.two{display:grid;grid-template-columns:3fr 2fr;gap:20px}@media(max-width:900px){.two{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>tuvl try · admin</h1><span class="sp"></span><span id="when" style="color:var(--muted)"></span><button id="refresh">Refresh</button><a href="/admin/export.csv">Export people (CSV)</a><a href="/admin/logout">Sign out</a></header>
+<main>
+<div class="kpis" id="kpis"></div>
+<section><h2>Last 30 days</h2><div class="chart" id="chart"></div><div class="legend"><em style="background:#a5f3fc"></em>visitors<em style="background:#0e7490"></em>sign-ups<em style="background:#22d3ee"></em>sandboxes launched</div></section>
+<div class="two">
+<section><h2>Projects tried</h2><table id="projects"></table></section>
+<section><h2>Where visitors come from</h2><table id="sources"></table></section>
+</div>
+<section><h2>People</h2><input id="q" placeholder="Filter by name, email or project"><table id="people"></table></section>
+<section><h2>Recent sandboxes</h2><table id="runs"></table></section>
+</main>
+<script>
+const $=s=>document.querySelector(s)
+const el=(tag,props={},kids=[])=>{const e=document.createElement(tag);Object.assign(e,props);for(const k of [].concat(kids))e.append(k);return e}
+const dur=s=>{s=Math.round(s||0);if(s<60)return s+'s';const m=Math.floor(s/60);return m<60?`${m}m ${s%60}s`:`${Math.floor(m/60)}h ${m%60}m`}
+const when=iso=>iso?new Date(iso).toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):''
+function table(t,cols,rows){
+  t.replaceChildren(el('thead',{},el('tr',{},cols.map(c=>el('th',{className:c.n?'n':''},c.h)))),
+    el('tbody',{},rows.map(r=>el('tr',{},cols.map(c=>{const v=c.f(r);const td=el('td',{className:c.n?'n':''});td.append(v instanceof Node?v:String(v??''));return td})))))
+}
+let D=null
+function render(){
+  const t=D.totals
+  $('#kpis').replaceChildren(...[['Visitors',t.visitors],['Page views',t.pageViews],['Sign-ups (unique emails)',t.signups],['Sandboxes launched',t.launches],['Actually opened',t.opened],['Running now',t.liveNow],['Avg active time / sandbox',dur(t.avgActiveSec)],['Avg lifetime / sandbox',dur(t.avgWallSec)]]
+    .map(([l,v])=>el('div',{className:'k'},[el('b',{},String(v)),el('span',{},l)])))
+  $('#when').textContent='Updated '+when(D.generatedAt)
+  const max=Math.max(1,...D.series.map(d=>d.visitors))
+  $('#chart').replaceChildren(...D.series.map(d=>{const c=el('div',{title:`${d.day}: ${d.visitors} visitors, ${d.signups} sign-ups, ${d.launches} sandboxes`});
+    for(const [k,cls] of [['launches',''],['signups','s'],['visitors','l']])c.append(el('i',{className:cls,style:`height:${Math.round(d[k]/max*100)}px`}));return c}))
+  const pm=Math.max(1,...D.projects.map(p=>p.launches))
+  table($('#projects'),[{h:'Project',f:p=>p.title},{h:'',f:p=>el('span',{className:'bar',style:`width:${Math.round(p.launches/pm*60)}px`})},{h:'Launches',n:1,f:p=>p.launches},{h:'People',n:1,f:p=>p.people},{h:'Opened',n:1,f:p=>p.opened},{h:'Failed',n:1,f:p=>p.failed},{h:'Avg active',n:1,f:p=>dur(p.avgActiveSec)}],D.projects)
+  table($('#sources'),[{h:'Source',f:s=>s[0]},{h:'Page views',n:1,f:s=>s[1]}],D.sources)
+  const q=$('#q').value.toLowerCase()
+  const ps=D.people.filter(p=>!q||[p.name,p.email,...p.projects].join(' ').toLowerCase().includes(q))
+  table($('#people'),[{h:'Name',f:p=>p.name},{h:'Email',f:p=>p.email},{h:'First seen',f:p=>when(p.firstSeen)},{h:'Last seen',f:p=>when(p.lastSeen)},{h:'Sandboxes',n:1,f:p=>p.launches},{h:'Projects',f:p=>p.projects.join(', ')},{h:'On site',n:1,f:p=>dur(p.siteSec)},{h:'In sandboxes (active)',n:1,f:p=>dur(p.sandboxActiveSec)},{h:'Sandbox lifetime',n:1,f:p=>dur(p.sandboxWallSec)}],ps)
+  table($('#runs'),[{h:'Started',f:r=>when(r.startedAt)},{h:'Project',f:r=>r.title},{h:'Name',f:r=>r.name},{h:'Email',f:r=>r.email},{h:'Opened',f:r=>r.opened?'yes':'no'},{h:'Active',n:1,f:r=>dur(r.activeSec)},{h:'Lifetime',n:1,f:r=>dur(r.wallSec)},{h:'Requests',n:1,f:r=>r.requests??''},{h:'Ended by',f:r=>el('span',{className:'tag'+(r.state==='launch_failed'?' bad':'')},r.state)}],D.runs)
+}
+async function load(){const r=await fetch('/admin/api/data',{cache:'no-store'});if(r.status===401){location.href='/admin/login';return}D=await r.json();render()}
+$('#refresh').onclick=load;$('#q').oninput=()=>D&&render();load();setInterval(load,60000)
+</script></body></html>

@@ -10,7 +10,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import httpProxy from 'http-proxy'
 import { EXAMPLES, EXAMPLE_BY_ID } from './lib/examples.js'
-import { createSession, getSession, recordLaunch } from './lib/store.js'
+import crypto from 'node:crypto'
+import { createSession, getSession, recordLaunch, recordVisit, touchPresence, flushPresence } from './lib/store.js'
+import { buildDashboard, peopleCsv } from './lib/stats.js'
+import { ADMIN_EMAIL, adminConfigured, isAdmin, issueAdminCookie, loginRedirect, finishLogin } from './lib/admin.js'
 import {
   createDb,
   dropDb,
@@ -83,8 +86,41 @@ async function teardown(id, reason = 'expired') {
   sandboxes.delete(id)
   await killSandbox(id)
   await dropDb(sb.dbName)
-  recordLaunch({ event: 'teardown', id, exampleId: sb.exampleId, email: sb.email, reason })
+  recordLaunch({
+    event: 'teardown', id, runId: sb.runId, exampleId: sb.exampleId, email: sb.email, reason,
+    wallSec: Math.round((Date.now() - Date.parse(sb.createdAt)) / 1000),
+    activeSec: sb.activeBuckets * 30, requests: sb.requests, opened: !!sb.firstHit,
+    openedAfterSec: sb.firstHit ? Math.round((sb.firstHit - Date.parse(sb.createdAt)) / 1000) : null,
+  })
 }
+
+// Count a sandbox request as activity: one 30-second window per window that saw traffic.
+function noteActivity(sb) {
+  const now = Date.now()
+  sb.requests += 1
+  sb.firstHit ||= now
+  const bucket = Math.floor(now / 30000)
+  if (bucket !== sb.lastBucket) {
+    sb.lastBucket = bucket
+    sb.activeBuckets += 1
+  }
+}
+
+// ── small per-IP limiter for the unauthenticated tracking endpoints ───────────
+const hits = new Map()
+const clientIp = (req) => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
+function limited(req, res, perMinute) {
+  const k = `${req.path}|${clientIp(req)}`
+  const now = Date.now()
+  const h = (hits.get(k) || []).filter((t) => now - t < 60000)
+  h.push(now)
+  hits.set(k, h)
+  if (h.length > perMinute) { res.status(429).json({ error: 'slow_down' }); return true }
+  return false
+}
+setInterval(() => { const cut = Date.now() - 60000; for (const [k, v] of hits) if (!v.some((t) => t > cut)) hits.delete(k) }, 60000)
+
+const clip = (v, n) => String(v ?? '').slice(0, n)
 
 // ── portal app (only reached when Host === PORTAL_HOST) ───────────────────────
 const app = express()
@@ -108,12 +144,13 @@ app.get('/api/me', (req, res) => {
 })
 
 app.post('/api/signup', (req, res) => {
-  const name = String(req.body?.name || '').trim()
-  const email = String(req.body?.email || '').trim()
+  if (limited(req, res, 10)) return
+  const name = clip(req.body?.name, 100).trim()
+  const email = clip(req.body?.email, 254).trim()
   if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'name and a valid email are required' })
   }
-  const s = createSession({ name, email })
+  const s = createSession({ name, email, vid: parseCookies(req).sbv })
   res.setHeader(
     'Set-Cookie',
     `sbsess=${s.sid}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax`,
@@ -160,9 +197,14 @@ app.post('/api/launch', async (req, res) => {
     createdAt: new Date(now).toISOString(),
     expiresAt: new Date(now + TTL_MS).toISOString(),
     status: 'starting',
+    runId: crypto.randomBytes(8).toString('hex'),
+    requests: 0,
+    activeBuckets: 0,
+    lastBucket: 0,
+    firstHit: 0,
   }
   sandboxes.set(id, sb)
-  recordLaunch({ event: 'launch', id, exampleId: ex.id, name: sb.name, email: sb.email })
+  recordLaunch({ event: 'launch', id, runId: sb.runId, exampleId: ex.id, name: sb.name, email: sb.email })
 
   try {
     await createDb(dbName)
@@ -185,6 +227,71 @@ app.post('/api/stop', async (req, res) => {
   if (!sb || sb.sid !== req.session.sid) return res.status(404).json({ error: 'not_found' })
   await teardown(sb.id, 'stopped')
   res.json({ ok: true })
+})
+
+// anonymous visit + time-on-page, tied to a random visitor id (no personal data)
+const ensureVid = (req, res) => {
+  let vid = parseCookies(req).sbv
+  if (!/^[\w-]{10,40}$/.test(vid || '')) {
+    vid = crypto.randomBytes(12).toString('base64url')
+    res.append('Set-Cookie', `sbv=${vid}; HttpOnly; Path=/; Max-Age=31536000; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`)
+  }
+  return vid
+}
+app.post('/api/hit', (req, res) => {
+  if (limited(req, res, 20)) return
+  const vid = ensureVid(req, res)
+  const b = req.body || {}
+  recordVisit({ vid, ref: clip(b.ref, 200), utm_source: clip(b.utm_source, 60), utm_medium: clip(b.utm_medium, 60), utm_campaign: clip(b.utm_campaign, 60) })
+  res.json({ ok: true })
+})
+app.post('/api/ping', (req, res) => {
+  if (limited(req, res, 8)) return
+  const vid = ensureVid(req, res)
+  const sec = Math.min(35, Math.max(0, Number(req.body?.s) || 0))
+  if (sec) touchPresence(vid, sec)
+  res.json({ ok: true })
+})
+
+// ── admin dashboard: Google sign-in, ADMIN_EMAIL only ────────────────────────
+const origin = `${SANDBOX_SCHEME}://${PORTAL_HOST}`
+const cookieFlags = `HttpOnly; Path=/admin; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`
+const adminOnly = (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store')
+  if (isAdmin(parseCookies(req).sbadmin)) return next()
+  if (req.path.startsWith('/admin/api/') || req.path === '/admin/export.csv') return res.status(401).json({ error: 'admin_only' })
+  res.redirect('/admin/login')
+}
+const adminPage = (title, body) => `<!doctype html><meta charset=utf-8><title>${title}</title><style>body{font:16px/1.6 system-ui;max-width:32rem;margin:14vh auto;padding:0 1.5rem;color:#0f172a}a{color:#0d9488}</style>${body}`
+app.get('/admin/login', (_req, res) => {
+  if (!adminConfigured()) return res.status(503).send(adminPage('Admin', '<h1>Admin sign-in is not configured</h1><p>Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server.</p>'))
+  const l = loginRedirect(origin)
+  res.append('Set-Cookie', `sbstate=${l.cookie}; Max-Age=600; ${cookieFlags}`)
+  res.redirect(l.url)
+})
+app.get('/admin/callback', async (req, res) => {
+  try {
+    const email = await finishLogin({ origin, code: String(req.query.code || ''), state: String(req.query.state || ''), stateCookie: parseCookies(req).sbstate })
+    if (email !== ADMIN_EMAIL) throw new Error('not_admin')
+    res.append('Set-Cookie', `sbadmin=${issueAdminCookie()}; Max-Age=28800; ${cookieFlags}`)
+    res.append('Set-Cookie', `sbstate=; Max-Age=0; ${cookieFlags}`)
+    res.redirect('/admin')
+  } catch (err) {
+    console.warn('admin login refused:', err.message)
+    res.status(403).send(adminPage('Not allowed', '<h1>Not allowed</h1><p>This dashboard is for the tuvl admin only.</p><p><a href="/">Back to tuvl try</a></p>'))
+  }
+})
+app.get('/admin/logout', (_req, res) => {
+  res.append('Set-Cookie', `sbadmin=; Max-Age=0; ${cookieFlags}`)
+  res.redirect('/')
+})
+const dashboard = () => buildDashboard({ live: [...sandboxes.values()], examples: EXAMPLES })
+app.get('/admin', adminOnly, (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')))
+app.get('/admin/api/data', adminOnly, (_req, res) => res.json(dashboard()))
+app.get('/admin/export.csv', adminOnly, (_req, res) => {
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', 'attachment; filename="tuvl-try-people.csv"')
+  res.send(peopleCsv(dashboard()))
 })
 
 app.get('/healthz', (_req, res) => res.json({ ok: true, active: sandboxes.size }))
@@ -212,6 +319,7 @@ const server = http.createServer((req, res) => {
   if (id) {
     const sb = sandboxes.get(id)
     if (sb) {
+      noteActivity(sb)
       if (EXAMPLE_BY_ID[sb.exampleId]?.ui && (req.url === '/ui' || req.url.startsWith('/ui/') || req.url.startsWith('/ui?'))) {
         if (req.url === '/ui') {
           res.writeHead(302, { Location: '/ui/' })
@@ -232,6 +340,7 @@ server.on('upgrade', (req, socket, head) => {
   const host = (req.headers.host || '').split(':')[0]
   const id = sandboxIdFromHost(host)
   if (id && sandboxes.has(id)) {
+    noteActivity(sandboxes.get(id))
     proxy.ws(req, socket, head, { target: `http://${upstreamHost(id)}` })
   } else {
     socket.destroy()
@@ -245,6 +354,9 @@ setInterval(() => {
     if (Date.parse(sb.expiresAt) <= now) teardown(sb.id, 'expired')
   }
 }, 30_000)
+
+setInterval(flushPresence, 60_000)
+for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => { flushPresence(); setTimeout(() => process.exit(0), 200) })
 
 reapOrphans()
   .then((n) => n && console.log(`reaped ${n} orphan sandbox container(s)`))

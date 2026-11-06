@@ -32,6 +32,10 @@ services:
       SANDBOX_MEM_MB: ${SANDBOX_MEM_MB:-512}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-sooraj@tuvl.io}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/app/data

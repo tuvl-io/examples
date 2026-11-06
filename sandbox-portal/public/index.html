@@ -11,6 +11,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7NBSPKBZSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('set', { site_id: 'try' });
+  gtag('config', 'G-7NBSPKBZSP');
+</script>
 <style>
   :root{
     color-scheme:light;
@@ -83,6 +91,7 @@
   button:disabled{opacity:.55;cursor:default}
   .toast{position:fixed;bottom:1.3rem;left:50%;transform:translateX(-50%);background:var(--fg);color:#fff;padding:.65rem 1.1rem;border-radius:10px;font-size:.88rem;box-shadow:0 8px 24px rgba(0,0,0,.18)}
   @media (max-width:560px){.brand{font-size:1.6rem}.feather{width:36px;height:36px}.nav .hide-sm{display:none}}
+  .privacy{font-size:.78rem;color:var(--muted);margin:1rem 0 0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -114,6 +123,7 @@
       <div class="err" id="loginErr"></div>
       <button class="btn-primary" type="submit" style="width:100%;margin-top:1rem">Enter the sandbox →</button>
     </form>
+    <p class="privacy">We keep your name and email, which project you run and how long you use it, to understand how tuvl try is used and to follow up about tuvl. Write to <a href="mailto:developer@tuvl.io">developer@tuvl.io</a> to have them deleted.</p>
   </div>
 </section>
 
@@ -142,6 +152,16 @@
 
 <script>
 const $ = (s,r=document)=>r.querySelector(s)
+const track=(name,params={})=>{ if(typeof gtag==='function') gtag('event',name,params) }
+const post=(p,body)=>fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{}),keepalive:true}).catch(()=>{})
+{ // anonymous visit, then seconds of visible time every 30s (no personal data; tied to a random visitor id)
+  const q=new URLSearchParams(location.search)
+  post('/api/hit',{ref:document.referrer,utm_source:q.get('utm_source'),utm_medium:q.get('utm_medium'),utm_campaign:q.get('utm_campaign')})
+  let last=Date.now()
+  const beat=()=>{ const now=Date.now(), s=Math.round((now-last)/1000); last=now; if(document.visibilityState==='visible'&&s>0) post('/api/ping',{s:Math.min(s,35)}) }
+  setInterval(beat,30000)
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') beat(); else last=Date.now() })
+}
 const api = (p,opt)=>fetch(p,{headers:{'Content-Type':'application/json'},...opt}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.message||j.error||r.statusText),{status:r.status});return j})
 let EXAMPLES=[], running={}, capFull=false // exampleId -> sandbox record
 
@@ -151,6 +171,7 @@ function toast(msg){const t=document.createElement('div');t.className='toast';t.
 async function refreshCap(){
   try{
     const c=await api('/api/capacity')
+    if(c.available<=0 && !capFull) track('capacity_full')
     capFull = c.available<=0
     const pct = c.total ? Math.round(c.used/c.total*100) : 0
     const html = `<span class="dot ${capFull?'full':''}"></span><span>${c.used} of ${c.total} sandboxes in use · ${c.available} available</span><span class="bar"><span class="fill" style="width:${pct}%"></span></span>`
@@ -199,17 +220,20 @@ async function launch(exId){
   try{
     const sb = await api('/api/launch',{method:'POST',body:JSON.stringify({exampleId:exId})})
     running[exId]=sb; renderSlot(exId); poll(exId); refreshCap()
-  }catch(e){ running[exId]=null; renderSlot(exId); toast(e.message); refreshCap() }
+    track('sandbox_launch',{example_id:exId})
+  }catch(e){ running[exId]=null; renderSlot(exId); toast(e.message); refreshCap(); track('sandbox_launch_failed',{example_id:exId,reason:e.status||'error'}) }
 }
 async function poll(exId){
   const sb = running[exId]; if(!sb||!sb.id) return
   try{
     const s = await api('/api/sandbox/'+sb.id)
-    running[exId]=s; renderSlot(exId)
+    const was=running[exId]?.status; running[exId]=s; renderSlot(exId)
+    if(s.status==='ready'&&was==='starting') track('sandbox_ready',{example_id:exId})
     if(s.status==='starting') setTimeout(()=>poll(exId),2000)
   }catch{ running[exId]=null; renderSlot(exId) }
 }
 async function stop(id,exId){
+  track('sandbox_stop',{example_id:exId})
   try{ await api('/api/stop',{method:'POST',body:JSON.stringify({id})}) }catch{}
   running[exId]=null; renderSlot(exId); refreshCap()
 }
@@ -224,6 +248,9 @@ setInterval(()=>{
 },1000)
 
 document.addEventListener('click',e=>{
+  const open=e.target.closest('a.open'); if(open) track('sandbox_open',{example_id:open.closest('[data-ex]')?.dataset.ex,target:open.textContent.includes('Insight')?'insight':'app'})
+  const link=e.target.closest('.card .links a'); if(link) track('example_link_click',{example_id:link.closest('[data-ex]')?.dataset.ex,kind:link.textContent.startsWith('Spec')?'spec':'source'})
+  const out=e.target.closest('footer a[href^="http"]'); if(out) track('outbound_click',{destination:new URL(out.href).hostname,link_url:out.href})
   const run=e.target.closest('[data-run]'); if(run) return launch(run.dataset.run)
   const st=e.target.closest('[data-stop]'); if(st) return stop(st.dataset.stop, st.dataset.ex)
 })
@@ -231,7 +258,7 @@ document.addEventListener('click',e=>{
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault(); $('#loginErr').textContent=''
   const name=$('#name').value.trim(), email=$('#email').value.trim()
-  try{ await api('/api/signup',{method:'POST',body:JSON.stringify({name,email})}); await boot() }
+  try{ await api('/api/signup',{method:'POST',body:JSON.stringify({name,email})}); track('signup_complete'); await boot() }
   catch(err){ $('#loginErr').textContent=err.message }
 })
 
@@ -248,7 +275,7 @@ async function boot(){
   refreshCap()
   if(!window._capT) window._capT=setInterval(refreshCap,8000)
   try{ const me=await api('/api/me'); await showGallery(me) }
-  catch{ $('#gallery').classList.add('hidden'); $('#login').classList.remove('hidden') }
+  catch{ $('#gallery').classList.add('hidden'); $('#login').classList.remove('hidden'); if(!window._seenLogin){window._seenLogin=1;track('signup_view')} }
 }
 boot()
 </script>

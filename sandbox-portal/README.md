@@ -16,6 +16,24 @@ Insight** editor. No install, no signup friction, no lingering state.
 4. **Auto-cleanup** — a reaper destroys each sandbox (container **and** database)
    when its TTL (default 20 min) expires; visitors can also Stop early.
 
+## Usage tracking and the admin dashboard
+
+The portal records, as JSONL under `DATA_DIR` (`./data`, a volume in the compose files):
+
+| File | Holds |
+|---|---|
+| `signups.jsonl` | name, email, visitor id, time of every sign-up |
+| `visits.jsonl` | one row per landing-page load: random visitor id, referrer, `utm_*` |
+| `presence.jsonl` | seconds a visitor kept the page open and visible (30 s pings, snapshots) |
+| `launches.jsonl` | every sandbox: project, who, when it ended and why, lifetime, active time, requests, whether it was opened |
+
+A sandbox's *active time* is the number of 30-second windows in which the visitor's browser sent it traffic;
+*lifetime* is launch to teardown.
+
+`/admin` on the portal host shows people, projects tried, time spent, sources, a 30-day chart and a CSV export. It signs in with
+Google and lets in `ADMIN_EMAIL` only (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_SESSION_SECRET`; see `.env.example`). Without
+the Google settings it answers 503. The sign-up form tells visitors what is kept.
+
 ## Architecture
 
 A single Node process (`server.js`) does three jobs:
@@ -70,6 +88,8 @@ images present locally (`tuvl-example-<id>:latest`, built from `../<example>`).
 | `GET /api/sandbox/:id` | launch status (`starting`/`ready`) |
 | `POST /api/stop` | tear a sandbox down early |
 | `GET /api/mine` | this visitor's active sandboxes |
+| `POST /api/hit`, `POST /api/ping` | anonymous visit and time-on-page |
+| `GET /admin`, `/admin/api/data`, `/admin/export.csv` | admin only |
 
 > Built with [tuvl](https://tuvl.io). The sandboxed Insight editor is public and
 > writable **by design** — sandboxes are ephemeral and reset on their TTL.
