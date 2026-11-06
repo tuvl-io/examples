@@ -125,7 +125,7 @@
       <div class="err" id="loginErr"></div>
       <button class="btn-primary" type="submit" style="width:100%;margin-top:1rem">Continue →</button>
     </form>
-    <p class="privacy">Each visitor gets an ID like IN-7K3-9QX, saved in your browser so it is the same next time. Its first two letters are the country, worked out from your IP address, which we do not store. We keep that ID, which project you run and how long you use it, plus your name and email if you give them, to understand how tuvl try is used. Write to <a href="mailto:developer@tuvl.io">developer@tuvl.io</a> to have them deleted.</p>
+    <p class="privacy">Each visitor gets an ID like IN-KAB-0042, saved in your browser so it is the same next time. Its first two letters are the country, worked out from your IP address, which we do not store. We keep that ID, which project you run and how long you use it, plus your name and email if you give them, to understand how tuvl try is used. Write to <a href="mailto:developer@tuvl.io">developer@tuvl.io</a> to have them deleted.</p>
   </div>
 </section>
 
@@ -160,7 +160,7 @@ const post=(p,body)=>fetch(p,{method:'POST',headers:{'Content-Type':'application
 { // anonymous visit, then seconds of visible time every 30s (no personal data; tied to a random visitor id)
   const q=new URLSearchParams(location.search)
   let stored='';try{stored=localStorage.getItem('tuvl_try_vid')||''}catch{}
-  fetch('/api/hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vid:stored,ref:document.referrer,utm_source:q.get('utm_source'),utm_medium:q.get('utm_medium'),utm_campaign:q.get('utm_campaign')}),keepalive:true}).then(r=>r.json()).then(j=>{ if(j.visitorId){ try{localStorage.setItem('tuvl_try_vid',j.visitorId)}catch{} } }).catch(()=>{})
+  fetch('/api/hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vid:stored,ref:document.referrer,utm_source:q.get('utm_source'),utm_medium:q.get('utm_medium'),utm_campaign:q.get('utm_campaign')}),keepalive:true}).then(r=>r.json()).then(j=>{ if(j.restore){ try{localStorage.setItem('tuvl_try_vid',j.restore)}catch{} } }).catch(()=>{})
   let last=Date.now()
   const beat=()=>{ const now=Date.now(), s=Math.round((now-last)/1000); last=now; if(document.visibilityState==='visible'&&s>0) post('/api/ping',{s:Math.min(s,35)}) }
   setInterval(beat,30000)
