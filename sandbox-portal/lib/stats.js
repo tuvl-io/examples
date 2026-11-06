@@ -1,7 +1,7 @@
 // Aggregates the JSONL logs into the numbers the admin dashboard shows.
 import crypto from 'node:crypto'
 import { FILES, readJsonl } from './store.js'
-import { displayId, countryOf, seriesOf } from './visitor.js'
+import { displayId, countryOf, seriesOf, arrivalOf } from './visitor.js'
 
 const norm = (e) => String(e || '').trim().toLowerCase()
 // Older rows predate visitor ids: derive a stable one from the email so every row has an id and the same person keeps the same id.
@@ -75,7 +75,7 @@ export function buildDashboard({ live, examples }) {
   const peopleOut = [...people.values()].map((p) => {
     const snap = p.vid ? presence.get(p.vid) : null
     if (snap) seen(p, snap.lastSeen)
-    return { visitorId: displayId(p.vid), country: countryOf(p.vid), series: seriesOf(p.vid), name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
+    return { visitorId: displayId(p.vid), country: countryOf(p.vid), series: seriesOf(p.vid), arrival: arrivalOf(displayId(p.vid)), name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
       firstSeen: p.firstSeen, lastSeen: p.lastSeen, launches: p.launches, opened: p.opened,
       projects: [...p.projects].map((id) => title[id] || id), siteSec: snap ? snap.activeSec : 0, sandboxActiveSec: p.sandboxActiveSec, sandboxWallSec: p.sandboxWallSec }
   }).sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)))
@@ -173,7 +173,7 @@ const csvCell = (v) => {
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
 }
 export function peopleCsv(d) {
-  const head = ['visitor_id', 'country', 'series', 'email', 'email_check', 'name', 'first_seen', 'last_seen', 'sandboxes', 'opened', 'projects', 'time_on_site_sec', 'sandbox_active_sec', 'sandbox_wall_sec']
-  const rows = d.people.map((p) => [p.visitorId, p.country, p.series, p.email, p.emailCheck, p.name, p.firstSeen, p.lastSeen, p.launches, p.opened, p.projects, p.siteSec, p.sandboxActiveSec, p.sandboxWallSec])
+  const head = ['visitor_id', 'country', 'series', 'arrival_no', 'email', 'email_check', 'name', 'first_seen', 'last_seen', 'sandboxes', 'opened', 'projects', 'time_on_site_sec', 'sandbox_active_sec', 'sandbox_wall_sec']
+  const rows = d.people.map((p) => [p.visitorId, p.country, p.series, p.arrival, p.email, p.emailCheck, p.name, p.firstSeen, p.lastSeen, p.launches, p.opened, p.projects, p.siteSec, p.sandboxActiveSec, p.sandboxWallSec])
   return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n'
 }

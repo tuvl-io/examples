@@ -2,7 +2,8 @@
 //   IN    country the visitor first came from (XX when unknown), from the request IP and a local database
 //   KAB   the series: three letters that encode, with SERIES_KEY, the year and month the series started
 //         and which series of that month it is. A new series starts for a country once 10,000 ids are used.
-//   0042  counter within the series, 0000 to 9999
+//   0042  number within the series, 0000 to 9999. Arrivals are numbered in order, but the number shown is
+//         scrambled with SERIES_KEY (a keyed permutation, so no two ids collide), so ids do not reveal volume or order.
 // Ids are sequential, so the cookie and the copy kept in the browser carry a signature; an id typed in by hand is ignored.
 import crypto from 'node:crypto'
 import fs from 'node:fs'
@@ -54,20 +55,50 @@ function saveCounters() {
   fs.writeFileSync(`${COUNTERS}.tmp`, JSON.stringify(counters))
   fs.renameSync(`${COUNTERS}.tmp`, COUNTERS)
 }
+// Keyed permutation of 0000..9999 (four Feistel rounds on two digits at a time).
+const round = (key, half, i) => crypto.createHmac('sha256', SERIES_KEY).update(`${key}:${i}:${half}`).digest()[0] % 100
+function scramble(n, key) {
+  let l = Math.floor(n / 100), r = n % 100
+  for (let i = 0; i < 4; i++) [l, r] = [r, (l + round(key, r, i)) % 100]
+  return l * 100 + r
+}
+function unscramble(v, key) {
+  let l = Math.floor(v / 100), r = v % 100
+  for (let i = 3; i >= 0; i--) [l, r] = [(r - round(key, l, i) + 100) % 100, l]
+  return l * 100 + r
+}
+
 export function newVisitorId(country, now = new Date()) {
   const cc = /^[A-Z]{2}$/.test(country || '') ? country : 'XX'
   const y = now.getUTCFullYear(), m = now.getUTCMonth() + 1
   let c = counters[cc]
-  if (!c) c = counters[cc] = { y, m, b: 1, n: -1 }
-  if (c.n >= 9999) {
-    c.b = c.y === y && c.m === m ? c.b + 1 : 1
-    c.y = y
-    c.m = m
-    c.n = -1
-  }
-  c.n += 1
+  if (!c) c = counters[cc] = { y, m, b: 1, n: -1, legacy: 0 }
+  // ids handed out before scrambling were plain sequence numbers 0..legacy-1; never hand those values out again
+  if (c.legacy === undefined) c.legacy = c.n + 1
+  let value
+  do {
+    c.n += 1
+    if (c.n > 9999) {
+      c.b = c.y === y && c.m === m ? c.b + 1 : 1
+      c.y = y
+      c.m = m
+      c.n = 0
+      c.legacy = 0
+    }
+    value = scramble(c.n, `${cc}:${seriesCode(c.y, c.m, c.b)}`)
+  } while (value < c.legacy)
   saveCounters()
-  return `${cc}-${seriesCode(c.y, c.m, c.b)}-${String(c.n).padStart(4, '0')}`
+  return `${cc}-${seriesCode(c.y, c.m, c.b)}-${String(value).padStart(4, '0')}`
+}
+
+// The real arrival number (1 = first visitor from that country in that series), for the dashboard.
+export function arrivalOf(id) {
+  if (!ID_RE.test(id || '')) return ''
+  const cc = id.slice(0, 2), code = id.slice(3, 6), value = Number(id.slice(7))
+  const c = counters[cc]
+  const cur = c && seriesCode(c.y, c.m, c.b) === code
+  if (cur && value < (c.legacy ?? c.n + 1)) return value + 1
+  return unscramble(value, `${cc}:${code}`) + 1
 }
 
 // ── signed tokens for the cookie and the browser copy ──
