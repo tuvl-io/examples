@@ -27,7 +27,7 @@ input{font:inherit;padding:6px 10px;border:1px solid var(--border);border-radius
 <section><h2>Last 30 days</h2><div class="chart" id="chart"></div><div class="legend"><em style="background:#a5f3fc"></em>visitors<em style="background:#0e7490"></em>started<em style="background:#22d3ee"></em>sandboxes launched</div></section>
 <div class="two">
 <section><h2>Projects tried</h2><table id="projects"></table></section>
-<section><h2>Where visitors come from</h2><table id="sources"></table></section>
+<section><h2>Where visitors come from</h2><table id="sources"></table><h2 style="margin-top:18px">By country</h2><table id="countries"></table></section>
 </div>
 <section><h2>Visitors who started</h2><input id="q" placeholder="Filter by ID, name, email or project"><table id="people"></table></section>
 <section><h2>Recent sandboxes</h2><table id="runs"></table></section>
@@ -52,11 +52,13 @@ function render(){
     for(const [k,cls] of [['launches',''],['started','s'],['visitors','l']])c.append(el('i',{className:cls,style:`height:${Math.round(d[k]/max*100)}px`}));return c}))
   const pm=Math.max(1,...D.projects.map(p=>p.launches))
   table($('#projects'),[{h:'Project',f:p=>p.title},{h:'',f:p=>el('span',{className:'bar',style:`width:${Math.round(p.launches/pm*60)}px`})},{h:'Launches',n:1,f:p=>p.launches},{h:'People',n:1,f:p=>p.people},{h:'Opened',n:1,f:p=>p.opened},{h:'Failed',n:1,f:p=>p.failed},{h:'Avg active',n:1,f:p=>dur(p.avgActiveSec)}],D.projects)
+  const rn=new Intl.DisplayNames(['en'],{type:'region'});const cname=c=>{try{return c==='XX'?'Unknown':rn.of(c)}catch{return c}}
+  table($('#countries'),[{h:'Country',f:c=>`${c.code} · ${cname(c.code)}`},{h:'Visitors',n:1,f:c=>c.visitors},{h:'Started',n:1,f:c=>c.started},{h:'Launched',n:1,f:c=>c.launchers}],D.countries)
   table($('#sources'),[{h:'Source',f:s=>s[0]},{h:'Page views',n:1,f:s=>s[1]}],D.sources)
   const q=$('#q').value.toLowerCase()
   const ps=D.people.filter(p=>!q||[p.visitorId,p.name,p.email,...p.projects].join(' ').toLowerCase().includes(q))
-  table($('#people'),[{h:'Visitor ID',f:p=>p.visitorId},{h:'Name',f:p=>p.name},{h:'Email',f:p=>p.email?el('span',{title:p.emailCheck},p.email+(p.emailCheck?' ⚠':'')):''},{h:'First seen',f:p=>when(p.firstSeen)},{h:'Last seen',f:p=>when(p.lastSeen)},{h:'Sandboxes',n:1,f:p=>p.launches},{h:'Projects',f:p=>p.projects.join(', ')},{h:'On site',n:1,f:p=>dur(p.siteSec)},{h:'In sandboxes (active)',n:1,f:p=>dur(p.sandboxActiveSec)},{h:'Sandbox lifetime',n:1,f:p=>dur(p.sandboxWallSec)}],ps)
-  table($('#runs'),[{h:'Started',f:r=>when(r.startedAt)},{h:'Project',f:r=>r.title},{h:'Visitor',f:r=>(r.vid||'').slice(0,8)},{h:'Name',f:r=>r.name},{h:'Email',f:r=>r.email},{h:'Opened',f:r=>r.opened?'yes':'no'},{h:'Active',n:1,f:r=>dur(r.activeSec)},{h:'Lifetime',n:1,f:r=>dur(r.wallSec)},{h:'Requests',n:1,f:r=>r.requests??''},{h:'Ended by',f:r=>el('span',{className:'tag'+(r.state==='launch_failed'?' bad':'')},r.state)}],D.runs)
+  table($('#people'),[{h:'Visitor ID',f:p=>el('code',{},p.visitorId)},{h:'Country',f:p=>p.country==='XX'?'?':p.country},{h:'Name',f:p=>p.name},{h:'Email',f:p=>p.email?el('span',{title:p.emailCheck},p.email+(p.emailCheck?' ⚠':'')):''},{h:'First seen',f:p=>when(p.firstSeen)},{h:'Last seen',f:p=>when(p.lastSeen)},{h:'Sandboxes',n:1,f:p=>p.launches},{h:'Projects',f:p=>p.projects.join(', ')},{h:'On site',n:1,f:p=>dur(p.siteSec)},{h:'In sandboxes (active)',n:1,f:p=>dur(p.sandboxActiveSec)},{h:'Sandbox lifetime',n:1,f:p=>dur(p.sandboxWallSec)}],ps)
+  table($('#runs'),[{h:'Started',f:r=>when(r.startedAt)},{h:'Project',f:r=>r.title},{h:'Visitor',f:r=>el('code',{},r.visitorId)},{h:'Name',f:r=>r.name},{h:'Email',f:r=>r.email},{h:'Opened',f:r=>r.opened?'yes':'no'},{h:'Active',n:1,f:r=>dur(r.activeSec)},{h:'Lifetime',n:1,f:r=>dur(r.wallSec)},{h:'Requests',n:1,f:r=>r.requests??''},{h:'Ended by',f:r=>el('span',{className:'tag'+(r.state==='launch_failed'?' bad':'')},r.state)}],D.runs)
 }
 async function load(){const r=await fetch('/admin/api/data',{cache:'no-store'});if(r.status===401){location.href='/admin/login';return}D=await r.json();render()}
 $('#refresh').onclick=load;$('#q').oninput=()=>D&&render();load();setInterval(load,60000)

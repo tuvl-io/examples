@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import httpProxy from 'http-proxy'
 import { EXAMPLES, EXAMPLE_BY_ID } from './lib/examples.js'
 import crypto from 'node:crypto'
+import { ID_RE, newVisitorId, displayId, lookupCountry } from './lib/visitor.js'
 import { createSession, getSession, recordLaunch, recordVisit, touchPresence, flushPresence } from './lib/store.js'
 import { buildDashboard, peopleCsv } from './lib/stats.js'
 import { ADMIN_EMAIL, adminConfigured, isAdmin, issueAdminCookie, loginRedirect, finishLogin } from './lib/admin.js'
@@ -139,15 +140,16 @@ app.get('/api/capacity', (_req, res) => {
 })
 
 // anonymous visit + time-on-page, tied to a random visitor id (no personal data)
-const ensureVid = (req, res) => {
-  let vid = parseCookies(req).sbv
-  if (!/^[\w-]{10,40}$/.test(vid || '')) {
-    vid = crypto.randomBytes(12).toString('base64url')
-    res.append('Set-Cookie', `sbv=${vid}; HttpOnly; Path=/; Max-Age=31536000; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`)
-  }
+// The cookie is the source of truth; a copy kept in the browser's localStorage (sent as `hint`) restores it if the cookie was cleared.
+const ensureVid = (req, res, hint) => {
+  const c = parseCookies(req).sbv
+  let vid = /^[\w-]{10,40}$/.test(c || '') ? c : null
+  if (!vid && ID_RE.test(hint || '')) vid = hint
+  if (!vid) vid = newVisitorId(lookupCountry(clientIp(req)))
+  res.append('Set-Cookie', `sbv=${vid}; HttpOnly; Path=/; Max-Age=63072000; SameSite=Lax${SANDBOX_SCHEME === 'https' ? '; Secure' : ''}`)
   return vid
 }
-const visitorLabel = (vid) => String(vid || '').slice(0, 8)
+const visitorLabel = displayId
 
 app.get('/api/me', (req, res) => {
   if (!req.session) return res.status(401).json({ error: 'not_signed_in' })
@@ -247,10 +249,10 @@ app.post('/api/stop', async (req, res) => {
 
 app.post('/api/hit', (req, res) => {
   if (limited(req, res, 20)) return
-  const vid = ensureVid(req, res)
   const b = req.body || {}
+  const vid = ensureVid(req, res, String(b.vid || ''))
   recordVisit({ vid, ref: clip(b.ref, 200), utm_source: clip(b.utm_source, 60), utm_medium: clip(b.utm_medium, 60), utm_campaign: clip(b.utm_campaign, 60) })
-  res.json({ ok: true })
+  res.json({ ok: true, visitorId: visitorLabel(vid) })
 })
 app.post('/api/ping', (req, res) => {
   if (limited(req, res, 8)) return

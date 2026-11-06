@@ -1,6 +1,7 @@
 // Aggregates the JSONL logs into the numbers the admin dashboard shows.
 import crypto from 'node:crypto'
 import { FILES, readJsonl } from './store.js'
+import { displayId, countryOf } from './visitor.js'
 
 const norm = (e) => String(e || '').trim().toLowerCase()
 // Older rows predate visitor ids: derive a stable one from the email so every row has an id and the same person keeps the same id.
@@ -74,7 +75,7 @@ export function buildDashboard({ live, examples }) {
   const peopleOut = [...people.values()].map((p) => {
     const snap = p.vid ? presence.get(p.vid) : null
     if (snap) seen(p, snap.lastSeen)
-    return { visitorId: p.vid.slice(0, 8), name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
+    return { visitorId: displayId(p.vid), country: countryOf(p.vid), name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
       firstSeen: p.firstSeen, lastSeen: p.lastSeen, launches: p.launches, opened: p.opened,
       projects: [...p.projects].map((id) => title[id] || id), siteSec: snap ? snap.activeSec : 0, sandboxActiveSec: p.sandboxActiveSec, sandboxWallSec: p.sandboxWallSec }
   }).sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)))
@@ -104,6 +105,20 @@ export function buildDashboard({ live, examples }) {
     launches: runs.filter((r) => day(r.startedAt) === d).length,
   }))
 
+  const byCountry = new Map()
+  const bump = (code, k, id) => {
+    const c = byCountry.get(code) || { code, visitors: new Set(), started: new Set(), launchers: new Set() }
+    c[k].add(id); byCountry.set(code, c)
+  }
+  for (const v of visits) bump(countryOf(v.vid), 'visitors', v.vid)
+  for (const p of peopleOut) {
+    bump(p.country, 'visitors', p.visitorId)
+    bump(p.country, 'started', p.visitorId)
+    if (p.launches) bump(p.country, 'launchers', p.visitorId)
+  }
+  const countries = [...byCountry.values()].map((c) => ({ code: c.code, visitors: c.visitors.size, started: c.started.size, launchers: c.launchers.size }))
+    .sort((a, b) => b.visitors - a.visitors)
+
   const sources = {}
   for (const v of visits) {
     const k = v.utm_source || (v.ref ? safeHost(v.ref) : 'direct')
@@ -132,7 +147,8 @@ export function buildDashboard({ live, examples }) {
     projects,
     sources: Object.entries(sources).sort((a, b) => b[1] - a[1]).slice(0, 10),
     people: peopleOut,
-    runs: runs.slice(0, 200).map((r) => ({ ...r, title: title[r.exampleId] || r.exampleId })),
+    runs: runs.slice(0, 200).map((r) => ({ ...r, visitorId: displayId(r.vid), title: title[r.exampleId] || r.exampleId })),
+    countries,
   }
 }
 
@@ -157,7 +173,7 @@ const csvCell = (v) => {
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
 }
 export function peopleCsv(d) {
-  const head = ['visitor_id', 'email', 'email_check', 'name', 'first_seen', 'last_seen', 'sandboxes', 'opened', 'projects', 'time_on_site_sec', 'sandbox_active_sec', 'sandbox_wall_sec']
-  const rows = d.people.map((p) => [p.visitorId, p.email, p.emailCheck, p.name, p.firstSeen, p.lastSeen, p.launches, p.opened, p.projects, p.siteSec, p.sandboxActiveSec, p.sandboxWallSec])
+  const head = ['visitor_id', 'country', 'email', 'email_check', 'name', 'first_seen', 'last_seen', 'sandboxes', 'opened', 'projects', 'time_on_site_sec', 'sandbox_active_sec', 'sandbox_wall_sec']
+  const rows = d.people.map((p) => [p.visitorId, p.country, p.email, p.emailCheck, p.name, p.firstSeen, p.lastSeen, p.launches, p.opened, p.projects, p.siteSec, p.sandboxActiveSec, p.sandboxWallSec])
   return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n'
 }
