@@ -1,7 +1,10 @@
 // Aggregates the JSONL logs into the numbers the admin dashboard shows.
+import crypto from 'node:crypto'
 import { FILES, readJsonl } from './store.js'
 
 const norm = (e) => String(e || '').trim().toLowerCase()
+// Older rows predate visitor ids: derive a stable one from the email so every row has an id and the same person keeps the same id.
+const legacyId = (email) => crypto.createHash('sha256').update(`legacy:${email}`).digest('base64url').slice(0, 16)
 const day = (iso) => String(iso || '').slice(0, 10)
 const secs = (a, b) => Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 1000))
 
@@ -32,12 +35,16 @@ export function buildDashboard({ live, examples }) {
     const r = byRun.get(sb.runId)
     if (r) Object.assign(r, { state: 'running', wallSec: secs(sb.createdAt, new Date().toISOString()), activeSec: sb.activeBuckets * 30, requests: sb.requests, opened: !!sb.firstHit })
   }
+  const emailVid = new Map()
+  for (const s of signups) if (s.vid && s.email && !emailVid.has(norm(s.email))) emailVid.set(norm(s.email), s.vid)
+  const idFor = (vid, email) => vid || emailVid.get(email) || (email ? legacyId(email) : 'unknown')
+  for (const r of byRun.values()) r.vid = idFor(r.vid, r.email)
   const runs = [...byRun.values()].sort((a, b) => b.startedAt.localeCompare(a.startedAt))
   const title = Object.fromEntries(examples.map((e) => [e.id, e.title]))
 
   // people: one row per visitor id (legacy rows without one fall back to the email)
   const people = new Map()
-  const keyOf = (vid, email) => vid || (email ? `email:${email}` : 'unknown')
+  const keyOf = (vid, email) => idFor(vid, email)
   const person = (key, vid) => {
     if (!people.has(key)) people.set(key, { key, vid: vid || '', name: '', email: '', firstSeen: null, lastSeen: null, launches: 0, opened: 0, projects: new Set(), sandboxActiveSec: 0, sandboxWallSec: 0 })
     return people.get(key)
@@ -48,13 +55,13 @@ export function buildDashboard({ live, examples }) {
     if (!p.lastSeen || at > p.lastSeen) p.lastSeen = at
   }
   for (const s of signups) {
-    const p = person(keyOf(s.vid, norm(s.email)), s.vid)
+    const p = person(keyOf(s.vid, norm(s.email)), keyOf(s.vid, norm(s.email)))
     if (s.name) p.name = s.name
     if (s.email) p.email = norm(s.email)
     seen(p, s.createdAt)
   }
   for (const r of runs) {
-    const p = person(keyOf(r.vid, r.email), r.vid)
+    const p = person(r.vid, r.vid)
     if (!p.name && r.name) p.name = r.name
     if (!p.email && r.email) p.email = r.email
     p.launches++
@@ -67,7 +74,7 @@ export function buildDashboard({ live, examples }) {
   const peopleOut = [...people.values()].map((p) => {
     const snap = p.vid ? presence.get(p.vid) : null
     if (snap) seen(p, snap.lastSeen)
-    return { visitorId: p.vid ? p.vid.slice(0, 8) : '', name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
+    return { visitorId: p.vid.slice(0, 8), name: p.name, email: p.email, emailCheck: p.email ? emailCheck(p.email) : '',
       firstSeen: p.firstSeen, lastSeen: p.lastSeen, launches: p.launches, opened: p.opened,
       projects: [...p.projects].map((id) => title[id] || id), siteSec: snap ? snap.activeSec : 0, sandboxActiveSec: p.sandboxActiveSec, sandboxWallSec: p.sandboxWallSec }
   }).sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)))
@@ -80,7 +87,7 @@ export function buildDashboard({ live, examples }) {
     return {
       id: e.id, title: e.title, tier: e.difficulty,
       launches: mine.length,
-      people: new Set(mine.map((r) => r.vid || r.email)).size,
+      people: new Set(mine.map((r) => r.vid)).size,
       opened: mine.filter((r) => r.opened).length,
       failed: mine.filter((r) => r.state === 'launch_failed').length,
       avgActiveSec: done.length ? Math.round(done.reduce((n, r) => n + (r.activeSec || 0), 0) / done.length) : 0,
